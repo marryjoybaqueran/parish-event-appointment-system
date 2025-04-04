@@ -1,10 +1,10 @@
 <script setup>
+import AppLayout from '@/components/layout/AppLayout.vue'
 import { ref } from 'vue'
 
 const email = ref(null)
 const password = ref(null)
 const visible = ref(false)
-const terms = ref(false)
 
 function requiredemail(v) {
   return !!v || 'Email is required'
@@ -12,34 +12,11 @@ function requiredemail(v) {
 function requiredpassword(v) {
   return !!v || 'Password is required'
 }
-
-//toggle
-const theme = ref('light')
-
-function onClick() {
-  theme.value = theme.value === 'light' ? 'dark' : 'light'
-}
-//toggle
 </script>
 
 <template>
-  <!--Toggle-->
-  <v-responsive class="border rounded">
-    <v-app :theme="theme">
-      <v-app-bar class="bg-primary py-3">
-        <h2 class="ps-5 header">San Isidro Labrador Parish</h2>
-        <v-spacer></v-spacer>
-        <v-switch
-          :prepend-icon="theme === 'light' ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-          text="Toggle Theme"
-          slim
-          class="pt-5"
-          @click="onClick"
-          :width="100"
-        ></v-switch>
-      </v-app-bar>
-      <!--Toggle-->
-
+  <AppLayout>
+    <template #content>
       <v-main>
         <div class="bg-wrapper">
           <v-img src="silp.jpg" class="bg-image" cover></v-img>
@@ -52,16 +29,16 @@ function onClick() {
               <br />
 
               <h2 class="line-1 anim-typewriter pt-1 text-center">
-                ("<span class="text-span"
+                "<span class="text-span"
                   >Join us as we come together in faith and community, where we celebrate the spirit
                   of service, devotion, and unity!</span
-                >")
+                >"
               </h2>
             </v-col>
             <!-- Right Column: Form -->
             <v-col class="cardy" cols="12" md="6" lg="6" xl="6" sm="12">
               <v-form fast-fail @submit.prevent>
-                <div class="cardd px-5 float-end">
+                <div class="cardd px-6 float-end">
                   <v-card class="mx-auto pa-12 pb-8" elevation="8" rounded="lg">
                     <div><h2 class="text-center">Welcome!</h2></div>
 
@@ -103,13 +80,7 @@ function onClick() {
                     >
                       Forgot password?</a
                     >
-                    <v-checkbox
-                      v-model="terms"
-                      :rules="[(v) => !!v || '']"
-                      color="secondary"
-                      label="I agree to the  terms and conditions"
-                      class="checkbox-font mb-0"
-                    ></v-checkbox>
+
                     <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
                       <v-btn
                         class="bg-primary pt-0 mt-0"
@@ -125,7 +96,10 @@ function onClick() {
                     </v-hover>
 
                     <v-card-text class="text-center">
-                      <p>Don't have an account? <RouterLink to="">Sign up now</RouterLink></p>
+                      <p>
+                        Don't have an account?
+                        <RouterLink to="/register">Sign up </RouterLink>
+                      </p>
                     </v-card-text>
                   </v-card>
                 </div>
@@ -139,8 +113,8 @@ function onClick() {
           <br />
         </v-container>
       </v-main>
-    </v-app>
-  </v-responsive>
+    </template>
+  </AppLayout>
 </template>
 
 <style scoped>
@@ -179,9 +153,11 @@ function onClick() {
 }
 
 .cardd {
+  width: 450px;
   padding: 100px;
-  max-width: 500px;
-  height: 400px;
+  max-width: 100%;
+  height: 600px;
+  max-height: 100%;
   margin: auto;
   justify-content: center;
   align-items: center;
