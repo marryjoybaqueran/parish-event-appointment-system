@@ -46,7 +46,7 @@ const { mobile } = useDisplay()
             </v-hover>
           </v-card-actions>
           <v-card-text class="text-center">
-            <p>Already have Account?<RouterLink to="/login"> Sign in </RouterLink></p>
+            <p>Already have Account?<RouterLink to="/"> Sign in </RouterLink></p>
           </v-card-text>
         </v-card>
       </div>
