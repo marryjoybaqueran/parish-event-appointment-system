@@ -1,17 +1,9 @@
 <script setup>
+import LoginForm from '@/components/auth/LoginForm.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { ref } from 'vue'
+import { useDisplay } from 'vuetify'
 
-const email = ref(null)
-const password = ref(null)
-const visible = ref(false)
-
-function requiredemail(v) {
-  return !!v || 'Email is required'
-}
-function requiredpassword(v) {
-  return !!v || 'Password is required'
-}
+const { mobile } = useDisplay()
 </script>
 
 <template>
@@ -25,7 +17,13 @@ function requiredpassword(v) {
           <v-row>
             <!-- Left Column: Image and Heading -->
             <v-col cols="12" md="6" lg="6" xl="6" sm="12" class="col1">
-              <v-img :width="270" src="logo.png" class="animated-image"></v-img> <br />
+              <v-img
+                max-auto
+                src="logo.png"
+                v-bind:width="mobile ? '70%' : '56%'"
+                class="animated-logo"
+              ></v-img>
+              <br />
               <br />
 
               <h2 class="line-1 anim-typewriter pt-1 text-center">
@@ -37,73 +35,21 @@ function requiredpassword(v) {
             </v-col>
             <!-- Right Column: Form -->
             <v-col class="cardy" cols="12" md="6" lg="6" xl="6" sm="12">
-              <v-form fast-fail @submit.prevent>
-                <div class="cardd px-6 float-end">
-                  <v-card class="mx-auto pa-12 pb-8" elevation="8" rounded="lg">
-                    <div><h2 class="text-center">Welcome!</h2></div>
+              <v-card
+                class="mx-auto pa-12 pb-8"
+                elevation="8"
+                rounded="lg"
+                v-bind:width="mobile ? '110%' : '75%'"
+              >
+                <LoginForm></LoginForm>
 
-                    <div class="text-subtitle-1 text-medium-emphasis">Username</div>
-
-                    <v-text-field
-                      v-model="email"
-                      density="compact"
-                      placeholder="Email address"
-                      prepend-inner-icon="mdi-email-outline"
-                      :rules="[requiredemail]"
-                      :counter="50"
-                      variant="outlined"
-                    ></v-text-field>
-
-                    <div
-                      class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
-                    >
-                      Password
-                    </div>
-
-                    <v-text-field
-                      v-model="password"
-                      :append-inner-icon="visible ? 'mdi-eye' : 'mdi-eye-off'"
-                      :type="visible ? 'text' : 'password'"
-                      density="compact"
-                      :rules="[requiredpassword]"
-                      counter="20"
-                      placeholder="Enter your password"
-                      prepend-inner-icon="mdi-lock-outline"
-                      variant="outlined"
-                      @click:append-inner="visible = !visible"
-                    ></v-text-field>
-                    <a
-                      class="text-caption text-decoration-none text-blue"
-                      href="#"
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      Forgot password?</a
-                    >
-
-                    <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
-                      <v-btn
-                        class="bg-primary pt-0 mt-0"
-                        :class="{ 'on-hover': isHovering }"
-                        v-bind="props"
-                        :elevation="isHovering ? 16 : 2"
-                        size="large"
-                        variant="tonal"
-                        block
-                      >
-                        <span class="login">Log In</span>
-                      </v-btn>
-                    </v-hover>
-
-                    <v-card-text class="text-center">
-                      <p>
-                        Don't have an account?
-                        <RouterLink to="/register">Sign up </RouterLink>
-                      </p>
-                    </v-card-text>
-                  </v-card>
+                <div class="text-center pt-4">
+                  <p>
+                    Don't have an account?
+                    <RouterLink to="/register">Sign up </RouterLink>
+                  </p>
                 </div>
-              </v-form>
+              </v-card>
             </v-col>
           </v-row>
           <br />
@@ -139,39 +85,12 @@ function requiredpassword(v) {
   position: relative;
   z-index: 10;
 }
-.cardd {
-  animation: bounce 4s infinite ease-in-out;
-}
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-15px);
-  }
-}
-
-.cardd {
-  width: 450px;
-  padding: 100px;
-  max-width: 100%;
-  height: 600px;
-  max-height: 100%;
-  margin: auto;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 100px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
 
 .col1 {
-  padding-top: 150px;
   place-items: center;
 }
 
-.animated-image {
-  width: 200px;
+.animated-logo {
   opacity: 0;
   transform: scale(0.2);
   animation: fadeInScale 1s ease-out forwards;
@@ -229,5 +148,23 @@ function requiredpassword(v) {
   display: flex;
   justify-content: center;
   align-items: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  animation: bounce 4s infinite ease-in-out;
+}
+
+.cardd {
+  justify-content: center;
+  display: flex;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  animation: bounce 4s infinite ease-in-out;
+}
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
 }
 </style>
