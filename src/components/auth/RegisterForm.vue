@@ -1,47 +1,63 @@
 <script setup>
+import {
+  requiredValidator,
+  emailValidator,
+  passwordValidator,
+  confirmedValidator,
+} from '@/utils/validators'
 import { ref } from 'vue'
 
-const fname = ref('')
-const lname = ref('')
-const brgy = ref('')
-const zip = ref('')
-const city = ref('')
-const state = ref('')
-const inline = ref('')
-const birthday = ref('')
-const age = ref('')
-const phonenumber = ref('+63')
-const createpassword = ref(null)
-const confirmpassword = ref(null)
-const terms = ref(false)
-const email = ref('')
-const visibleCreate = ref(false)
-const visibleConfirm = ref(false)
-const rules = {
-  email: (value) => {
-    const pattern =
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    return pattern.test(value) || 'Invalid e-mail.'
-  },
+const formDataDefault = {
+  fname: '',
+  lname: '',
+  email: '',
+  birthdate: '',
+  age: '',
+  gender: '',
+  brgy: '',
+  region: '',
+  city: '',
+  zip: '',
+  number: '',
+  password: '',
+  password_confirmation: '',
+  checkbox: 'false',
+}
+
+const formData = ref({
+  ...formDataDefault,
+})
+const isPasswordVisible = ref(false)
+const isPasswordconsfirmationVisible = ref(false)
+const refVform = ref()
+
+const onLogin = () => {
+  //alert(formData.value.email)
+}
+
+const onFormSubmit = () => {
+  refVform.value?.validate().then(({ valid }) => {
+    if (valid) onLogin()
+  })
 }
 </script>
 <template>
-  <v-form>
+  <v-form ref="refVform" @submit.prevent="onFormSubmit">
     <v-row>
       <v-col cols="12" md="6" lg="6" xl="6" sm="12">
         <v-text-field
-          v-model="fname"
+          v-model="formData.fname"
           :error-messages="errorMessages"
-          :rules="[rules.required, rules.fname]"
+          :rules="[requiredValidator]"
           label="First Name"
           required
         ></v-text-field>
       </v-col>
       <v-col cols="12" md="6" lg="6" xl="6" sm="12">
         <v-text-field
-          v-model="lname"
+          v-model="formData.lname"
           :error-messages="errorMessages"
-          :rules="[rules.required, rules.lname]"
+          :rules="[requiredValidator]"
           label="Last Name"
           required
         ></v-text-field> </v-col
@@ -49,24 +65,24 @@ const rules = {
     <v-row>
       <v-col cols="12" md="4" lg="4" xl="4" sm="12">
         <v-text-field
-          v-model="birthday"
+          v-model="formData.birthdate"
           type="date"
-          :rules="[rules.required, rules.birthday]"
+          :rules="[requiredValidator]"
           label="Birthdate"
           required
         ></v-text-field>
       </v-col>
       <v-col cols="12" md="4" lg="4" xl="4" sm="12">
         <v-text-field
-          v-model="age"
+          v-model="formData.age"
           type="number"
-          :rules="[rules.required, rules.age]"
+          :rules="[requiredValidator]"
           label="Age"
           required
         ></v-text-field>
       </v-col>
       <v-col cols="12" md="4" lg="4" xl="4" sm="12">
-        <v-radio-group v-model="inline" inline>
+        <v-radio-group v-model="formData.gender" :rules="[requiredValidator]" inline>
           <v-radio label="Female" value="radio-1"></v-radio>
           <v-radio label="Male" value="radio-2"></v-radio>
         </v-radio-group>
@@ -74,8 +90,8 @@ const rules = {
     </v-row>
 
     <v-text-field
-      v-model="brgy"
-      :rules="[rules.required, rules.adrress]"
+      v-model="formData.brgy"
+      :rules="[requiredValidator]"
       counter="25"
       label=" Street/Brgy/House no."
       required
@@ -83,16 +99,16 @@ const rules = {
     <v-row>
       <v-col cols="12" md="4" lg="4" xl="4" sm="12">
         <v-text-field
-          v-model="state"
-          :rules="[rules.required, rules.state]"
+          v-model="formData.region"
+          :rules="[requiredValidator]"
           label="Province/Region"
           required
         ></v-text-field>
       </v-col>
       <v-col cols="12" md="4" lg="4" xl="4" sm="12">
         <v-text-field
-          v-model="city"
-          :rules="[rules.required, rules.city]"
+          v-model="formData.city"
+          :rules="[requiredValidator]"
           label="City"
           required
         ></v-text-field
@@ -100,45 +116,83 @@ const rules = {
 
       <v-col cols="12" md="4" lg="4" xl="4" sm="12">
         <v-text-field
-          v-model="zip"
-          :rules="[rules.required, rules.zip]"
+          v-model="formData.zip"
+          :rules="[requiredValidator]"
           label="ZIP"
           required
         ></v-text-field
       ></v-col>
     </v-row>
     <v-text-field
-      v-model="phonenumber"
-      :rules="[rules.required, rules.phonenumber]"
+      v-model="formData.number"
+      :rules="[requiredValidator]"
       label="Phone Number"
       clearable
     ></v-text-field>
 
     <v-text-field
-      v-model="email"
-      :rules="[rules.required, rules.email]"
+      v-model="formData.email"
+      :rules="[requiredValidator, emailValidator]"
       placeholder="example@gmail.com"
       label="E-mail"
       clearable
     ></v-text-field>
 
     <v-text-field
-      v-model="createpassword"
+      v-model="formData.password"
       label="Create your password"
-      :append-inner-icon="visibleCreate ? 'mdi-eye' : 'mdi-eye-off'"
-      :type="visibleCreate ? 'text' : 'password'"
-      @click:append-inner="visibleCreate = !visibleCreate"
+      :rules="[requiredValidator, passwordValidator]"
+      :append-inner-icon="visible ? 'mdi-eye' : 'mdi-eye-off'"
+      :type="isPasswordVisible ? 'text' : 'password'"
+      @click:append-inner="isPasswordVisible = !isPasswordVisible"
     ></v-text-field>
 
     <v-text-field
-      v-model="confirmpassword"
-      :append-inner-icon="visibleConfirm ? 'mdi-eye' : 'mdi-eye-off'"
-      :type="visibleConfirm ? 'text' : 'password'"
-      :rules="[requiredpassword]"
+      v-model="formData.password_confirmation"
+      :rules="[
+        requiredValidator,
+        confirmedValidator(formData.password_confirmation, formData.password),
+      ]"
       label="Confirm your password"
-      @click:append-inner="visibleConfirm = !visibleConfirm"
+      :append-inner-icon="visible ? 'mdi-eye' : 'mdi-eye-off'"
+      :type="isPasswordconsfirmationVisible ? 'text' : 'password'"
+      @click:append-inner="isPasswordconsfirmationVisible = !isPasswordconsfirmationVisible"
     ></v-text-field>
 
-    <v-checkbox v-model="terms" color="secondary" label="I agree  terms and conditions"></v-checkbox
-  ></v-form>
+    <v-checkbox v-model="formData.checkbox" :rules="[requiredValidator]">
+      <template v-slot:label>
+        <div>
+          I agree with the
+          <v-tooltip location="bottom">
+            <template v-slot:activator="{ props }">
+              <a href="#" v-bind="props" @click.stop> Terms and Conditions </a>
+            </template>
+            Opens in new window
+          </v-tooltip>
+        </div>
+      </template>
+    </v-checkbox>
+
+    <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
+      <v-btn
+        class="bg-primary pt-0 mt-0"
+        :class="{ 'on-hover': isHovering }"
+        v-bind="props"
+        :elevation="isHovering ? 16 : 2"
+        size="large"
+        variant="tonal"
+        type="submit"
+        block
+      >
+        <span> Sign Up</span>
+      </v-btn>
+    </v-hover></v-form
+  >
 </template>
+
+<style setup>
+.v-btn.on-hover {
+  background-color: red !important;
+  color: white !important ;
+}
+</style>

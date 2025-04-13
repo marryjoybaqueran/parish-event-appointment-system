@@ -9,56 +9,55 @@ const { mobile } = useDisplay()
 <template>
   <AppLayout>
     <template #content>
-      <v-main>
+      <v-container fluid>
         <div class="bg-wrapper">
           <v-img src="silp.jpg" class="bg-image" cover></v-img>
         </div>
-        <v-container>
-          <v-row>
-            <!-- Left Column: Image and Heading -->
-            <v-col cols="12" md="6" lg="6" xl="6" sm="12" class="col1">
-              <v-img
-                max-auto
-                src="logo.png"
-                v-bind:width="mobile ? '70%' : '56%'"
-                class="animated-logo"
-              ></v-img>
-              <br />
-              <br />
 
-              <h2 class="line-1 anim-typewriter pt-1 text-center">
-                "<span class="text-span"
-                  >Join us as we come together in faith and community, where we celebrate the spirit
-                  of service, devotion, and unity!</span
-                >"
-              </h2>
-            </v-col>
-            <!-- Right Column: Form -->
-            <v-col class="cardy" cols="12" md="6" lg="6" xl="6" sm="12">
-              <v-card
-                class="mx-auto pa-12 pb-8"
-                elevation="8"
-                rounded="lg"
-                v-bind:width="mobile ? '110%' : '75%'"
-              >
-                <LoginForm></LoginForm>
+        <v-row>
+          <!-- Left Column: Image and Heading -->
+          <v-col cols="12" md="6" lg="6" xl="6" sm="12" class="col1">
+            <v-img
+              max-auto
+              src="logo.png"
+              v-bind:width="mobile ? '70%' : '56%'"
+              class="animated-logo"
+            ></v-img>
+            <br />
+            <br />
 
-                <div class="text-center pt-4">
-                  <p>
-                    Don't have an account?
-                    <RouterLink to="/register">Sign up </RouterLink>
-                  </p>
-                </div>
-              </v-card>
-            </v-col>
-          </v-row>
-          <br />
-          <br />
-          <br />
-          <br />
-          <br />
-        </v-container>
-      </v-main>
+            <h2 class="line-1 anim-typewriter pt-1 text-center">
+              "<span class="text-span"
+                >Join us as we come together in faith and community, where we celebrate the spirit
+                of service, devotion, and unity!</span
+              >"
+            </h2>
+          </v-col>
+          <!-- Right Column: Form -->
+          <v-col class="cardy" cols="12" md="6" lg="6" xl="6" sm="12">
+            <v-card
+              class="mx-auto pa-12 pb-8"
+              elevation="8"
+              rounded="lg"
+              v-bind:width="mobile ? '110%' : '75%'"
+            >
+              <LoginForm></LoginForm>
+
+              <div class="text-center pt-4">
+                <p>
+                  Don't have an account?
+                  <RouterLink to="/register">Sign up </RouterLink>
+                </p>
+              </div>
+            </v-card>
+          </v-col>
+        </v-row>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+      </v-container>
     </template>
   </AppLayout>
 </template>
@@ -96,10 +95,6 @@ const { mobile } = useDisplay()
   animation: fadeInScale 1s ease-out forwards;
 }
 
-.checkbox-font {
-  font-size: smaller;
-}
-
 @keyframes fadeInScale {
   0% {
     opacity: 0;
@@ -112,6 +107,7 @@ const { mobile } = useDisplay()
 }
 
 .col1 h2 {
+  position: relative;
   text-align: center;
   font-family:
     Times,
@@ -122,16 +118,6 @@ const { mobile } = useDisplay()
     0 2px 2px black,
     2px 0 2px black,
     0 -2px 2px;
-}
-.v-btn.on-hover {
-  background-color: red !important;
-  color: white !important ;
-}
-.login {
-  color: white;
-}
-.v-btn {
-  box-shadow: none !important;
 }
 .header {
   font-family:
