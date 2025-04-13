@@ -1,30 +1,42 @@
 <script setup>
+import { requiredValidator, emailValidator } from '@/utils/validators'
 import { ref } from 'vue'
 
-const email = ref(null)
-const password = ref(null)
-const visible = ref(false)
+const isPasswordVisible = ref(false)
+const refVform = ref()
 
-function requiredemail(v) {
-  return !!v || 'Email is required'
+const formDataDefault = {
+  email: '',
+  password: '',
 }
-function requiredpassword(v) {
-  return !!v || 'Password is required'
+
+const formData = ref({
+  ...formDataDefault,
+})
+
+const onLogin = () => {
+  //alert(formData.value.email)
+}
+
+const onFormSubmit = () => {
+  refVform.value?.validate().then(({ valid }) => {
+    if (valid) onLogin()
+  })
 }
 </script>
 
 <template>
-  <v-form fast-fail @submit.prevent>
+  <v-form ref="refVform" @submit.prevent="onFormSubmit">
     <div><h2 class="text-center">Welcome!</h2></div>
 
     <div class="text-subtitle-1 text-medium-emphasis">Username</div>
 
     <v-text-field
-      v-model="email"
+      v-model="formData.email"
       density="compact"
       placeholder="Email address"
       prepend-inner-icon="mdi-email-outline"
-      :rules="[requiredemail]"
+      :rules="[requiredValidator, emailValidator]"
       :counter="50"
       variant="outlined"
     ></v-text-field>
@@ -34,16 +46,16 @@ function requiredpassword(v) {
     </div>
 
     <v-text-field
-      v-model="password"
-      :append-inner-icon="visible ? 'mdi-eye' : 'mdi-eye-off'"
-      :type="visible ? 'text' : 'password'"
+      v-model="formData.password"
       density="compact"
-      :rules="[requiredpassword]"
+      :rules="[requiredValidator]"
       counter="20"
       placeholder="Enter your password"
       prepend-inner-icon="mdi-lock-outline"
       variant="outlined"
-      @click:append-inner="visible = !visible"
+      :append-inner-icon="visible ? 'mdi-eye' : 'mdi-eye-off'"
+      :type="isPasswordVisible ? 'text' : 'password'"
+      @click:append-inner="isPasswordVisible = !isPasswordVisible"
     ></v-text-field>
     <a
       class="text-caption text-decoration-none text-blue"
@@ -62,6 +74,7 @@ function requiredpassword(v) {
         :elevation="isHovering ? 16 : 2"
         size="large"
         variant="tonal"
+        type="submit"
         block
       >
         <span class="login">Log In</span>
@@ -69,3 +82,10 @@ function requiredpassword(v) {
     </v-hover>
   </v-form>
 </template>
+
+<style setup>
+.v-btn.on-hover {
+  background-color: red !important;
+  color: white !important ;
+}
+</style>

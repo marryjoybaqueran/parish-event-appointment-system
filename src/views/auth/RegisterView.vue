@@ -8,48 +8,36 @@ const { mobile } = useDisplay()
 <template>
   <AppLayout>
     <template #content>
-      <div class="bg-wrapper">
-        <v-img src="silp.jpg" class="bg-image" cover></v-img>
-      </div>
+      <v-container fluid>
+        <div class="bg-wrapper">
+          <v-img src="silp.jpg" class="bg-image" cover></v-img>
+        </div>
 
-      <div class="cardd2 py-8 align-items-center">
-        <v-card
-          class="mx-auto pa-6 pb-8"
-          elevation="8"
-          max-width="700px"
-          rounded="lg"
-          v-bind:width="mobile ? '100%' : '70%'"
-        >
-          <h1 align="center">Create Your Account</h1>
-          <p align="center">Sign up and create your account here</p>
-          <v-container>
+        <div class="cardd2 py-8 align-items-center">
+          <v-card
+            class="mx-auto pa-6 pb-8"
+            elevation="8"
+            max-width="700px"
+            rounded="lg"
+            v-bind:width="mobile ? '100%' : '70%'"
+          >
+            <div class="text-header">
+              <h1>Create Your Account</h1>
+              <p>Sign up and create your account here</p>
+            </div>
             <RegisterForm></RegisterForm>
-          </v-container>
 
-          <v-divider></v-divider>
+            <v-divider></v-divider>
 
-          <v-card-actions>
-            <v-spacer></v-spacer>
-
-            <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
-              <v-btn
-                class="bg-primary pt-0 mt-0"
-                :class="{ 'on-hover': isHovering }"
-                v-bind="props"
-                :elevation="isHovering ? 16 : 2"
-                size="large"
-                variant="tonal"
-                block
-              >
-                <span> Sign Up</span>
-              </v-btn>
-            </v-hover>
-          </v-card-actions>
-          <v-card-text class="text-center">
-            <p>Already have Account?<RouterLink to="/"> Sign in </RouterLink></p>
-          </v-card-text>
-        </v-card>
-      </div>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+            <v-card-text class="text-center">
+              <p>Already have Account?<RouterLink to="/"> Sign in </RouterLink></p>
+            </v-card-text>
+          </v-card>
+        </div></v-container
+      >
     </template>
   </AppLayout>
 </template>
@@ -86,12 +74,8 @@ const { mobile } = useDisplay()
   margin: auto;
 }
 
-.v-btn.on-hover {
-  background-color: red !important;
-  color: white !important ;
-}
-
-.v-btn {
-  box-shadow: none !important;
+.text-header {
+  text-align: center;
+  padding-bottom: 30px;
 }
 </style>
