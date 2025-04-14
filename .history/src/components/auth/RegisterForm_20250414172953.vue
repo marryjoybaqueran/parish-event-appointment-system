@@ -6,7 +6,6 @@ import {
   confirmedValidator,
 } from '@/utils/validators'
 import { ref } from 'vue'
-import AlertNotification from '@/components/common/AlertNotification.vue'
 import { supabase, formActionDefault } from '@/utils/supabase.js'
 
 const formDataDefault = {
@@ -29,65 +28,22 @@ const formDataDefault = {
 const formData = ref({
   ...formDataDefault,
 })
-
-const formAction = ref({
-  ...formActionDefault,
-})
-
 const isPasswordVisible = ref(false)
 const isPasswordconsfirmationVisible = ref(false)
 const refVform = ref()
 
-const onSubmit = async () => {
-  formAction.value = { ...formActionDefault }
-  formAction.value.formProcess = true
-
-  const { data, error } = await supabase.auth.signUp({
-    email: formData.value.email,
-    password: formData.value.password,
-    options: {
-      data: {
-        fname: formData.value.fname,
-        lname: formData.value.lname,
-        birthdate: formData.value.birthdate,
-        age: formData.value.age,
-        gender: formData.value.gender,
-        brgy: formData.value.brgy,
-        region: formData.value.region,
-        city: formData.value.city,
-        zip: formData.value.zip,
-        number: formData.value.number,
-      },
-    },
-  })
-
-  if (error) {
-    console.log(error)
-    formAction.value.formErrorMessage = error.message
-    formAction.value.formStatus = error.status
-  } else if (data) {
-    console.log(data)
-    formAction.value.formSuccessMessage = 'Successfully Registered Account!'
-
-    refVform.value?.reset()
-  }
-
-  formAction.value.formProcess = false
+const onLogin = () => {
+  //alert(formData.value.email)
 }
 
 const onFormSubmit = () => {
   refVform.value?.validate().then(({ valid }) => {
-    if (valid) onSubmit()
+    if (valid) onLogin()
   })
 }
 </script>
 <template>
-  <AlertNotification
-    :form-success-message="formAction.formSuccessMessage"
-    :form-error-message="formAction.formErrorMessage"
-  ></AlertNotification>
-
-  <v-form class="mt-5" ref="refVform" @submit.prevent="onFormSubmit">
+  <v-form ref="refVform" @submit.prevent="onFormSubmit">
     <v-row>
       <v-col cols="12" md="6" lg="6" xl="6" sm="12">
         <v-text-field
@@ -228,8 +184,6 @@ const onFormSubmit = () => {
         variant="tonal"
         type="submit"
         block
-        :disabled="formAction.formProcess"
-        :loading="formAction.formProcess"
       >
         <span> Sign Up</span>
       </v-btn>
@@ -239,7 +193,7 @@ const onFormSubmit = () => {
 
 <style setup>
 .v-btn.on-hover {
-  background-color: green !important;
+  background-color: red !important;
   color: white !important ;
 }
 </style>
