@@ -6,7 +6,6 @@ import {
   confirmedValidator,
 } from '@/utils/validators'
 import { ref } from 'vue'
-import AlertNotification from '@/components/common/AlertNotification.vue'
 import { supabase, formActionDefault } from '@/utils/supabase.js'
 
 const formDataDefault = {
@@ -68,8 +67,6 @@ const onSubmit = async () => {
   } else if (data) {
     console.log(data)
     formAction.value.formSuccessMessage = 'Successfully Registered Account!'
-
-    refVform.value?.reset()
   }
 
   formAction.value.formProcess = false
@@ -82,12 +79,31 @@ const onFormSubmit = () => {
 }
 </script>
 <template>
-  <AlertNotification
-    :form-success-message="formAction.formSuccessMessage"
-    :form-error-message="formAction.formErrorMessage"
-  ></AlertNotification>
+  <v-alert
+    v-if="formAction.formSuccessMessage"
+    :text="formAction.formSuccessMessage"
+    title="Success!"
+    type="success"
+    variant="tonal"
+    density="compact"
+    border="start"
+    closable
+  >
+  </v-alert>
 
-  <v-form class="mt-5" ref="refVform" @submit.prevent="onFormSubmit">
+  <v-alert
+    v-if="formAction.formErrorMessage"
+    :text="formAction.formErrorMessage"
+    title="Oops!"
+    type="error"
+    variant="tonal"
+    density="compact"
+    border="start"
+    closable
+  >
+  </v-alert>
+
+  <v-form ref="refVform" @submit.prevent="onFormSubmit">
     <v-row>
       <v-col cols="12" md="6" lg="6" xl="6" sm="12">
         <v-text-field
@@ -239,7 +255,7 @@ const onFormSubmit = () => {
 
 <style setup>
 .v-btn.on-hover {
-  background-color: green !important;
+  background-color: red !important;
   color: white !important ;
 }
 </style>

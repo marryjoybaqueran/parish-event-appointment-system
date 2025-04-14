@@ -23,7 +23,7 @@ const { smAndDown } = useDisplay()
     <v-app :theme="theme">
       <v-app-bar class="px-6" :color="theme === 'light' ? 'blue-darken-1' : 'blue-darken-3'" border>
         <div class="d-flex align-center">
-          <v-img src="logo.png" :width="mobile ? '40px' : '45px'" class="me-2" cover></v-img>
+          <v-img src="logo.png" :width="mobile ? '40px' : '55px'" class="me-2" cover></v-img>
           <h2 :class="smAndDown ? 'text-subtitle-2' : 'text-h5'" class="ma-0 header">
             San Isidro Labrador Parish
           </h2>

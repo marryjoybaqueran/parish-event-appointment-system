@@ -6,7 +6,7 @@ import {
   confirmedValidator,
 } from '@/utils/validators'
 import { ref } from 'vue'
-import AlertNotification from '@/components/common/AlertNotification.vue'
+import AlertNotification from '@components/common/AlertNotification.vue'
 import { supabase, formActionDefault } from '@/utils/supabase.js'
 
 const formDataDefault = {
@@ -68,8 +68,6 @@ const onSubmit = async () => {
   } else if (data) {
     console.log(data)
     formAction.value.formSuccessMessage = 'Successfully Registered Account!'
-
-    refVform.value?.reset()
   }
 
   formAction.value.formProcess = false
