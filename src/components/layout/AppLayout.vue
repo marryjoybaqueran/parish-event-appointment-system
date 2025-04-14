@@ -39,7 +39,7 @@ const { smAndDown } = useDisplay()
           style="transform: scale(1.5); transform-origin: right center"
         >
           <template #thumb>
-            <v-icon size="20">
+            <v-icon size="20  ">
               {{ isDark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
             </v-icon>
           </template>
