@@ -9,7 +9,7 @@ const { mobile } = useDisplay()
   <NavBar>
     <template #content>
       <v-container fluid>
-        <h3 class="uppercase-text"> Announcement Dashboard </h3>
+        <h3 class="uppercase-text">Book Event</h3>
       </v-container>
     </template>
   </NavBar>
