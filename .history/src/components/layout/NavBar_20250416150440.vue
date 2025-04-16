@@ -57,13 +57,9 @@ const { smAndDown } = useDisplay()
               </v-btn>
             </RouterLink>
 
-            <v-btn class="mr-2 outlined-btn pl-1" outlined>
-              <v-icon class="event-icon">mdi-logout</v-icon>
-              <span
-                class="hover-underline-animation"
-                :class="smAndDown ? 'small-header' : 'large-header'"
-                >LOG OUT
-              </span>
+            <v-btn class="home-btn mr-2" flat>
+              <v-icon class="home-icon">mdi-home</v-icon>
+              <span class="home-text"> <span class="home-color">LOG OUT</span></span>
             </v-btn>
           </div>
           <v-spacer></v-spacer>
@@ -102,7 +98,7 @@ const { smAndDown } = useDisplay()
               HOME
             </v-btn>
           </v-list-item>
-          <v-divider></v-divider>
+
           <!-- BOOK EVENT -->
           <v-list-item @click="drawer = false">
             <RouterLink to="/book-event" class="router-link" style="width: 100%">
@@ -112,15 +108,7 @@ const { smAndDown } = useDisplay()
               </v-btn>
             </RouterLink>
           </v-list-item>
-          <v-divider></v-divider>
-          <!-- LOG OUT -->
-          <v-list-item @click="drawer = false">
-            <v-btn flat>
-              <v-icon class="me-2">mdi-logout</v-icon>
-              LOG OUT
-            </v-btn>
-          </v-list-item>
-          <v-divider></v-divider>
+
           <!-- THEME SWITCH -->
           <v-list-item>
             <v-btn
@@ -209,7 +197,7 @@ const { smAndDown } = useDisplay()
   align-items: center;
   gap: 20px;
   pointer-events: none;
-  padding-bottom: 2px;
+  padding-bottom: 1px;
   letter-spacing: 2px;
   font-weight: 600;
 }
@@ -228,11 +216,10 @@ const { smAndDown } = useDisplay()
 }
 
 .event-icon {
-  font-size: 20px;
+  font-size: 22px;
   vertical-align: middle;
   margin-right: 5px;
   color: black;
-  padding-bottom: 5px;
 }
 
 .home-color {
@@ -269,7 +256,7 @@ const { smAndDown } = useDisplay()
 }
 
 .small-header {
-  font-size: 15px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.5px;
 }

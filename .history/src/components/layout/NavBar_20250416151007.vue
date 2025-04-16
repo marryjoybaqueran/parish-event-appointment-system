@@ -57,7 +57,7 @@ const { smAndDown } = useDisplay()
               </v-btn>
             </RouterLink>
 
-            <v-btn class="mr-2 outlined-btn pl-1" outlined>
+            <v-btn class="mr-2 outlined-btn" outlined>
               <v-icon class="event-icon">mdi-logout</v-icon>
               <span
                 class="hover-underline-animation"
@@ -72,7 +72,7 @@ const { smAndDown } = useDisplay()
             v-model="isDark"
             color="primary"
             hide-details
-            class="theme-switch pl-7"
+            class="theme-switch pl-4"
             @change="onClick"
             style="transform: scale(1.5); transform-origin: right center"
           >
@@ -102,7 +102,7 @@ const { smAndDown } = useDisplay()
               HOME
             </v-btn>
           </v-list-item>
-          <v-divider></v-divider>
+
           <!-- BOOK EVENT -->
           <v-list-item @click="drawer = false">
             <RouterLink to="/book-event" class="router-link" style="width: 100%">
@@ -112,15 +112,7 @@ const { smAndDown } = useDisplay()
               </v-btn>
             </RouterLink>
           </v-list-item>
-          <v-divider></v-divider>
-          <!-- LOG OUT -->
-          <v-list-item @click="drawer = false">
-            <v-btn flat>
-              <v-icon class="me-2">mdi-logout</v-icon>
-              LOG OUT
-            </v-btn>
-          </v-list-item>
-          <v-divider></v-divider>
+
           <!-- THEME SWITCH -->
           <v-list-item>
             <v-btn
@@ -269,7 +261,7 @@ const { smAndDown } = useDisplay()
 }
 
 .small-header {
-  font-size: 15px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.5px;
 }

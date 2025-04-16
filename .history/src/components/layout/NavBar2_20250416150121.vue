@@ -41,29 +41,21 @@ const { smAndDown } = useDisplay()
         <!-- Desktop Nav -->
         <div v-if="!smAndDown" class="d-flex align-center nav">
           <div class="d-flex nav">
-            <v-btn class="home-btn mr-2" flat>
-              <v-icon class="home-icon">mdi-home</v-icon>
-              <span class="home-text"> <span class="home-color">HOME</span></span>
-            </v-btn>
-
-            <RouterLink to="/book-event" class="router-link">
-              <v-btn class="mr-2 outlined-btn" outlined>
-                <v-icon class="event-icon">mdi-calendar</v-icon>
+            <RouterLink to="/home" class="router-link">
+              <v-btn class="outlined-btn mr-2" outlined>
+                <v-icon class="home-icon">mdi-home</v-icon>
                 <span
                   class="hover-underline-animation"
                   :class="smAndDown ? 'small-header' : 'large-header'"
-                  >BOOK EVENT</span
+                >
+                  <span class="home-text">HOME</span></span
                 >
               </v-btn>
             </RouterLink>
 
-            <v-btn class="mr-2 outlined-btn pl-1" outlined>
-              <v-icon class="event-icon">mdi-logout</v-icon>
-              <span
-                class="hover-underline-animation"
-                :class="smAndDown ? 'small-header' : 'large-header'"
-                >LOG OUT
-              </span>
+            <v-btn class="home-btn mr-2" flat>
+              <v-icon class="event-icon">mdi-calendar</v-icon>
+              <span class="home-color">BOOK EVENT</span>
             </v-btn>
           </div>
           <v-spacer></v-spacer>
@@ -97,30 +89,22 @@ const { smAndDown } = useDisplay()
         <v-list>
           <!-- HOME -->
           <v-list-item @click="drawer = false">
-            <v-btn flat>
-              <v-icon class="me-2">mdi-home</v-icon>
-              HOME
-            </v-btn>
-          </v-list-item>
-          <v-divider></v-divider>
-          <!-- BOOK EVENT -->
-          <v-list-item @click="drawer = false">
-            <RouterLink to="/book-event" class="router-link" style="width: 100%">
+            <RouterLink to="/home" class="router-link" style="width: 100%">
               <v-btn flat>
-                <v-icon class="me-2">mdi-calendar</v-icon>
-                BOOK EVENT
+                <v-icon class="me-2">mdi-home</v-icon>
+                HOME
               </v-btn>
             </RouterLink>
           </v-list-item>
-          <v-divider></v-divider>
-          <!-- LOG OUT -->
+
+          <!-- BOOK EVENT -->
           <v-list-item @click="drawer = false">
             <v-btn flat>
-              <v-icon class="me-2">mdi-logout</v-icon>
-              LOG OUT
+              <v-icon class="me-2">mdi-calendar</v-icon>
+              BOOK EVENT
             </v-btn>
           </v-list-item>
-          <v-divider></v-divider>
+
           <!-- THEME SWITCH -->
           <v-list-item>
             <v-btn
@@ -209,7 +193,7 @@ const { smAndDown } = useDisplay()
   align-items: center;
   gap: 20px;
   pointer-events: none;
-  padding-bottom: 2px;
+  padding-bottom: 1px;
   letter-spacing: 2px;
   font-weight: 600;
 }
@@ -224,15 +208,13 @@ const { smAndDown } = useDisplay()
   font-size: 22px;
   margin-right: 5px;
   color: black;
-  padding-bottom: 5px;
+  padding-bottom: 6px;
 }
-
 .event-icon {
-  font-size: 20px;
+  font-size: 22px;
   vertical-align: middle;
   margin-right: 5px;
   color: black;
-  padding-bottom: 5px;
 }
 
 .home-color {
@@ -269,7 +251,7 @@ const { smAndDown } = useDisplay()
 }
 
 .small-header {
-  font-size: 15px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.5px;
 }

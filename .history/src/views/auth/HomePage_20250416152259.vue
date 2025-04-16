@@ -2,9 +2,7 @@
 import NavBar from '@/components/layout/NavBar.vue'
 import { ref } from 'vue'
 
-const show1 = ref(false)
-const show2 = ref(false)
-const show3 = ref(false)
+const show = ref(false)
 </script>
 
 <template>
@@ -35,13 +33,13 @@ const show3 = ref(false)
                 <v-spacer></v-spacer>
 
                 <v-btn
-                  :icon="show1 ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-                  @click="show1 = !show1"
+                  :icon="show ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                  @click="show = !show"
                 ></v-btn>
               </v-card-actions>
 
               <v-expand-transition>
-                <div v-show="show1">
+                <div v-show="show">
                   <v-divider></v-divider>
 
                   <v-card-text class="text1">
@@ -131,13 +129,13 @@ const show3 = ref(false)
                 <v-spacer></v-spacer>
 
                 <v-btn
-                  :icon="show2 ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-                  @click="show2 = !show2"
+                  :icon="show ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                  @click="show = !show"
                 ></v-btn>
               </v-card-actions>
 
               <v-expand-transition>
-                <div v-show="show2">
+                <div v-show="show">
                   <v-divider></v-divider>
 
                   <v-card-text class="text1">
@@ -192,13 +190,13 @@ const show3 = ref(false)
                 <v-spacer></v-spacer>
 
                 <v-btn
-                  :icon="show3 ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-                  @click="show3 = !show3"
+                  :icon="show ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                  @click="show = !show"
                 ></v-btn>
               </v-card-actions>
 
               <v-expand-transition>
-                <div v-show="show3">
+                <div v-show="show">
                   <v-divider></v-divider>
 
                   <v-card-text class="text1">

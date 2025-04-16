@@ -102,7 +102,7 @@ const { smAndDown } = useDisplay()
               HOME
             </v-btn>
           </v-list-item>
-          <v-divider></v-divider>
+
           <!-- BOOK EVENT -->
           <v-list-item @click="drawer = false">
             <RouterLink to="/book-event" class="router-link" style="width: 100%">
@@ -111,16 +111,15 @@ const { smAndDown } = useDisplay()
                 BOOK EVENT
               </v-btn>
             </RouterLink>
+
+            <!-- LOG OUT -->
           </v-list-item>
-          <v-divider></v-divider>
-          <!-- LOG OUT -->
           <v-list-item @click="drawer = false">
             <v-btn flat>
               <v-icon class="me-2">mdi-logout</v-icon>
               LOG OUT
             </v-btn>
           </v-list-item>
-          <v-divider></v-divider>
           <!-- THEME SWITCH -->
           <v-list-item>
             <v-btn
