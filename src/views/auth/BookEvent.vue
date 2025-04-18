@@ -32,6 +32,7 @@ const items = [
   },
   {
     name: '✝️ Baptism Mass (Christening)',
+    route: '/baptism-mass',
   },
 ]
 
