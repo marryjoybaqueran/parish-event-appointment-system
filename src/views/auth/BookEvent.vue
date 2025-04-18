@@ -2,7 +2,9 @@
 import NavBar2 from '@/components/layout/NavBar2.vue'
 import { useDisplay } from 'vuetify'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const { mdAndDown } = useDisplay()
 const images = [
   '/wedding mass background image.jpg',
@@ -20,6 +22,7 @@ let intervalId = null
 const items = [
   {
     name: '💍 Special Wedding Mass',
+    route: '/wedding-mass-form',
   },
   {
     name: '⚰️ Funeral Mass',
@@ -36,6 +39,15 @@ function itemProps(item) {
   return {
     title: item.name,
     subtitle: item.department,
+  }
+}
+
+const selectedEvent = ref(null)
+
+function handleEventSelect(selectedName) {
+  const selected = items.find((item) => item.name === selectedName)
+  if (selected?.route) {
+    router.push(selected.route)
   }
 }
 
@@ -83,14 +95,18 @@ onBeforeUnmount(() => {
             <v-card elevation="10" class="pa-7 text-center">
               <v-card-text>
                 <h2 class="text-center welcome pb-5">Welcome!</h2>
+
                 <v-select
                   v-model="selectedEvent"
                   :items="items"
                   :item-props="itemProps"
+                  item-title="name"
+                  item-value="name"
                   v-blind:width="mdAndDown ? '80%' : '100%'"
                   placeholder="Choose events you want to book"
                   outlined
                   dense
+                  @update:modelValue="handleEventSelect"
                 />
               </v-card-text>
             </v-card>
