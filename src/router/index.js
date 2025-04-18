@@ -3,6 +3,7 @@ import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue'
 import HomePage from '@/views/auth/HomePage.vue'
 import BookEvent from '@/views/auth/BookEvent.vue'
+import WeddingMassForm from '@/views/auth/WeddingMassForm.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +27,11 @@ const router = createRouter({
       path: '/book-event',
       name: 'book-event',
       component: BookEvent,
+    },
+    {
+      path: '/wedding-mass-form',
+      name: 'wedding-mass-form',
+      component: WeddingMassForm,
     },
   ],
 })
