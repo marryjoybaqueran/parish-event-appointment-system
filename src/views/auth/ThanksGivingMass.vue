@@ -1,6 +1,6 @@
 <script setup>
 import NavBar2 from '@/components/layout/NavBar2.vue'
-import FuneralForm from '@/components/auth/FuneralForm.vue'
+import ThanksGivingForm from '@/components/auth/ThanksGivingForm.vue'
 
 import { useDisplay } from 'vuetify'
 const { smAndDown } = useDisplay()
@@ -11,17 +11,17 @@ const { smAndDown } = useDisplay()
     <template #content>
       <v-container fluid>
         <div class="bg-wrapper">
-          <v-img src="funeral mass background image.jpg" class="bg-image" cover></v-img>
+          <v-img src="thanksgiving mass background image.png" class="bg-image" cover></v-img>
         </div>
 
         <div class="overlay-content pa-10">
           <h1 :class="smAndDown ? 'small-header' : 'large-header'">
-            <i>Funeral Mass</i>
+            <i>Thanks Giving Mass</i>
           </h1>
         </div>
 
         <v-card class="mt-15" :width="smAndDown ? '100%' : '100%'">
-          <FuneralForm></FuneralForm>
+          <ThanksGivingForm></ThanksGivingForm>
         </v-card>
       </v-container>
     </template>

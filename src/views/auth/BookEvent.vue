@@ -30,6 +30,7 @@ const items = [
   },
   {
     name: '🎁 Thanksgiving Mass',
+    route: '/thanks-giving-mass',
   },
   {
     name: '✝️ Baptism Mass (Christening)',
