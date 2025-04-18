@@ -4,12 +4,7 @@ import { ref } from 'vue'
 const { mdAndDown } = useDisplay()
 
 const showRequirements = ref(false)
-const requirements = ref([
-  'Child’s Birth Certificate',
-  'Sacrament Certificates ',
-  'Godparent Eligibility Certificate',
-  'Pre-Baptism Class Certificate',
-])
+const requirements = ref(['Birth Certificate', 'Death Certificates '])
 const isHovering = ref(false)
 // Validation
 const valid = ref(false)
@@ -21,18 +16,15 @@ const timeRules = [(v) => !!v || 'Time is required']
 const Bfirstname = ref('')
 const Blastname = ref('')
 const BMI = ref('')
-const Bplaceofbirth = ref('')
-const Bdateofbirth = ref('')
+const dateofbirth = ref('')
+const dateofdeath = ref('')
+const age = ref('')
 
 const Mfirstname = ref('')
 const Mlastname = ref('')
 const MMI = ref('')
-const Ffirstname = ref('')
-const Flastname = ref('')
-const FMI = ref('')
-
-const S1firstname = ref('')
-const S2lastname = ref('')
+const relationship = ref('')
+const phonenum = ref('')
 
 // Wedding date/time
 const date = ref('')
@@ -42,7 +34,7 @@ const time = ref('')
 <template>
   <v-form v-model="valid" ref="form">
     <v-container>
-      <h2 class="info mt-7">Name of Baptised</h2>
+      <h2 class="info mt-7">Name of Deceased</h2>
 
       <!--First Row-->
       <v-row>
@@ -70,28 +62,67 @@ const time = ref('')
       </v-row>
       <!--Second Row-->
       <v-row>
-        <v-col cols="6">
+        <v-col cols="5">
           <v-text-field
-            v-model="Bplaceofbirth"
+            v-model="dateofbirth"
             :rules="nameRules"
-            label="Place of Birth "
+            label="Date of Birth "
+            type="date"
             required
           ></v-text-field>
         </v-col>
 
-        <v-col cols="6">
+        <v-col cols="5">
           <v-text-field
-            v-model="Bdateofbirth"
+            v-model="dateofdeath"
             :rules="dateRules"
             type="date"
-            label="Date of Birth"
+            label="Date of Death"
+            required
+          ></v-text-field>
+        </v-col>
+
+        <v-col cols="2">
+          <v-text-field
+            v-model="age"
+            :rules="dateRules"
+            type="number"
+            label="Age"
             required
           ></v-text-field>
         </v-col>
       </v-row>
 
       <!--3rd Row-->
-      <h2 class="info mt-7">Name of Mother</h2>
+      <v-row>
+        <v-col cols="6">
+          <v-text-field
+            v-model="date"
+            :rules="dateRules"
+            type="date"
+            label="Select funeral date  "
+            required
+          ></v-text-field>
+        </v-col>
+
+        <v-col cols="6">
+          <v-text-field
+            v-model="time"
+            :items="items"
+            :item-props="itemProps"
+            type="time"
+            :rules="timeRules"
+            label="Select funeral time"
+            outlined
+            dense
+          >
+          </v-text-field>
+        </v-col>
+      </v-row>
+
+      <!--4th Row-->
+
+      <h2 class="info mt-7">Contact Person</h2>
       <v-row>
         <v-col cols="5">
           <v-text-field
@@ -115,107 +146,33 @@ const time = ref('')
           <v-text-field v-model="MMI" :rules="emailRules" label="M.I." required></v-text-field>
         </v-col>
       </v-row>
-      <!--4th Row-->
-      <h2 class="info mt-7">Name of Father</h2>
-      <v-row>
-        <v-col cols="5">
-          <v-text-field
-            v-model="Ffirstname"
-            :rules="nameRules"
-            label="First name"
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="5">
-          <v-text-field
-            v-model="Flastname"
-            :rules="nameRules"
-            label="Last name"
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="2">
-          <v-text-field v-model="FMI" :rules="emailRules" label="M.I." required></v-text-field>
-        </v-col>
-      </v-row>
       <!--5th Row-->
-      <h2 class="info mt-7">Sponsored</h2>
-      <v-row>
-        <v-col cols="4">
-          <v-text-field
-            v-model="S1firstname"
-            :rules="nameRules"
-            label="First name"
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="4">
-          <v-text-field
-            v-model="S2lastname"
-            :rules="nameRules"
-            label="Last name"
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="4">
-          <v-text-field v-model="BMI" :rules="emailRules" label="M.I." required></v-text-field>
-        </v-col>
-      </v-row>
-      <!--6th Row-->
-      <v-row>
-        <v-col cols="4">
-          <v-text-field
-            v-model="Bfirstname"
-            :rules="nameRules"
-            label="First name"
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="4">
-          <v-text-field
-            v-model="Blastname"
-            :rules="nameRules"
-            label="Last name"
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="4">
-          <v-text-field v-model="BMI" :rules="emailRules" label="M.I." required></v-text-field>
-        </v-col>
-      </v-row>
-      <!--Last Row-->
 
       <v-row>
-        <v-col cols="6">
+        <v-col cols="4">
           <v-text-field
-            v-model="date"
-            :rules="dateRules"
-            type="date"
-            label="Select date  "
+            v-model="relationship"
+            :rules="nameRules"
+            label="Relationship"
             required
           ></v-text-field>
         </v-col>
 
-        <v-col cols="6">
+        <v-col cols="4">
+          <v-text-field v-model="email" :rules="emailRules" label="Email" required></v-text-field>
+        </v-col>
+
+        <v-col cols="4">
           <v-text-field
-            v-model="time"
-            :items="items"
-            :item-props="itemProps"
-            type="time"
-            :rules="timeRules"
-            label="Select time"
-            outlined
-            dense
-          >
-          </v-text-field>
+            v-model="phonenum"
+            :rules="emailRules"
+            label="Phone Number"
+            inputmode="+63"
+            required
+          ></v-text-field>
         </v-col>
       </v-row>
+
       <v-btn @click="showRequirements = true" flat class="no-uppercase text-blue-darken-2">
         <u> Click to view the following requirements</u>
       </v-btn>

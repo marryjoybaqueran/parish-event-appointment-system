@@ -26,6 +26,7 @@ const items = [
   },
   {
     name: '⚰️ Funeral Mass',
+    route: '/funeral-mass',
   },
   {
     name: '🎁 Thanksgiving Mass',
