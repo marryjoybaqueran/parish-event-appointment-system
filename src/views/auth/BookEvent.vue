@@ -26,12 +26,15 @@ const items = [
   },
   {
     name: '⚰️ Funeral Mass',
+    route: '/funeral-mass',
   },
   {
     name: '🎁 Thanksgiving Mass',
+    route: '/thanks-giving-mass',
   },
   {
     name: '✝️ Baptism Mass (Christening)',
+    route: '/baptism-mass',
   },
 ]
 

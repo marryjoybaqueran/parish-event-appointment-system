@@ -494,7 +494,7 @@ const time = ref('')
 <style scoped>
 .green-hover {
   background-color: green !important;
-  transition: background-color 0.3s ease; /* Add smooth transition */
+  transition: background-color 0.3s ease;
 }
 
 .no-uppercase {
@@ -503,5 +503,6 @@ const time = ref('')
 
 .info {
   padding-bottom: 20px;
+  font-family: 'RocknRoll One';
 }
 </style>
