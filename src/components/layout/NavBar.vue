@@ -18,15 +18,13 @@ const isDark = computed({
 })
 
 const isLoggedIn = ref(false)
-
 const drawer = ref(false)
 
 function onClick() {
   localStorage.setItem('theme', theme.value)
 }
 import { useDisplay } from 'vuetify'
-const { mobile } = useDisplay()
-const { smAndDown } = useDisplay()
+const { mobile, smAndDown } = useDisplay()
 
 // Load Functions during component rendering
 onMounted(async () => {
@@ -72,18 +70,8 @@ onMounted(async () => {
                 >
               </v-btn>
             </RouterLink>
-
-            <v-btn class="mr-2 outlined-btn pl-1" outlined>
-              <v-icon class="event-icon">mdi-logout</v-icon>
-              <span
-                class="hover-underline-animation"
-                :class="smAndDown ? 'small-header' : 'large-header'"
-                >LOG OUT
-              </span>
-            </v-btn>
           </div>
           <v-spacer></v-spacer>
-          <ProfileHeader v-if="isLoggedIn"></ProfileHeader>
 
           <v-switch
             v-model="isDark"
@@ -99,6 +87,8 @@ onMounted(async () => {
               </v-icon>
             </template>
           </v-switch>
+
+          <ProfileHeader v-if="isLoggedIn" :onLogout="onLogout"></ProfileHeader>
         </div>
 
         <!-- Mobile Nav (Hamburger) -->
@@ -113,6 +103,7 @@ onMounted(async () => {
       <v-navigation-drawer v-model="drawer" temporary location="right">
         <v-list>
           <!-- HOME -->
+          <ProfileHeader v-if="isLoggedIn"></ProfileHeader>
           <v-list-item @click="drawer = false">
             <v-btn flat>
               <v-icon class="me-2">mdi-home</v-icon>
@@ -130,13 +121,7 @@ onMounted(async () => {
             </RouterLink>
           </v-list-item>
           <v-divider></v-divider>
-          <!-- LOG OUT -->
-          <v-list-item @click="drawer = false">
-            <v-btn flat>
-              <v-icon class="me-2">mdi-logout</v-icon>
-              LOG OUT
-            </v-btn>
-          </v-list-item>
+
           <v-divider></v-divider>
           <!-- THEME SWITCH -->
           <v-list-item>
@@ -155,9 +140,15 @@ onMounted(async () => {
               </span>
             </v-btn>
           </v-list-item>
+          <divider></divider>
+          <!-- LOG OUT
+          <v-list-item>
+            <v-btn flat prepend-icon="mdi-logout" @click="onLogout"> Log Out</v-btn>
+          </v-list-item> -->
         </v-list>
       </v-navigation-drawer>
       <!-- MAIN CONTENT -->
+
       <v-main>
         <v-container>
           <slot name="content"></slot>

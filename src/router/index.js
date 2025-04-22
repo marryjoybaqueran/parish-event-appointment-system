@@ -8,6 +8,7 @@ import WeddingMassForm from '@/views/auth/WeddingMassForm.vue'
 import BaptismMass from '@/views/auth/BaptismMass.vue'
 import FuneralMass from '@/views/auth/FuneralMass.vue'
 import ThanksGivingMass from '@/views/auth/ThanksGivingMass.vue'
+import TrialHeader from '@/views/TrialHeader.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -51,6 +52,12 @@ const router = createRouter({
       path: '/thanks-giving-mass',
       name: 'thanks-giving-mass',
       component: ThanksGivingMass,
+    },
+
+    {
+      path: '/trial-header',
+      name: 'trial-header',
+      component: TrialHeader,
     },
   ],
 })
