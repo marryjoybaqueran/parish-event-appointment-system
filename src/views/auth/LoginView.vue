@@ -2,7 +2,9 @@
 import LoginForm from '@/components/auth/LoginForm.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useDisplay } from 'vuetify'
+import { ref } from 'vue'
 
+// Utilize pre-defined vue functions
 const { mobile } = useDisplay()
 </script>
 

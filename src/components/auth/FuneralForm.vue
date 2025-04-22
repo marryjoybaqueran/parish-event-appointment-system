@@ -38,7 +38,7 @@ const time = ref('')
 
       <!--First Row-->
       <v-row>
-        <v-col cols="5">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="Bfirstname"
             :rules="nameRules"
@@ -47,7 +47,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="5">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="Blastname"
             :rules="nameRules"
@@ -56,13 +56,13 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="2">
+        <v-col cols="12" md="4">
           <v-text-field v-model="BMI" :rules="emailRules" label="M.I." required></v-text-field>
         </v-col>
       </v-row>
       <!--Second Row-->
       <v-row>
-        <v-col cols="5">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="dateofbirth"
             :rules="nameRules"
@@ -72,7 +72,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="5">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="dateofdeath"
             :rules="dateRules"
@@ -82,7 +82,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="2">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="age"
             :rules="dateRules"
@@ -95,7 +95,7 @@ const time = ref('')
 
       <!--3rd Row-->
       <v-row>
-        <v-col cols="6">
+        <v-col cols="12" md="6">
           <v-text-field
             v-model="date"
             :rules="dateRules"
@@ -105,7 +105,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="6">
+        <v-col cols="12" md="6">
           <v-text-field
             v-model="time"
             :items="items"
@@ -124,7 +124,7 @@ const time = ref('')
 
       <h2 class="info mt-7">Contact Person</h2>
       <v-row>
-        <v-col cols="5">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="Mfirstname"
             :rules="nameRules"
@@ -133,7 +133,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="5">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="Mlastname"
             :rules="nameRules"
@@ -142,14 +142,14 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="2">
+        <v-col cols="12" md="4">
           <v-text-field v-model="MMI" :rules="emailRules" label="M.I." required></v-text-field>
         </v-col>
       </v-row>
       <!--5th Row-->
 
       <v-row>
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="relationship"
             :rules="nameRules"
@@ -158,11 +158,11 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field v-model="email" :rules="emailRules" label="Email" required></v-text-field>
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="phonenum"
             :rules="emailRules"

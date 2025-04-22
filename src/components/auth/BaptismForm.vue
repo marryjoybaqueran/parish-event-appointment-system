@@ -46,7 +46,7 @@ const time = ref('')
 
       <!--First Row-->
       <v-row>
-        <v-col cols="5">
+        <v-col cols="12" md="5">
           <v-text-field
             v-model="Bfirstname"
             :rules="nameRules"
@@ -55,7 +55,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="5">
+        <v-col cols="12" md="5">
           <v-text-field
             v-model="Blastname"
             :rules="nameRules"
@@ -64,13 +64,13 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="2">
+        <v-col cols="12" md="2">
           <v-text-field v-model="BMI" :rules="emailRules" label="M.I." required></v-text-field>
         </v-col>
       </v-row>
       <!--Second Row-->
       <v-row>
-        <v-col cols="6">
+        <v-col cols="12" md="6">
           <v-text-field
             v-model="Bplaceofbirth"
             :rules="nameRules"
@@ -79,7 +79,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="6">
+        <v-col cols="12" md="6">
           <v-text-field
             v-model="Bdateofbirth"
             :rules="dateRules"
@@ -93,7 +93,7 @@ const time = ref('')
       <!--3rd Row-->
       <h2 class="info mt-7">Name of Mother</h2>
       <v-row>
-        <v-col cols="5">
+        <v-col cols="12" md="5">
           <v-text-field
             v-model="Mfirstname"
             :rules="nameRules"
@@ -102,7 +102,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="5">
+        <v-col cols="12" md="5">
           <v-text-field
             v-model="Mlastname"
             :rules="nameRules"
@@ -111,14 +111,14 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="2">
+        <v-col cols="12" md="2">
           <v-text-field v-model="MMI" :rules="emailRules" label="M.I." required></v-text-field>
         </v-col>
       </v-row>
       <!--4th Row-->
       <h2 class="info mt-7">Name of Father</h2>
       <v-row>
-        <v-col cols="5">
+        <v-col cols="12" md="5">
           <v-text-field
             v-model="Ffirstname"
             :rules="nameRules"
@@ -127,7 +127,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="5">
+        <v-col cols="12" md="5">
           <v-text-field
             v-model="Flastname"
             :rules="nameRules"
@@ -136,14 +136,14 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="2">
+        <v-col cols="12" md="2">
           <v-text-field v-model="FMI" :rules="emailRules" label="M.I." required></v-text-field>
         </v-col>
       </v-row>
       <!--5th Row-->
-      <h2 class="info mt-7">Sponsored</h2>
+      <h2 class="info mt-7">Sponsored by:</h2>
       <v-row>
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="S1firstname"
             :rules="nameRules"
@@ -152,7 +152,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="S2lastname"
             :rules="nameRules"
@@ -161,13 +161,13 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field v-model="BMI" :rules="emailRules" label="M.I." required></v-text-field>
         </v-col>
       </v-row>
       <!--6th Row-->
       <v-row>
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="Bfirstname"
             :rules="nameRules"
@@ -176,7 +176,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="Blastname"
             :rules="nameRules"
@@ -185,14 +185,14 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="12" md="3">
           <v-text-field v-model="BMI" :rules="emailRules" label="M.I." required></v-text-field>
         </v-col>
       </v-row>
       <!--Last Row-->
 
       <v-row>
-        <v-col cols="6">
+        <v-col cols="12" md="6">
           <v-text-field
             v-model="date"
             :rules="dateRules"
@@ -202,7 +202,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="6">
+        <v-col cols="12" md="6">
           <v-text-field
             v-model="time"
             :items="items"

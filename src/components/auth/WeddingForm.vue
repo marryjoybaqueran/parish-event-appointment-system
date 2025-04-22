@@ -66,7 +66,7 @@ const time = ref('')
 
       <!--First Row-->
       <v-row>
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="Bfirstname"
             :rules="nameRules"
@@ -75,7 +75,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="Blastname"
             :rules="nameRules"
@@ -84,7 +84,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="BMI"
             :rules="emailRules"
@@ -95,7 +95,7 @@ const time = ref('')
       </v-row>
       <!--Second Row-->
       <v-row>
-        <v-col cols="5">
+        <v-col cols="12" md="5">
           <v-text-field
             v-model="Bplaceofbirth"
             :rules="nameRules"
@@ -104,7 +104,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="5">
+        <v-col cols="12" md="5">
           <v-text-field
             v-model="Bdateofbirth"
             :rules="dateRules"
@@ -114,7 +114,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="2">
+        <v-col cols="12" md="2">
           <v-text-field
             v-model="Bage"
             :rules="emailRules"
@@ -127,19 +127,198 @@ const time = ref('')
 
       <!--3rd Row-->
       <v-row>
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="Bcitizenship"
             :rules="nameRules"
-            v-blind:width="mdAndDown ? '80%' : '100%'"
+            v-blind:width="mdAndDown ? '80%' : '300%'"
             label="Citizenship"
             outlined
             dense
           ></v-text-field>
         </v-col>
-        <v-col cols="4">
+        <v-col cols="12" md="4">
           <v-select
             v-model="Breligion"
+            :items="[
+              'Roman Catholic',
+              'Iglesia Ni Cristo (INC)',
+              'Muslim',
+              'Aglipayan',
+              'Buddhism',
+              'Seventh Day Adventist',
+              'Born Again',
+            ]"
+            :rules="nameRules"
+            v-blind:width="mdAndDown ? '80%' : '300%'"
+            label="Religion"
+            outlined
+            dense
+          />
+        </v-col>
+
+        <v-col cols="12" md="2">
+          <v-select
+            v-model="Bcivilstatus"
+            :items="['Single', 'Married']"
+            v-blind:width="mdAndDown ? '80%' : '300%'"
+            label="Civil Status"
+            :rules="nameRules"
+            outlined
+            dense
+          ></v-select>
+        </v-col>
+
+        <v-col cols="12" md="2">
+          <v-select
+            v-model="Bsex"
+            :items="['Male', 'Female']"
+            v-blind:width="mdAndDown ? '80%' : '300%'"
+            label="Sex"
+            :rules="nameRules"
+            outlined
+            dense
+          />
+        </v-col>
+      </v-row>
+
+      <!--4th Row-->
+      <v-row>
+        <v-col cols="12" md="12">
+          <v-text-field
+            v-model="Bresidence"
+            :rules="nameRules"
+            label="Residence "
+            required
+          ></v-text-field>
+        </v-col>
+      </v-row>
+      <!--5th Row-->
+      <v-row>
+        <v-col cols="12" md="9">
+          <v-text-field
+            v-model="Bmother"
+            :rules="nameRules"
+            label="Mother's Name "
+            required
+          ></v-text-field>
+        </v-col>
+
+        <v-col cols="12" md="3">
+          <v-text-field
+            v-model="BMcitizenship"
+            v-blind:width="mdAndDown ? '80%' : '300%'"
+            label="Citizenship"
+            dense
+            :rules="nameRules"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+
+      <!--6th Row-->
+      <v-row>
+        <v-col cols="12" md="9">
+          <v-text-field
+            v-model="Bfather"
+            :rules="nameRules"
+            label="Fathers's Name "
+            required
+          ></v-text-field>
+        </v-col>
+
+        <v-col cols="12" md="3">
+          <v-text-field
+            v-model="BFcitizenship"
+            label="Citizenship"
+            outlined
+            dense
+            :rules="nameRules"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+      <!--Groom info-->
+      <v-divider thickness="3" class="mt-7">
+        <h2 class="info mt-7">Groom Information</h2></v-divider
+      >
+
+      <!--First Row-->
+      <v-row>
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="Gfirstname"
+            :rules="nameRules"
+            label="First name"
+            required
+          ></v-text-field>
+        </v-col>
+
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="Glastname"
+            :rules="nameRules"
+            label="Last name"
+            required
+          ></v-text-field>
+        </v-col>
+
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="GMI"
+            :rules="emailRules"
+            label="Middle Name"
+            required
+          ></v-text-field>
+        </v-col>
+      </v-row>
+      <!--Second Row-->
+      <v-row>
+        <v-col cols="12" md="5">
+          <v-text-field
+            v-model="Gplaceofbirth"
+            :rules="nameRules"
+            label="Place of Birth "
+            required
+          ></v-text-field>
+        </v-col>
+
+        <v-col cols="12" md="5">
+          <v-text-field
+            v-model="Gdateofbirth"
+            :rules="nameRules"
+            type="date"
+            label="Date of Birth"
+            required
+          ></v-text-field>
+        </v-col>
+
+        <v-col cols="12" md="2">
+          <v-text-field
+            v-model="Gage"
+            :rules="emailRules"
+            type="number"
+            label="Age"
+            required
+          ></v-text-field>
+        </v-col>
+      </v-row>
+
+      <!--3rd Row-->
+      <v-row>
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="Gcitizenship"
+            :items="items"
+            :item-props="itemProps"
+            v-blind:width="mdAndDown ? '80%' : '100%'"
+            label="Citizenship"
+            outlined
+            :rules="nameRules"
+            dense
+          ></v-text-field>
+        </v-col>
+        <v-col cols="12" md="4">
+          <v-select
+            v-model="Greligion"
             :items="[
               'Roman Catholic',
               'Iglesia Ni Cristo (INC)',
@@ -157,186 +336,7 @@ const time = ref('')
           />
         </v-col>
 
-        <v-col cols="2">
-          <v-select
-            v-model="Bcivilstatus"
-            :items="['Single', 'Married']"
-            v-blind:width="mdAndDown ? '80%' : '100%'"
-            label="Civil Status"
-            :rules="nameRules"
-            outlined
-            dense
-          ></v-select>
-        </v-col>
-
-        <v-col cols="2">
-          <v-select
-            v-model="Bsex"
-            :items="['Male', 'Female']"
-            v-blind:width="mdAndDown ? '80%' : '100%'"
-            label="Sex"
-            :rules="nameRules"
-            outlined
-            dense
-          />
-        </v-col>
-      </v-row>
-
-      <!--4th Row-->
-      <v-row>
-        <v-col>
-          <v-text-field
-            v-model="Bresidence"
-            :rules="nameRules"
-            label="Residence "
-            required
-          ></v-text-field>
-        </v-col>
-      </v-row>
-      <!--5th Row-->
-      <v-row>
-        <v-col cols="8">
-          <v-text-field
-            v-model="Bmother"
-            :rules="nameRules"
-            label="Mother's Name "
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="4">
-          <v-text-field
-            v-model="BMcitizenship"
-            v-blind:width="mdAndDown ? '80%' : '100%'"
-            label="Citizenship"
-            dense
-            :rules="nameRules"
-          ></v-text-field>
-        </v-col>
-      </v-row>
-
-      <!--6th Row-->
-      <v-row>
-        <v-col cols="8">
-          <v-text-field
-            v-model="Bfather"
-            :rules="nameRules"
-            label="Fathers's Name "
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="4">
-          <v-text-field
-            v-model="BFcitizenship"
-            label="Citizenship"
-            outlined
-            dense
-            :rules="nameRules"
-          ></v-text-field>
-        </v-col>
-      </v-row>
-      <!--Groom info-->
-      <v-divider thickness="3" class="mt-7">
-        <h2 class="info mt-7">Groom Information</h2></v-divider
-      >
-
-      <!--First Row-->
-      <v-row>
-        <v-col cols="4">
-          <v-text-field
-            v-model="Gfirstname"
-            :rules="nameRules"
-            label="First name"
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="4">
-          <v-text-field
-            v-model="Glastname"
-            :rules="nameRules"
-            label="Last name"
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="4">
-          <v-text-field
-            v-model="GMI"
-            :rules="emailRules"
-            label="Middle Name"
-            required
-          ></v-text-field>
-        </v-col>
-      </v-row>
-      <!--Second Row-->
-      <v-row>
-        <v-col cols="5">
-          <v-text-field
-            v-model="Gplaceofbirth"
-            :rules="nameRules"
-            label="Place of Birth "
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="5">
-          <v-text-field
-            v-model="Gdateofbirth"
-            :rules="nameRules"
-            type="date"
-            label="Date of Birth"
-            required
-          ></v-text-field>
-        </v-col>
-
-        <v-col cols="2">
-          <v-text-field
-            v-model="Gage"
-            :rules="emailRules"
-            type="number"
-            label="Age"
-            required
-          ></v-text-field>
-        </v-col>
-      </v-row>
-
-      <!--3rd Row-->
-      <v-row>
-        <v-col cols="4">
-          <v-text-field
-            v-model="Gcitizenship"
-            :items="items"
-            :item-props="itemProps"
-            v-blind:width="mdAndDown ? '80%' : '100%'"
-            label="Citizenship"
-            outlined
-            :rules="nameRules"
-            dense
-          ></v-text-field>
-        </v-col>
-        <v-col cols="4">
-          <v-select
-            v-model="Greligion"
-            :items="[
-              'Roman Catholic',
-              'Iglesia Ni Cristo (INC)',
-              'Muslim',
-              'Aglipayan',
-              'Buddhism',
-              'Seventh Day Adventist',
-              'Born Again',
-            ]"
-            :rules="nameRules"
-            v-blind:width="mdAndDown ? '80%' : '100%'"
-            placeholder="Religion"
-            outlined
-            dense
-          />
-        </v-col>
-
-        <v-col cols="2">
+        <v-col cols="12" md="2">
           <v-select
             v-model="Gcivilstatus"
             :items="['Single', 'Married']"
@@ -347,7 +347,7 @@ const time = ref('')
           />
         </v-col>
 
-        <v-col cols="2">
+        <v-col cols="12" md="2">
           <v-select
             v-model="Gsex"
             :items="['Male', 'Female']"
@@ -362,7 +362,7 @@ const time = ref('')
 
       <!--4th Row-->
       <v-row>
-        <v-col>
+        <v-col cols="12" md="12">
           <v-text-field
             v-model="Gresidence"
             :rules="nameRules"
@@ -373,7 +373,7 @@ const time = ref('')
       </v-row>
       <!--5th Row-->
       <v-row>
-        <v-col cols="8">
+        <v-col cols="12" md="9">
           <v-text-field
             v-model="Gmother"
             :rules="nameRules"
@@ -382,7 +382,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="12" md="3">
           <v-text-field
             v-model="GMcitizenship"
             :items="items"
@@ -397,7 +397,7 @@ const time = ref('')
 
       <!--6th Row-->
       <v-row>
-        <v-col cols="8">
+        <v-col cols="12" md="9">
           <v-text-field
             v-model="Gfather"
             :rules="nameRules"
@@ -406,7 +406,7 @@ const time = ref('')
           ></v-text-field>
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="12" md="3">
           <v-text-field
             v-model="GFcitizenship"
             :items="items"

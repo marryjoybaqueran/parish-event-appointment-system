@@ -11,6 +11,8 @@ const show3 = ref(false)
   <NavBar>
     <template #content>
       <v-container fluid>
+        <div class="bg-color"></div>
+
         <v-row>
           <v-col><h3 class="uppercase-text">Announcement Dashboard</h3> </v-col></v-row
         >
@@ -105,7 +107,7 @@ const show3 = ref(false)
                     <br />
                     <hr />
                     <br />
-                    Let’s spend this Holy Week together in prayer and reflection. Everyone is
+                    Let's spend this Holy Week together in prayer and reflection. Everyone is
                     welcome to attend!!
                   </v-card-text>
                 </div>
@@ -278,6 +280,17 @@ const show3 = ref(false)
 </template>
 
 <style scoped>
+.bg-color {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+  background-color: #bddde4;
+}
+
 .card-shadow {
   box-shadow:
     -4px 0px 12px rgba(0, 0, 0, 0.1),

@@ -1,4 +1,11 @@
 <script setup>
+import { useAuthUserStore } from '@/stores/authUser'
+import ProfileHeader from '@/components/layout/ProfileHeader.vue'
+import { onMounted } from 'vue'
+
+// Use Pinia Store
+const authStore = useAuthUserStore()
+
 import { ref, computed } from 'vue'
 const theme = ref(localStorage.getItem('theme') ?? 'light')
 
@@ -10,6 +17,8 @@ const isDark = computed({
   },
 })
 
+const isLoggedIn = ref(false)
+
 const drawer = ref(false)
 
 function onClick() {
@@ -18,6 +27,13 @@ function onClick() {
 import { useDisplay } from 'vuetify'
 const { mobile } = useDisplay()
 const { smAndDown } = useDisplay()
+
+// Load Functions during component rendering
+onMounted(async () => {
+  isLoggedIn.value = await authStore.isAuthenticated()
+  isMobileLogged.value = mobile.value && isLoggedIn.value
+  isDesktop.value = !mobile.value && (isLoggedIn.value || !isLoggedIn.value)
+})
 </script>
 
 <template>
@@ -67,6 +83,7 @@ const { smAndDown } = useDisplay()
             </v-btn>
           </div>
           <v-spacer></v-spacer>
+          <ProfileHeader v-if="isLoggedIn"></ProfileHeader>
 
           <v-switch
             v-model="isDark"
