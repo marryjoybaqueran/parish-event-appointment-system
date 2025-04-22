@@ -1,4 +1,11 @@
 <script setup>
+import { useAuthUserStore } from '@/stores/authUser'
+import ProfileHeader from '@/components/layout/ProfileHeader.vue'
+import { onMounted } from 'vue'
+
+// Use Pinia Store
+const authStore = useAuthUserStore()
+
 import { ref, computed } from 'vue'
 const theme = ref(localStorage.getItem('theme') ?? 'light')
 
@@ -10,14 +17,21 @@ const isDark = computed({
   },
 })
 
+const isLoggedIn = ref(false)
 const drawer = ref(false)
 
 function onClick() {
   localStorage.setItem('theme', theme.value)
 }
 import { useDisplay } from 'vuetify'
-const { mobile } = useDisplay()
-const { smAndDown } = useDisplay()
+const { mobile, smAndDown } = useDisplay()
+
+// Load Functions during component rendering
+onMounted(async () => {
+  isLoggedIn.value = await authStore.isAuthenticated()
+  isMobileLogged.value = mobile.value && isLoggedIn.value
+  isDesktop.value = !mobile.value && (isLoggedIn.value || !isLoggedIn.value)
+})
 </script>
 
 <template>
@@ -56,15 +70,6 @@ const { smAndDown } = useDisplay()
                 >
               </v-btn>
             </RouterLink>
-
-            <v-btn class="mr-2 outlined-btn pl-1" outlined>
-              <v-icon class="event-icon">mdi-logout</v-icon>
-              <span
-                class="hover-underline-animation"
-                :class="smAndDown ? 'small-header' : 'large-header'"
-                >LOG OUT
-              </span>
-            </v-btn>
           </div>
           <v-spacer></v-spacer>
 
@@ -82,6 +87,8 @@ const { smAndDown } = useDisplay()
               </v-icon>
             </template>
           </v-switch>
+
+          <ProfileHeader v-if="isLoggedIn" :onLogout="onLogout"></ProfileHeader>
         </div>
 
         <!-- Mobile Nav (Hamburger) -->
@@ -96,6 +103,7 @@ const { smAndDown } = useDisplay()
       <v-navigation-drawer v-model="drawer" temporary location="right">
         <v-list>
           <!-- HOME -->
+          <ProfileHeader v-if="isLoggedIn"></ProfileHeader>
           <v-list-item @click="drawer = false">
             <v-btn flat>
               <v-icon class="me-2">mdi-home</v-icon>
@@ -113,13 +121,7 @@ const { smAndDown } = useDisplay()
             </RouterLink>
           </v-list-item>
           <v-divider></v-divider>
-          <!-- LOG OUT -->
-          <v-list-item @click="drawer = false">
-            <v-btn flat>
-              <v-icon class="me-2">mdi-logout</v-icon>
-              LOG OUT
-            </v-btn>
-          </v-list-item>
+
           <v-divider></v-divider>
           <!-- THEME SWITCH -->
           <v-list-item>
@@ -138,9 +140,15 @@ const { smAndDown } = useDisplay()
               </span>
             </v-btn>
           </v-list-item>
+          <divider></divider>
+          <!-- LOG OUT
+          <v-list-item>
+            <v-btn flat prepend-icon="mdi-logout" @click="onLogout"> Log Out</v-btn>
+          </v-list-item> -->
         </v-list>
       </v-navigation-drawer>
       <!-- MAIN CONTENT -->
+
       <v-main>
         <v-container>
           <slot name="content"></slot>

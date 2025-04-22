@@ -1,9 +1,10 @@
 <script setup>
 import NavBar2 from '@/components/layout/NavBar2.vue'
 import WeddingForm from '@/components/auth/WeddingForm.vue'
-
 import { useDisplay } from 'vuetify'
 const { smAndDown } = useDisplay()
+
+// Utilize pre-defined vue functions
 </script>
 
 <template>
@@ -14,10 +15,20 @@ const { smAndDown } = useDisplay()
           <v-img src="wedding mass background image.jpg" class="bg-image" cover></v-img>
         </div>
 
-        <div class="overlay-content pa-10">
-          <h1 :class="smAndDown ? 'small-header' : 'large-header'">
-            <i>Special Wedding Mass Form</i>
-          </h1>
+        <div class="overlay-content pa-10" :class="smAndDown ? 'small-icon' : 'large-icon'">
+          <v-row>
+            <v-col cols="2" class="back">
+              <RouterLink to="/book-event" class="router-link">
+                <v-btn class="rounded-circle" color="indigo" icon>
+                  <v-icon>mdi-arrow-left</v-icon>
+                </v-btn>
+              </RouterLink> </v-col
+            ><v-col cols="10" class="title">
+              <h1 :class="smAndDown ? 'small-header' : 'large-header'">
+                <i>Special Wedding Mass</i>
+              </h1></v-col
+            ></v-row
+          >
         </div>
 
         <v-card class="mt-15" :width="smAndDown ? '100%' : '100%'">
@@ -48,11 +59,10 @@ const { smAndDown } = useDisplay()
 
 .overlay-content {
   position: absolute;
-  top: 50px; /* you can adjust this value */
+  top: 50px;
   left: 0;
   right: 0;
   z-index: 1;
-  text-align: center;
   color: white;
   padding-top: 20px;
 }
@@ -64,15 +74,25 @@ h1 {
     0 2px 2px white,
     2px 0 2px white,
     0 -2px 2px;
-  text-align: center;
   color: #000;
 }
 
 .large-header {
   font-size: 40px;
+  padding-left: 100px;
 }
 
 .small-header {
   font-size: 22px;
+  text-align: center;
+}
+
+.router-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.router-link:hover {
+  text-decoration: none;
 }
 </style>

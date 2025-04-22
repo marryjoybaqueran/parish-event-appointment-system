@@ -8,7 +8,7 @@ const router = useRouter()
 const { mdAndDown } = useDisplay()
 const images = [
   '/wedding mass background image.jpg',
-  '/thanksgiving mass background image.png',
+  'thanksgiving mass background image.png',
   '/funeral mass background image.jpg',
   '/baptism mass background image.jpg',
 ]
@@ -58,7 +58,6 @@ function nextImage() {
   if (currentIndex.value < images.length) {
     currentIndex.value++
   } else {
-    // Instantly reset without animation, then move to 1st image smoothly
     transitionSpeed.value = '0s'
     currentIndex.value = 0
     setTimeout(() => {
