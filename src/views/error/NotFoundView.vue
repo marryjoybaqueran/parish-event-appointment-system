@@ -22,6 +22,7 @@ onMounted(async () => {
 </script>
 
 <template>
+  <div class="bg-color"></div>
   <AppLayout
     :is-with-app-bar-nav-icon="isLoggedIn"
     @is-drawer-visible="isDrawerVisible = !isDrawerVisible"
@@ -34,7 +35,7 @@ onMounted(async () => {
       <v-container>
         <v-row>
           <v-col class="mx-auto mt-16 text-center" cols="12" lg="4">
-            <h1 class="text-h1 font-weight-black text-red-darken-4">404</h1>
+            <h1 class="text-h1 font-weight-black text-red-darken-4">404.</h1>
             <h2 class="text-h2 font-weight-black mb-2">Page Not Found</h2>
 
             <p class="text-subtitle-1 font-weight-bold mb-4">Page does not exist.</p>
@@ -48,3 +49,16 @@ onMounted(async () => {
     </template>
   </AppLayout>
 </template>
+
+<style scoped>
+.bg-color {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+  background-color: #bddde4;
+}
+</style>
