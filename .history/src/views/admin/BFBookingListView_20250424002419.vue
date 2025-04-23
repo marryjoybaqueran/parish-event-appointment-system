@@ -1,0 +1,152 @@
+<script setup>
+import { ref } from 'vue'
+import AdminHeader from '@/components/layout/AdminHeader.vue'
+
+// Mock data: You can expand this or match it to actual form data
+const desserts = ref([
+  {
+    BaptisedFirstName: 'Rapunzel',
+    BaptisedLastName: 'Ron',
+    BaptisedbrideMiddleName: 'M.',
+    BaptisedPlaceOfBirth: 'Bonbon',
+    BaptisedDateOfBirth: '2024-06-12',
+    BaptisedDateSelected: '8:45 AM',
+    BaptisedTimeSelected: 'Filipino',
+
+    MotherFirstName: 'Liam',
+    MotherLastName: 'Smith',
+    MotherMiddleName: 'J.',
+
+    FatherFirstName: 'Liam',
+    FatherLastName: 'Smith',
+    FatherMiddleName: 'J.',
+
+    Sponsor1FirstName: 'Liam',
+    Sponsor1LastName: 'Smith',
+    Sponsor1MiddleName: 'J.',
+
+    Sponsor2FirstName: 'Liam',
+    Sponsor2LastName: 'Smith',
+    Sponsor2MiddleName: 'J.',
+
+    Sponsor3FirstName: 'Liam',
+    Sponsor3LastName: 'Smith',
+    Sponsor3MiddleName: 'J.',
+  },
+])
+</script>
+
+<template>
+  <AdminHeader>
+    <template #content>
+      <v-container>
+        <v-row>
+          <v-col>
+            <v-table>
+              <thead>
+                <tr>
+                  <th colspan="15" class="text-left"><b>Name of Baptised</b></th>
+                  <th colspan="17">
+                    <b>Groom's Information</b>
+                  </th>
+                </tr>
+                <tr>
+                  <!-- Baptised Information -->
+                  <th class="text-left font-weight-bold">First Name</th>
+                  <th class="text-left font-weight-bold">Last Name</th>
+                  <th class="text-left font-weight-bold">Middle Initial</th>
+                  <th class="text-left font-weight-bold">Place of Birth</th>
+                  <th class="text-left font-weight-bold">Date of Birth</th>
+                  <th class="text-left font-weight-bold">Date Selected</th>
+                  <th class="text-left font-weight-bold">Time Selected</th>
+
+                  <!-- Mother's Name -->
+                  <th class="text-left font-weight-bold">First Name</th>
+                  <th class="text-left font-weight-bold">Last Name</th>
+                  <th class="text-left font-weight-bold">Middle Name</th>
+
+                  <!-- Father's Name -->
+                  <th class="text-left font-weight-bold">First Name</th>
+                  <th class="text-left font-weight-bold">Last Name</th>
+                  <th class="text-left font-weight-bold">Middle Name</th>
+
+                  <!-- Sponsored by: -->
+                  <th class="text-left font-weight-bold">First Name</th>
+                  <th class="text-left font-weight-bold">Last Name</th>
+                  <th class="text-left font-weight-bold">Middle Name</th>
+
+                  <!-- Sponsored by: -->
+                  <th class="text-left font-weight-bold">First Name</th>
+                  <th class="text-left font-weight-bold">Last Name</th>
+                  <th class="text-left font-weight-bold">Middle Name</th>
+
+                  <!-- Sponsored by: -->
+                  <th class="text-left font-weight-bold">First Name</th>
+                  <th class="text-left font-weight-bold">Last Name</th>
+                  <th class="text-left font-weight-bold">Middle Name</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in desserts" :key="index">
+                  <!-- Bride's Info -->
+                  <td>{{ item.brideFirstName }}</td>
+                  <td>{{ item.brideLastName }}</td>
+                  <td>{{ item.brideMiddleName }}</td>
+                  <td>{{ item.bridePlaceOfBirth }}</td>
+                  <td>{{ item.brideDOB }}</td>
+                  <td>{{ item.brideAge }}</td>
+                  <td>{{ item.brideCitizenship }}</td>
+                  <td>{{ item.brideReligion }}</td>
+                  <td>{{ item.brideCivilStatus }}</td>
+                  <td>{{ item.brideSex }}</td>
+                  <td>{{ item.brideResidence }}</td>
+                  <td>{{ item.brideMotherName }}</td>
+                  <td>{{ item.brideMotherCitizenship }}</td>
+                  <td>{{ item.brideFatherName }}</td>
+                  <td>{{ item.brideFatherCitizenship }}</td>
+
+                  <!-- Groom's Info -->
+                  <td>{{ item.groomFirstName }}</td>
+                  <td>{{ item.groomLastName }}</td>
+                  <td>{{ item.groomMiddleName }}</td>
+                  <td>{{ item.groomPlaceOfBirth }}</td>
+                  <td>{{ item.groomDOB }}</td>
+                  <td>{{ item.groomAge }}</td>
+                  <td>{{ item.groomCitizenship }}</td>
+                  <td>{{ item.groomReligion }}</td>
+                  <td>{{ item.groomCivilStatus }}</td>
+                  <td>{{ item.groomSex }}</td>
+                  <td>{{ item.groomResidence }}</td>
+                  <td>{{ item.groomMotherName }}</td>
+                  <td>{{ item.groomMotherCitizenship }}</td>
+                  <td>{{ item.groomFatherName }}</td>
+                  <td>{{ item.groomFatherCitizenship }}</td>
+                  <td>{{ item.weddingDate }}</td>
+                  <td>{{ item.weddingTime }}</td>
+                </tr>
+              </tbody>
+            </v-table>
+          </v-col>
+        </v-row>
+      </v-container>
+    </template>
+  </AdminHeader>
+</template>
+
+<style scoped>
+.card-shadow {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.flex-grow-1 {
+  flex-grow: 1;
+}
+
+th {
+  white-space: nowrap;
+}
+
+th,
+td {
+  border: 1px solid black;
+}
+</style>
