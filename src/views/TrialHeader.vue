@@ -1,8 +1,7 @@
 <script setup>
 import NavBar2 from '@/components/layout/NavBar.vue'
-import { ref, onMounted, watch } from 'vue'
-
-import { supabase, formActionDefault } from '@/utils/supabase.js'
+import { ref, onMounted } from 'vue'
+import { supabase } from '@/utils/supabase.js'
 
 const STORAGE_KEY = 'events'
 const events = ref([])
@@ -21,13 +20,31 @@ const newEvent = ref({
 })
 
 async function loadEvents() {
-  const { data, error } = await supabase.from('events').select('*')
-  if (error) console.error(error)
-  else events.value = data
+  // Fetch events from Supabase when the page loads
+  const { data, error } = await supabase.from('events').select()
+  if (data) {
+    events.value = data
+  } else {
+    console.error(error)
+  }
 }
 
-function saveEvents() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(events.value))
+async function saveEventToSupabase(event) {
+  // Save event to Supabase without the image (no image URL)
+  const { error } = await supabase.from('events').insert([
+    {
+      title: event.title,
+      date_posted: event.datePosted,
+      summary: event.summary,
+      details: event.details,
+      type: event.type,
+      priest: event.priest,
+      additional_info: event.additionalInfo, // Storing as JSON
+    },
+  ])
+  if (error) {
+    console.error('Error saving event to Supabase:', error)
+  }
 }
 
 function handleFileUpload(event) {
@@ -35,7 +52,7 @@ function handleFileUpload(event) {
   if (file) {
     const reader = new FileReader()
     reader.onload = (e) => {
-      newEvent.value.image = e.target.result
+      newEvent.value.image = e.target.result // Save image locally
     }
     reader.readAsDataURL(file)
   }
@@ -46,7 +63,7 @@ function handleEditFileUpload(e, eventItem) {
   if (file) {
     const reader = new FileReader()
     reader.onload = (ev) => {
-      eventItem.image = ev.target.result
+      eventItem.image = ev.target.result // Save image locally
       saveEvents()
     }
     reader.readAsDataURL(file)
@@ -55,39 +72,34 @@ function handleEditFileUpload(e, eventItem) {
 
 async function addEvent() {
   if (newEvent.value.title) {
-    // Upload image first
-    let imageUrl = ''
-    if (newEvent.value.file) {
-      const { data, error } = await supabase.storage
-        .from('event-images')
-        .upload(`event-${Date.now()}.jpg`, newEvent.value.file)
-      if (error) console.error(error)
-      else imageUrl = supabase.storage.from('event-images').getPublicUrl(data.path).data.publicUrl
-    }
+    // Save event to Supabase
+    await saveEventToSupabase(newEvent.value)
 
-    const { data, error } = await supabase.from('events').insert([
-      {
-        title: newEvent.value.title,
-        date_posted: newEvent.value.datePosted,
-        image_url: imageUrl,
-        summary: newEvent.value.summary,
-        details: newEvent.value.details,
-        type: newEvent.value.type,
-        priest: newEvent.value.priest,
-        additional_info: newEvent.value.additionalInfo,
-      },
-    ])
-    if (error) console.error(error)
-    else {
-      dialog.value = false
-      loadEvents()
+    // Push the new event to the events array
+    events.value.push({
+      id: Date.now(), // Fake ID until we get the Supabase-generated ID
+      ...newEvent.value,
+      isEditing: false,
+    })
+
+    dialog.value = false
+    newEvent.value = {
+      title: '',
+      datePosted: '',
+      image: '',
+      file: null,
+      summary: '',
+      details: '',
+      type: '',
+      priest: '',
+      additionalInfo: [],
     }
   }
 }
 
-async function deleteEvent(id) {
-  await supabase.from('events').delete().eq('id', id)
-  loadEvents()
+function deleteEvent(id) {
+  events.value = events.value.filter((e) => e.id !== id)
+  saveEvents()
 }
 
 function addAdditionalInfo(event) {
@@ -194,6 +206,7 @@ onMounted(loadEvents)
           </v-col>
         </v-row>
 
+        <!-- ADD NEW EVENT DIALOG -->
         <v-dialog v-model="dialog" max-width="600">
           <v-card>
             <v-card-title>Add New Event</v-card-title>
@@ -231,8 +244,8 @@ onMounted(loadEvents)
               </v-btn>
             </v-card-text>
             <v-card-actions>
-              <v-btn color="green" @click="addEvent">✅ Save</v-btn>
-              <v-btn text @click="dialog = false">❌ Cancel</v-btn>
+              <v-btn color="green" @click="addEvent"> Save Event</v-btn>
+              <v-btn text @click="dialog = false">Cancel</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>

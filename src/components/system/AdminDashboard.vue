@@ -19,7 +19,7 @@ function reserve() {
       <v-container fluid>
         <div class="bg-color"></div>
         <v-row>
-          <v-col cols>
+          <v-col cols lg="6" md="12" sm="12">
             <v-card
               :disabled="loading"
               :loading="loading"
@@ -38,24 +38,24 @@ function reserve() {
               <v-img height="250" src="public/announcement8.gif" cover></v-img>
 
               <v-card-item>
-                <v-card-title> ANNOUNCEMENT MANAGER </v-card-title>
+                <v-card-title class="card-title"> ANNOUNCEMENT MANAGER </v-card-title>
               </v-card-item>
 
               <v-divider class="mx-4 mb-1"></v-divider>
-              <RouterLink to="/admin-announcement-manager" class="router-link"> </RouterLink>
-              <v-card-actions>
-                <v-btn
-                  class="view"
-                  color="deep-purple-lighten-2"
-                  text="View"
-                  block
-                  border
-                  @click="reserve"
-                ></v-btn>
-              </v-card-actions>
+              <RouterLink to="/admin-announcement-manager" class="router-link">
+                <v-card-actions>
+                  <v-btn
+                    class="view"
+                    color="deep-purple-lighten-2"
+                    text="View"
+                    block
+                    border
+                    @click="reserve"
+                  ></v-btn> </v-card-actions
+              ></RouterLink>
             </v-card>
           </v-col>
-          <v-col cols>
+          <v-col cols lg="6" md="12" sm="12">
             <v-card
               :disabled="loading"
               :loading="loading"
@@ -74,20 +74,20 @@ function reserve() {
               <v-img height="250" src="public/appointment5.gif" cover></v-img>
 
               <v-card-item>
-                <v-card-title> APPOINMENTS LIST </v-card-title>
+                <v-card-title class="card-title"> APPOINMENTS LIST </v-card-title>
               </v-card-item>
 
               <v-divider class="mx-4 mb-1"></v-divider>
-
-              <v-card-actions>
-                <v-btn
-                  color="deep-purple-lighten-2"
-                  text="view"
-                  block
-                  border
-                  @click="reserve"
-                ></v-btn>
-              </v-card-actions>
+              <RouterLink to="/admin-booking-view" class="router-link">
+                <v-card-actions>
+                  <v-btn
+                    color="deep-purple-lighten-2"
+                    text="view"
+                    block
+                    border
+                    @click="reserve"
+                  ></v-btn> </v-card-actions
+              ></RouterLink>
             </v-card> </v-col
         ></v-row>
       </v-container>
@@ -104,7 +104,7 @@ function reserve() {
   height: 100%;
   z-index: 0;
   overflow: hidden;
-  background-color: #faf3f0;
+  background-color: #ecc5fb;
 }
 .card-shadow {
   box-shadow:
@@ -119,9 +119,12 @@ function reserve() {
 
 .router-link:hover {
   text-decoration: none;
+  background-color: skyblue;
 }
-.view {
+
+.card-title {
+  font-family: Cambria, Georgia, serif;
+  font-weight: bolder;
   text-align: center;
-  align-items: center;
 }
 </style>
