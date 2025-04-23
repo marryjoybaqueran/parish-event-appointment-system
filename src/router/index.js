@@ -9,6 +9,9 @@ import BaptismMass from '@/views/auth/BaptismMass.vue'
 import FuneralMass from '@/views/auth/FuneralMass.vue'
 import ThanksGivingMass from '@/views/auth/ThanksGivingMass.vue'
 import TrialHeader from '@/views/TrialHeader.vue'
+import AdminDashboard from '@/components/system/AdminDashboard.vue'
+import AdminAnnouncementManager from '@/components/system/AdminAnnouncementManager.vue'
+import AdminBookingsView from '@/components/system/AdminBookingsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -53,7 +56,21 @@ const router = createRouter({
       name: 'thanks-giving-mass',
       component: ThanksGivingMass,
     },
-
+    {
+      path: '/admin-dashboard',
+      name: 'admin-dashboard',
+      component: AdminDashboard,
+    },
+    {
+      path: '/admin-booking-view',
+      name: 'admin-booking-view',
+      component: AdminBookingsView,
+    },
+    {
+      path: '/admin-announcement-manager',
+      name: 'admin-announcement-manager',
+      component: AdminAnnouncementManager,
+    },
     {
       path: '/trial-header',
       name: 'trial-header',
