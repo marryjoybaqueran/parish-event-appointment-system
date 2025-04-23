@@ -1,4 +1,11 @@
 <script setup>
+import { useAuthUserStore } from '@/stores/authUser'
+import ProfileHeader from '@/components/layout/ProfileHeader.vue'
+import { onMounted } from 'vue'
+
+// Use Pinia Store
+const authStore = useAuthUserStore()
+
 import { ref, computed } from 'vue'
 const theme = ref(localStorage.getItem('theme') ?? 'light')
 
@@ -10,14 +17,21 @@ const isDark = computed({
   },
 })
 
+const isLoggedIn = ref(false)
 const drawer = ref(false)
 
 function onClick() {
   localStorage.setItem('theme', theme.value)
 }
 import { useDisplay } from 'vuetify'
-const { mobile } = useDisplay()
-const { smAndDown } = useDisplay()
+const { mobile, smAndDown } = useDisplay()
+
+// Load Functions during component rendering
+onMounted(async () => {
+  isLoggedIn.value = await authStore.isAuthenticated()
+  isMobileLogged.value = mobile.value && isLoggedIn.value
+  isDesktop.value = !mobile.value && (isLoggedIn.value || !isLoggedIn.value)
+})
 </script>
 
 <template>
@@ -57,15 +71,6 @@ const { smAndDown } = useDisplay()
               <v-icon class="event-icon">mdi-calendar</v-icon>
               <span class="home-color">BOOK EVENT</span>
             </v-btn>
-
-            <v-btn class="mr-2 outlined-btn pl-1" outlined>
-              <v-icon class="event-icon">mdi-logout</v-icon>
-              <span
-                class="hover-underline-animation"
-                :class="smAndDown ? 'small-header' : 'large-header'"
-                >LOG OUT
-              </span>
-            </v-btn>
           </div>
           <v-spacer></v-spacer>
 
@@ -83,6 +88,8 @@ const { smAndDown } = useDisplay()
               </v-icon>
             </template>
           </v-switch>
+
+          <ProfileHeader v-if="isLoggedIn" :onLogout="onLogout"></ProfileHeader>
         </div>
 
         <!-- Mobile Nav (Hamburger) -->
@@ -97,6 +104,8 @@ const { smAndDown } = useDisplay()
       <v-navigation-drawer v-model="drawer" temporary location="right">
         <v-list>
           <!-- HOME -->
+          <ProfileHeader v-if="isLoggedIn"></ProfileHeader>
+
           <v-list-item @click="drawer = false">
             <RouterLink to="/home" class="router-link" style="width: 100%">
               <v-btn flat>

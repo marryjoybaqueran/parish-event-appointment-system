@@ -16,7 +16,7 @@ const { mobile } = useDisplay()
         <div class="cardd2 py-8 align-items-center">
           <v-card
             class="mx-auto pa-6 pb-8"
-            elevation="4"
+            elevation="8"
             max-width="700px"
             rounded="lg"
             v-bind:width="mobile ? '100%' : '70%'"

@@ -1,4 +1,4 @@
-//import { isAuthenticated } from '@/utils/supabase'
+import { isAuthenticated } from '@/utils/supabase'
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue'
@@ -9,12 +9,20 @@ import BaptismMass from '@/views/auth/BaptismMass.vue'
 import FuneralMass from '@/views/auth/FuneralMass.vue'
 import ThanksGivingMass from '@/views/auth/ThanksGivingMass.vue'
 import TrialHeader from '@/views/TrialHeader.vue'
+import AdminDashboard from '@/components/system/AdminDashboard.vue'
+import AdminAnnouncementManager from '@/components/system/AdminAnnouncementManager.vue'
+import AdminBookingsView from '@/components/system/AdminBookingsView.vue'
+import NotFoundView from '@/views/error/NotFoundView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
+      name: 'home',
+    },
+    {
+      path: '/login',
       name: 'login',
       component: LoginView,
     },
@@ -24,8 +32,8 @@ const router = createRouter({
       component: RegisterView,
     },
     {
-      path: '/home',
-      name: 'home',
+      path: '/homepage',
+      name: 'homepage',
       component: HomePage,
     },
     {
@@ -53,35 +61,57 @@ const router = createRouter({
       name: 'thanks-giving-mass',
       component: ThanksGivingMass,
     },
-
+    {
+      path: '/system/admin-dashboard',
+      name: 'admin-dashboard',
+      component: AdminDashboard,
+    },
+    {
+      path: '/admin-booking-view',
+      name: 'admin-booking-view',
+      component: AdminBookingsView,
+    },
+    {
+      path: '/admin-announcement-manager',
+      name: 'admin-announcement-manager',
+      component: AdminAnnouncementManager,
+    },
     {
       path: '/trial-header',
       name: 'trial-header',
       component: TrialHeader,
     },
+    {
+      path: '/page-not-found',
+      name: 'page-not-found',
+      component: NotFoundView,
+    },
   ],
 })
 
-/* 
 router.beforeEach(async (to) => {
   const isLoggedIn = await isAuthenticated()
 
   // Redirect to appropriate page if accessing home route
   if (to.name === 'home') {
-    return isLoggedIn ? { name: 'home' } : { name: 'login' }
+    return isLoggedIn ? { name: 'homepage' } : { name: 'login' }
   }
 
   // If logged in, prevent access to login or register pages
   if (isLoggedIn && (to.name === 'login' || to.name === 'register')) {
     // redirect the user to the dashboard page
-    return { name: 'home' }
+    return { name: 'homepage' }
   }
 
   // If not logged in, prevent access to system pages
-  if (!isLoggedIn && to.meta.requiresAuth) {
+  if (!isLoggedIn && to.path.startsWith('/system')) {
     // redirect the user to the login page
     return { name: 'login' }
   }
+
+  if (router.resolve(to).matched.length === 0) {
+    return { name: 'page-not-found' }
+  }
 })
-*/
+
 export default router

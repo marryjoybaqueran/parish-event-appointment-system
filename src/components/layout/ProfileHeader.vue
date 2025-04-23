@@ -62,6 +62,7 @@ const getUser = async () => {
     },
   } = await supabase.auth.getUser()
 
+  //const metadata = getUserInformation()
   const fullname = metadata.fname + ' ' + metadata.lname
 
   userData.value.email = metadata.email
@@ -84,54 +85,6 @@ import { useDisplay } from 'vuetify'
 
 const { mdAndDown } = useDisplay()
 </script>
-<!--
-<template>
-  <v-menu min-width="100px" rounded>
-    <template v-slot:activator="{ props }">
-      <v-btn icon v-bind="props">
-        <v-avatar color="deep-orange-lighten-1" class="profile-size">
-          <span class="profile-text">{{ userData.initials }}</span>
-        </v-avatar>
-      </v-btn>
-    </template>
-
-    <v-card class="mt-1">
-      <v-card-text>
-        <v-list>
-          <v-list-item :subtitle="userData.email" :title="userData.fullname">
-            <template #prepend>
-              <v-avatar color="orange-darken-3" size="large">
-                <span class="text-5">
-                  {{
-                    getAvatarText(authStore.userData.fname + ' ' + authStore.userData.lname)
-                  }}</span
-                >
-              </v-avatar>
-            </template>
-          </v-list-item>
-        </v-list>
-
-        <v-divider class="my-3"></v-divider>
-
-        <v-btn prepend-icon="mdi-wrench" variant="plain" to="/account/settings">
-          Account Settings
-        </v-btn>
-
-        <v-divider class="my-3"></v-divider>
-
-        <v-btn
-          prepend-icon="mdi-logout"
-          variant="plain"
-          @click="onLogout"
-          :loading="formAction.formProcess"
-          :disabled="formAction.formProcess"
-        >
-          Logout
-        </v-btn>
-      </v-card-text>
-    </v-card>
-  </v-menu>
-</template>-->
 
 <template>
   <div>
