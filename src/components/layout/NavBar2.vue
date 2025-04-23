@@ -57,15 +57,6 @@ const { smAndDown } = useDisplay()
               <v-icon class="event-icon">mdi-calendar</v-icon>
               <span class="home-color">BOOK EVENT</span>
             </v-btn>
-
-            <v-btn class="mr-2 outlined-btn pl-1" outlined>
-              <v-icon class="event-icon">mdi-logout</v-icon>
-              <span
-                class="hover-underline-animation"
-                :class="smAndDown ? 'small-header' : 'large-header'"
-                >LOG OUT
-              </span>
-            </v-btn>
           </div>
           <v-spacer></v-spacer>
 
