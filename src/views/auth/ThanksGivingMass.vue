@@ -1,6 +1,6 @@
 <script setup>
 import NavBar2 from '@/components/layout/NavBar2.vue'
-import ThanksGivingForm from '@/components/auth/ThanksGivingForm.vue'
+import ThanksGivingForm from '@/components/system/ThanksGivingForm.vue'
 
 import { useDisplay } from 'vuetify'
 const { smAndDown } = useDisplay()

@@ -62,6 +62,7 @@ const getUser = async () => {
     },
   } = await supabase.auth.getUser()
 
+  //const metadata = getUserInformation()
   const fullname = metadata.fname + ' ' + metadata.lname
 
   userData.value.email = metadata.email

@@ -1,6 +1,6 @@
 <script setup>
 import NavBar2 from '@/components/layout/NavBar2.vue'
-import WeddingForm from '@/components/auth/WeddingForm.vue'
+import WeddingForm from '@/components/system/WeddingForm.vue'
 import { useDisplay } from 'vuetify'
 const { smAndDown } = useDisplay()
 

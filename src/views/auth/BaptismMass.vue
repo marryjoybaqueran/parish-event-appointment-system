@@ -1,6 +1,6 @@
 <script setup>
 import NavBar2 from '@/components/layout/NavBar2.vue'
-import BaptismForm from '@/components/auth/BaptismForm.vue'
+import BaptismForm from '@/components/system/BaptismForm.vue'
 
 import { useDisplay } from 'vuetify'
 const { smAndDown } = useDisplay()

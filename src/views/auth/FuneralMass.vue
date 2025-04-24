@@ -1,6 +1,6 @@
 <script setup>
 import NavBar2 from '@/components/layout/NavBar2.vue'
-import FuneralForm from '@/components/auth/FuneralForm.vue'
+import FuneralForm from '@/components/system/FuneralForm.vue'
 
 import { useDisplay } from 'vuetify'
 const { smAndDown } = useDisplay()
