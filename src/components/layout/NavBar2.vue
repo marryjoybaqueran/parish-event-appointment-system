@@ -55,7 +55,7 @@ onMounted(async () => {
         <!-- Desktop Nav -->
         <div v-if="!smAndDown" class="d-flex align-center nav">
           <div class="d-flex nav">
-            <RouterLink to="/home" class="router-link">
+            <RouterLink to="/homepage" class="router-link">
               <v-btn class="outlined-btn mr-2" outlined>
                 <v-icon class="home-icon">mdi-home</v-icon>
                 <span

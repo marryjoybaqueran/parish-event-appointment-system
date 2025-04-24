@@ -1,5 +1,5 @@
 <script setup>
-import { supabase, formActionDefault } from '@/utils/supabase'
+import { supabase, formActionDefault, getUserInformation } from '@/utils/supabase'
 import { useAuthUserStore } from '@/stores/authUser'
 import { getAvatarText } from '@/utils/helpers'
 import { useRouter } from 'vue-router'
@@ -43,18 +43,14 @@ const props = defineProps({
   },
 })
 
-/* const getUser = async () => {
-  const {
-    data: {
-      user: { user_metadata: data },
-    },
-  } = await supabase.auth.getUser()
+const getUser = async () => {
+  const metadata = await getUserInformation()
 
   userData.value.email = metadata.email
   userData.value.fullname = metadata.fname + ' ' + metadata.lname
   userData.value.initials = getAvatarText(userData.value.fullname)
-}*/
-
+}
+/*
 const getUser = async () => {
   const {
     data: {
@@ -75,7 +71,7 @@ const getUser = async () => {
     lname: metadata.lname,
     email: metadata.email,
   }
-}
+}*/
 
 onMounted(() => {
   getUser()

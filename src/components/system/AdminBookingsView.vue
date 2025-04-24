@@ -1,75 +1,45 @@
 <script setup>
-import AdminHeader from '@/components/layout/AdminHeader.vue'
 import { ref } from 'vue'
+import AdminHeader from '@/components/layout/AdminHeader.vue'
 
-const events = ref([
+// Mock data: You can expand this or match it to actual form data
+const desserts = ref([
   {
-    id: 1,
-    title: 'HOLY WEEK MASS ACTIVITIES 2025',
-    date: 'April 13, 2025',
-    time: '7:00 PM',
-    massType: 'Triduum',
-    expanded: false,
-  },
-  {
-    id: 2,
-    title: 'SUNDAY MASS SCHEDULE',
-    date: 'April 21, 2025',
-    time: '8:00 AM',
-    massType: 'Regular Sunday Mass',
-    expanded: false,
+    brideFirstName: 'Anna',
+    brideLastName: 'Rose',
+    brideMiddleName: 'M.',
+    bridePlaceOfBirth: 'Manila',
+    brideDOB: '1995-06-12',
+    brideAge: 29,
+    brideCitizenship: 'Filipino',
+    brideReligion: 'Catholic',
+    brideCivilStatus: 'Single',
+    brideSex: 'Female',
+    brideResidence: 'QC',
+    brideMotherName: 'Maria Rose',
+    brideMotherCitizenship: 'Filipino',
+    brideFatherName: 'Jose Rose',
+    brideFatherCitizenship: 'Filipino',
+
+    groomFirstName: 'Liam',
+    groomLastName: 'Smith',
+    groomMiddleName: 'J.',
+    groomPlaceOfBirth: 'Cebu',
+    groomDOB: '1990-11-22',
+    groomAge: 34,
+    groomCitizenship: 'Filipino',
+    groomReligion: 'Catholic',
+    groomCivilStatus: 'Single',
+    groomSex: 'Male',
+    groomResidence: 'Makati',
+    groomMotherName: 'Linda Smith',
+    groomMotherCitizenship: 'Filipino',
+    groomFatherName: 'John Smith',
+    groomFatherCitizenship: 'Filipino',
+    weddingDate: '2025-06-01',
+    weddingTime: '3:00 PM',
   },
 ])
-
-const dialog = ref(false)
-const isEditMode = ref(false)
-const editedIndex = ref(-1)
-
-const eventForm = ref({
-  title: '',
-  date: '',
-  time: '',
-  massType: '',
-})
-
-function resetForm() {
-  eventForm.value = { title: '', date: '', time: '', massType: '' }
-  isEditMode.value = false
-  editedIndex.value = -1
-}
-
-function saveEvent() {
-  if (isEditMode.value && editedIndex.value !== -1) {
-    events.value[editedIndex.value] = {
-      ...events.value[editedIndex.value],
-      ...eventForm.value,
-    }
-  } else {
-    events.value.push({
-      id: Date.now(),
-      ...eventForm.value,
-      expanded: false,
-    })
-  }
-
-  dialog.value = false
-  resetForm()
-}
-
-function editEvent(index) {
-  eventForm.value = { ...events.value[index] }
-  editedIndex.value = index
-  isEditMode.value = true
-  dialog.value = true
-}
-
-function deleteEvent(id) {
-  events.value = events.value.filter((e) => e.id !== id)
-}
-
-function toggleDetails(index) {
-  events.value[index].expanded = !events.value[index].expanded
-}
 </script>
 
 <template>
@@ -77,58 +47,95 @@ function toggleDetails(index) {
     <template #content>
       <v-container fluid>
         <v-row>
-          <v-col><h3>📋 Admin — Mass Event Schedule</h3></v-col>
-          <v-col class="text-right">
-            <v-btn color="green" @click="openDialog()">➕ Add Mass</v-btn>
+          <v-col>
+            <v-table>
+              <thead>
+                <tr>
+                  <th colspan="15" class="text-left"><b>Bride's Information</b></th>
+                  <th colspan="17">
+                    <b>Groom's Information</b>
+                  </th>
+                </tr>
+                <tr>
+                  <!-- Bride's Info Headers -->
+                  <th class="text-left font-weight-bold">First Name</th>
+                  <th class="text-left font-weight-bold">Last Name</th>
+                  <th class="text-left font-weight-bold">Middle Name</th>
+                  <th class="text-left font-weight-bold">Place of Birth</th>
+                  <th class="text-left font-weight-bold">Date of Birth</th>
+                  <th class="text-left font-weight-bold">Age</th>
+                  <th class="text-left font-weight-bold">Citizenship</th>
+                  <th class="text-left font-weight-bold">Religion</th>
+                  <th class="text-left font-weight-bold">Civil Status</th>
+                  <th class="text-left font-weight-bold">Sex</th>
+                  <th class="text-left font-weight-bold">Residence</th>
+                  <th class="text-left font-weight-bold">Mother's Name</th>
+                  <th class="text-left font-weight-bold">Mother's Citizenship</th>
+                  <th class="text-left font-weight-bold">Father's Name</th>
+                  <th class="text-left font-weight-bold">Father's Citizenship</th>
+
+                  <!-- Groom's Info Headers -->
+                  <th class="text-left font-weight-bold">First Name</th>
+                  <th class="text-left font-weight-bold">Last Name</th>
+                  <th class="text-left font-weight-bold">Middle Name</th>
+                  <th class="text-left font-weight-bold">Place of Birth</th>
+                  <th class="text-left font-weight-bold">Date of Birth</th>
+                  <th class="text-left font-weight-bold">Age</th>
+                  <th class="text-left font-weight-bold">Citizenship</th>
+                  <th class="text-left font-weight-bold">Religion</th>
+                  <th class="text-left font-weight-bold">Civil Status</th>
+                  <th class="text-left font-weight-bold">Sex</th>
+                  <th class="text-left font-weight-bold">Residence</th>
+                  <th class="text-left font-weight-bold">Mother's Name</th>
+                  <th class="text-left font-weight-bold">Mother's Citizenship</th>
+                  <th class="text-left font-weight-bold">Father's Name</th>
+                  <th class="text-left font-weight-bold">Father's Citizenship</th>
+                  <th class="text-left font-weight-bold">Select Date for the Wedding</th>
+                  <th class="text-left font-weight-bold">Select Time for the Wedding</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in desserts" :key="index">
+                  <!-- Bride's Info -->
+                  <td>{{ item.brideFirstName }}</td>
+                  <td>{{ item.brideLastName }}</td>
+                  <td>{{ item.brideMiddleName }}</td>
+                  <td>{{ item.bridePlaceOfBirth }}</td>
+                  <td>{{ item.brideDOB }}</td>
+                  <td>{{ item.brideAge }}</td>
+                  <td>{{ item.brideCitizenship }}</td>
+                  <td>{{ item.brideReligion }}</td>
+                  <td>{{ item.brideCivilStatus }}</td>
+                  <td>{{ item.brideSex }}</td>
+                  <td>{{ item.brideResidence }}</td>
+                  <td>{{ item.brideMotherName }}</td>
+                  <td>{{ item.brideMotherCitizenship }}</td>
+                  <td>{{ item.brideFatherName }}</td>
+                  <td>{{ item.brideFatherCitizenship }}</td>
+
+                  <!-- Groom's Info -->
+                  <td>{{ item.groomFirstName }}</td>
+                  <td>{{ item.groomLastName }}</td>
+                  <td>{{ item.groomMiddleName }}</td>
+                  <td>{{ item.groomPlaceOfBirth }}</td>
+                  <td>{{ item.groomDOB }}</td>
+                  <td>{{ item.groomAge }}</td>
+                  <td>{{ item.groomCitizenship }}</td>
+                  <td>{{ item.groomReligion }}</td>
+                  <td>{{ item.groomCivilStatus }}</td>
+                  <td>{{ item.groomSex }}</td>
+                  <td>{{ item.groomResidence }}</td>
+                  <td>{{ item.groomMotherName }}</td>
+                  <td>{{ item.groomMotherCitizenship }}</td>
+                  <td>{{ item.groomFatherName }}</td>
+                  <td>{{ item.groomFatherCitizenship }}</td>
+                  <td>{{ item.weddingDate }}</td>
+                  <td>{{ item.weddingTime }}</td>
+                </tr>
+              </tbody>
+            </v-table>
           </v-col>
         </v-row>
-
-        <v-row>
-          <v-col v-for="(event, index) in events" :key="event.id" cols="12" md="4">
-            <v-card class="mx-auto card-shadow" max-width="344">
-              <v-card-title @click="toggleDetails(index)" class="cursor-pointer">
-                {{ event.title }}
-              </v-card-title>
-
-              <v-expand-transition>
-                <div v-if="event.expanded">
-                  <v-card-text>
-                    <p><b>Date:</b> {{ event.date }}</p>
-                    <p><b>Time:</b> {{ event.time }}</p>
-                    <p><b>Type:</b> {{ event.massType }}</p>
-                  </v-card-text>
-                </div>
-              </v-expand-transition>
-
-              <v-card-actions>
-                <v-btn color="blue" @click="editEvent(index)">✏️ Edit</v-btn>
-                <v-btn color="red" @click="deleteEvent(event.id)">🗑️ Delete</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <!-- ADD / EDIT MASS DIALOG -->
-        <v-dialog v-model="dialog" max-width="500">
-          <v-card>
-            <v-card-title>{{ isEditMode ? 'Edit Mass Schedule' : 'Add New Mass' }}</v-card-title>
-            <v-card-text>
-              <v-text-field v-model="eventForm.title" label="Mass Title"></v-text-field>
-              <v-text-field v-model="eventForm.date" label="Date"></v-text-field>
-              <v-text-field v-model="eventForm.time" label="Time"></v-text-field>
-              <v-text-field
-                v-model="eventForm.massType"
-                label="Type of Mass (e.g. Youth, Healing)"
-              ></v-text-field>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn color="green" @click="saveEvent">{{
-                isEditMode ? '💾 Update' : '✅ Save'
-              }}</v-btn>
-              <v-btn text @click="dialog = false">❌ Cancel</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
       </v-container>
     </template>
   </AdminHeader>
@@ -140,5 +147,14 @@ function toggleDetails(index) {
 }
 .flex-grow-1 {
   flex-grow: 1;
+}
+
+th {
+  white-space: nowrap;
+}
+
+th,
+td {
+  border: 1px solid black;
 }
 </style>

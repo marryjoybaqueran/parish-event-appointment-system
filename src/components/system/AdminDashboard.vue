@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
+import { useRouter } from 'vue-router'
 
 import { useDisplay } from 'vuetify'
 const { smAndDown } = useDisplay()

@@ -62,7 +62,7 @@ const router = createRouter({
       component: ThanksGivingMass,
     },
     {
-      path: '/system/admin-dashboard',
+      path: '/admin-dashboard',
       name: 'admin-dashboard',
       component: AdminDashboard,
     },
@@ -102,13 +102,13 @@ router.beforeEach(async (to) => {
     // redirect the user to the dashboard page
     return { name: 'homepage' }
   }
-
+  /*
   // If not logged in, prevent access to system pages
   if (!isLoggedIn && to.path.startsWith('/system')) {
     // redirect the user to the login page
     return { name: 'login' }
   }
-
+*/
   if (router.resolve(to).matched.length === 0) {
     return { name: 'page-not-found' }
   }

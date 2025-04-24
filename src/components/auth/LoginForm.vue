@@ -39,7 +39,7 @@ const onSubmit = async () => {
   } else if (data) {
     console.log(data)
     formAction.value.formSuccessMessage = 'Successfully Logged Account!'
-    router.replace('/home')
+    router.replace('/homepage')
   }
 
   refVform.value?.reset()
