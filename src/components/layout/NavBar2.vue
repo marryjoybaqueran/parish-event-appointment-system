@@ -29,8 +29,8 @@ const { mobile, smAndDown } = useDisplay()
 // Load Functions during component rendering
 onMounted(async () => {
   isLoggedIn.value = await authStore.isAuthenticated()
-  isMobileLogged.value = mobile.value && isLoggedIn.value
-  isDesktop.value = !mobile.value && (isLoggedIn.value || !isLoggedIn.value)
+  //isMobileLogged.value = mobile.value && isLoggedIn.value
+  //isDesktop.value = !mobile.value && (isLoggedIn.value || !isLoggedIn.value)
 })
 </script>
 
@@ -56,7 +56,7 @@ onMounted(async () => {
         <div v-if="!smAndDown" class="d-flex align-center nav">
           <div class="d-flex nav">
             <RouterLink to="/homepage" class="router-link">
-              <v-btn class="outlined-btn mr-2" outlined>
+              <v-btn class="mr-2 outlined-btn" outlined>
                 <v-icon class="home-icon">mdi-home</v-icon>
                 <span
                   class="hover-underline-animation"
@@ -78,7 +78,7 @@ onMounted(async () => {
             v-model="isDark"
             color="primary"
             hide-details
-            class="theme-switch pl-7"
+            class="theme-switch pr-3"
             @change="onClick"
             style="transform: scale(1.5); transform-origin: right center"
           >
@@ -108,7 +108,7 @@ onMounted(async () => {
 
           <v-list-item @click="drawer = false">
             <RouterLink to="/home" class="router-link" style="width: 100%">
-              <v-btn flat>
+              <v-btn flat class="pl-0">
                 <v-icon class="me-2">mdi-home</v-icon>
                 HOME
               </v-btn>
@@ -117,27 +117,20 @@ onMounted(async () => {
           <v-divider></v-divider>
           <!-- BOOK EVENT -->
           <v-list-item @click="drawer = false">
-            <v-btn flat>
+            <v-btn flat class="pl-0">
               <v-icon class="me-2">mdi-calendar</v-icon>
               BOOK EVENT
             </v-btn>
           </v-list-item>
           <v-divider></v-divider>
-          <!-- LOG OUT -->
-          <v-list-item @click="drawer = false">
-            <v-btn flat>
-              <v-icon class="me-2">mdi-logout</v-icon>
-              LOG OUT
-            </v-btn>
-          </v-list-item>
-          <v-divider></v-divider>
+
           <!-- THEME SWITCH -->
           <v-list-item>
             <v-btn
               v-model="isDark"
               @click="isDark = !isDark"
               hide-details
-              class="theme-switch"
+              class="theme-switch pl-0"
               @change="onClick"
               flat
             >
@@ -204,7 +197,7 @@ onMounted(async () => {
 }
 
 .outlined-btn {
-  padding: 4px 12px;
+  padding: 5px;
   gap: 8px;
 }
 
@@ -219,10 +212,11 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 20px;
+  letter-spacing: 2px;
   pointer-events: none;
   padding-bottom: 1px;
-  letter-spacing: 2px;
   font-weight: 600;
+  padding-right: 46px;
 }
 
 .home-btn:hover {

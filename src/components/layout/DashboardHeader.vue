@@ -54,30 +54,13 @@ onMounted(async () => {
 
         <!-- Desktop Nav -->
         <div v-if="!smAndDown" class="d-flex align-center nav">
-          <div class="d-flex nav">
-            <v-btn class="home-btn mr-2" flat>
-              <v-icon class="home-icon">mdi-home</v-icon>
-              <span class="home-text"> <span class="home-color">HOME</span></span>
-            </v-btn>
-
-            <RouterLink to="/book-event" class="router-link">
-              <v-btn class="mr-2 outlined-btn" outlined>
-                <v-icon class="event-icon">mdi-calendar</v-icon>
-                <span
-                  class="hover-underline-animation"
-                  :class="smAndDown ? 'small-header' : 'large-header'"
-                  >BOOK EVENT</span
-                >
-              </v-btn>
-            </RouterLink>
-          </div>
           <v-spacer></v-spacer>
 
           <v-switch
             v-model="isDark"
             color="primary"
             hide-details
-            class="theme-switch pr-3"
+            class="theme-switch pr-5"
             @change="onClick"
             style="transform: scale(1.5); transform-origin: right center"
           >
@@ -102,25 +85,7 @@ onMounted(async () => {
       <!-- MOBILE DRAWER MENU -->
       <v-navigation-drawer v-model="drawer" temporary location="right">
         <v-list>
-          <!-- HOME -->
           <ProfileHeader v-if="isLoggedIn"></ProfileHeader>
-          <v-list-item @click="drawer = false">
-            <v-btn flat class="pl-0">
-              <v-icon class="me-2">mdi-home</v-icon>
-              HOME
-            </v-btn>
-          </v-list-item>
-          <v-divider></v-divider>
-          <!-- BOOK EVENT -->
-          <v-list-item @click="drawer = false">
-            <RouterLink to="/book-event" class="router-link" style="width: 100%">
-              <v-btn flat class="pl-0">
-                <v-icon class="me-2">mdi-calendar</v-icon>
-                BOOK EVENT
-              </v-btn>
-            </RouterLink>
-          </v-list-item>
-          <v-divider></v-divider>
 
           <v-divider></v-divider>
           <!-- THEME SWITCH -->
@@ -201,8 +166,7 @@ onMounted(async () => {
 }
 
 .outlined-btn {
-  padding: 5px;
-  padding-right: 45px;
+  padding: 4px 12px;
   gap: 8px;
 }
 

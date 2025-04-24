@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import AdminHeader from '@/components/layout/AdminHeader.vue'
+import DashboardHeader from '@/components/layout/DashboardHeader.vue'
 
 const loading = ref(false)
 function reserve() {
@@ -10,7 +10,7 @@ function reserve() {
 </script>
 
 <template>
-  <AdminHeader>
+  <DashboardHeader>
     <template #content>
       <v-container fluid>
         <div class="bg-color"></div>
@@ -88,7 +88,7 @@ function reserve() {
         ></v-row>
       </v-container>
     </template>
-  </AdminHeader>
+  </DashboardHeader>
 </template>
 
 <style scoped>
