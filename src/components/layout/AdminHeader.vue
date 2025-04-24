@@ -85,8 +85,12 @@ onMounted(async () => {
       <!-- DRAWER MENU -->
       <v-navigation-drawer v-model="drawer" temporary location="right">
         <v-list>
-          <!-- Only show toggle in drawer for mobile -->
-
+          <!--Toggle in drawer for mobile -->
+          <v-list-item>
+            <RouterLink to="/admin-dashboard" class="router-link">
+              <span class>Dashboard</span>
+            </RouterLink>
+          </v-list-item>
           <v-divider></v-divider>
 
           <!--Wedding Mass -->
