@@ -176,7 +176,7 @@ onMounted(() => {
         @click="onLogout"
         :loading="formAction.formProcess"
         :disabled="formAction.formProcess"
-        class="d-flex align-items-center"
+        class="pl-6"
       >
         Logout
       </v-btn>

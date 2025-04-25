@@ -46,6 +46,7 @@ const desserts = ref([
   <AdminHeader>
     <template #content>
       <v-container>
+        <h1 class="pb-5">Special Wedding List</h1>
         <v-row>
           <v-col>
             <v-table>

@@ -19,12 +19,13 @@ const desserts = ref([
   <AdminHeader>
     <template #content>
       <v-container>
+        <h1 class="pb-5">Thanks Giving List</h1>
         <v-row>
           <v-col>
             <v-table>
               <thead>
                 <tr>
-                  <th colspan="6" class="text-left"><b>Thanksgiving Mass Booking List</b></th>
+                  <th colspan="6" class="text-left"><b>Thanksgiving Mass</b></th>
                 </tr>
                 <tr>
                   <!-- Bride's Info Headers -->
