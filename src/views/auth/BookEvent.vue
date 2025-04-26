@@ -119,7 +119,6 @@ onBeforeUnmount(() => {
   </NavBar2>
 </template>
 <style scoped>
-/* Scoped styles for the carousel */
 .bg-wrapper {
   position: fixed;
   top: 0;

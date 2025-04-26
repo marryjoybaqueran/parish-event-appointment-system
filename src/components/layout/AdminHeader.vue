@@ -1,10 +1,12 @@
 <script setup>
 import { useAuthUserStore } from '@/stores/authUser'
 import { onMounted, ref, computed, watch } from 'vue'
-import { useDisplay, useTheme } from 'vuetify'
 
 // Store and display breakpoint
 const authStore = useAuthUserStore()
+
+//display for desktop & mobile
+import { useDisplay, useTheme } from 'vuetify'
 const { mobile, smAndDown } = useDisplay()
 const theme = useTheme()
 

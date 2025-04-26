@@ -1,17 +1,13 @@
 <script setup>
-import { RouterView } from 'vue-router'
-</script>
-
-<template>
-  <RouterView />
-</template>
-
-<!-- <script setup>
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import { onMounted } from 'vue'
 import { useEventsStore } from '@/stores/eventStore'
 
 const eventsStore = useEventsStore()
+
+const onRetrieveFromApi = async () => {
+  await itemsStore.getEventsFromApi()
+}
 
 onMounted(async () => {
   if (eventsStore.events.length === 0) {
@@ -41,7 +37,7 @@ onMounted(async () => {
         </v-col>
 
         <v-col cols="12" sm="1">
-          <v-btn variant="elevated" density="comfortable" icon>
+          <v-btn variant="elevated" density="comfortable" @click="onRetrieveFromApi" icon>
             <v-icon icon="mdi-refresh"></v-icon>
           </v-btn>
         </v-col>
@@ -69,7 +65,7 @@ onMounted(async () => {
       </v-row>
     </template>
   </AdminHeader>
-</template> -->
+</template>
 
 <!-- <script setup>
 import AdminHeader from '@/components/layout/AdminHeader.vue'

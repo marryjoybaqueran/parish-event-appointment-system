@@ -11,7 +11,25 @@ const show3 = ref(false)
   <NavBar>
     <template #content>
       <v-container fluid>
-        <div class="bg-color"></div>
+        <div class="bg-wrapper">
+          <!-- Video background -->
+          <v-responsive aspect-ratio="16/9">
+            <video
+              autoplay
+              muted
+              loop
+              playsinline
+              style="width: 100%; height: 100%; object-fit: cover"
+            >
+              <source src="public/homepage-bg.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </v-responsive>
+
+          <!-- Black overlay -->
+          <div class="bg-overlay"></div>
+        </div>
+        <!-- <div class="bg-color"></div> -->
 
         <v-row>
           <v-col><h3 class="uppercase-text">Announcement Dashboard</h3> </v-col></v-row
@@ -280,7 +298,7 @@ const show3 = ref(false)
 </template>
 
 <style scoped>
-.bg-color {
+.bg-wrapper {
   position: fixed;
   top: 0;
   left: 0;
@@ -288,7 +306,26 @@ const show3 = ref(false)
   height: 100%;
   z-index: 0;
   overflow: hidden;
-  background-color: #bddde4;
+}
+
+/* Make sure v-responsive fills the wrapper */
+.bg-wrapper > .v-responsive {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The dark overlay */
+.bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.15); /* 25% opacity */
+  z-index: 1;
 }
 
 .card-shadow {

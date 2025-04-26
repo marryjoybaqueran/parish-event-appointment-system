@@ -44,11 +44,11 @@ const onSubmit = async () => {
   ])
 
   if (error) {
-    console.log(error)
+    console.error('Error inserting data:', error.message)
     formAction.value.formErrorMessage = error.message
     formAction.value.formStatus = error.code
   } else {
-    console.log(data)
+    console.log('Data inserted successfully:', data)
     formAction.value.formSuccessMessage = 'Booking submitted successfully!'
     // Optional: Redirect or do something else here
   }

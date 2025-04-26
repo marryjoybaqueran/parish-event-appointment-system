@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import DashboardHeader from '@/components/layout/DashboardHeader.vue'
 
 const loading = ref(false)
-function reserve() {
+function view() {
   loading.value = true
   setTimeout(() => (loading.value = false), 2000)
 }
@@ -80,7 +80,7 @@ function reserve() {
                     text="View"
                     block
                     border
-                    @click="reserve"
+                    @click="view"
                   ></v-btn> </v-card-actions
               ></RouterLink>
             </v-card>
@@ -115,7 +115,7 @@ function reserve() {
                     text="view"
                     block
                     border
-                    @click="reserve"
+                    @click="view"
                   ></v-btn> </v-card-actions
               ></RouterLink>
             </v-card> </v-col
@@ -136,7 +136,6 @@ function reserve() {
   overflow: hidden;
 }
 
-/* Make sure v-responsive fills the wrapper */
 .bg-wrapper > .v-responsive {
   position: absolute;
   top: 0;
@@ -145,21 +144,19 @@ function reserve() {
   height: 100%;
 }
 
-/* The dark overlay */
 .bg-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.4); /* 25% opacity */
+  background-color: rgba(0, 0, 0, 0.4);
   z-index: 1;
 }
 
 .content-wrapper {
   position: relative;
-  z-index: 2; /* Above video & overlay */
-  /* Add your padding, layout styles, etc. */
+  z-index: 2;
 }
 
 .card-shadow {

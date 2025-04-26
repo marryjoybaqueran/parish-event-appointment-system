@@ -37,8 +37,8 @@ export const getUserInformation = async () => {
 }
 
 // Function to fetch all bookings from the database
-export const fetchBookings = async () => {
-  const { data, error } = await supabase.from('bookings').select('*')
+/* export const fetchBookings = async () => {
+  const { data, error } = await supabase.from('bookings').select('*').limit(1000)
 
   if (error) {
     console.error('Error fetching bookings:', error)
@@ -46,4 +46,19 @@ export const fetchBookings = async () => {
   }
 
   return { data }
+}*/
+
+export const fetchBookings = async () => {
+  const { data, error, count } = await supabase
+    .from('bookings')
+    .select('*', { count: 'exact' }) // Including count of rows
+    .range(0, 1000) // Pagination: adjust the range as necessary
+
+  if (error) {
+    console.error('Error fetching bookings:', error)
+    return { error }
+  }
+
+  console.log('Total bookings count:', count) // Optional: log the count
+  return { data, count }
 }

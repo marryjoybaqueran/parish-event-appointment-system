@@ -97,7 +97,9 @@ const authStore = useAuthUserStore()
 const { mdAndDown } = useDisplay()
 
 // Reactive form status
-const formAction = ref({ ...formActionDefault })
+const formAction = ref({
+  ...formActionDefault,
+})
 
 // User data
 const userData = ref({
@@ -111,7 +113,7 @@ const getUser = async () => {
   const metadata = await getUserInformation()
 
   if (metadata) {
-    const fullname = `${metadata.fname} ${metadata.lname}`
+    const fullname = metadata.fname + ' ' + metadata.lname
     userData.value.email = metadata.email
     userData.value.fullname = fullname
     userData.value.initials = getAvatarText(fullname)

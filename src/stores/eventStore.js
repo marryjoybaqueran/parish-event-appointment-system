@@ -38,9 +38,9 @@ export const useEventStore = defineStore('events', () => {
   }
 
   return { events, getEventsFromApi, addEvent, deleteEvent }
-})
+})*/
 
-// import axios from 'axios'
+import axios from 'axios'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -52,8 +52,13 @@ export const useEventsStore = defineStore('events', () => {
   async function getEventsFromApi() {
     const response = await axios.get('https://api.restful-api.dev/objects')
     events.value = response.data
+
+    const { data, error } = await supabase
+      .from('announcements')
+      .insert([{ some_column: 'someValue' }, { some_column: 'otherValue' }])
+      .select()
   }
 
   // Return state and actions
   return { events, getEventsFromApi }
-})*/
+})

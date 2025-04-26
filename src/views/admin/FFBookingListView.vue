@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
 // Mock data: You can expand this or match it to actual form data
-const desserts = ref([
+const deceased_info = ref([
   {
     deceasedFirstName: 'Elsa',
     deceasedLastName: 'Snowman',
@@ -58,7 +58,7 @@ const desserts = ref([
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in desserts" :key="index">
+                <tr v-for="(item, index) in deceased_info" :key="index">
                   <!-- Bride's Info -->
                   <td>{{ item.deceasedFirstName }}</td>
                   <td>{{ item.deceasedLastName }}</td>
