@@ -13,7 +13,8 @@ function reserve() {
   <DashboardHeader>
     <template #content>
       <v-container fluid>
-        <div class="bg-color">
+        <div class="bg-wrapper">
+          <!-- Video background -->
           <v-responsive aspect-ratio="16/9">
             <video
               autoplay
@@ -26,7 +27,27 @@ function reserve() {
               Your browser does not support the video tag.
             </video>
           </v-responsive>
+
+          <!-- Black overlay -->
+          <div class="bg-overlay"></div>
         </div>
+
+        <!-- <div class="bg-wrapper"> 
+          <v-responsive aspect-ratio="16/9">
+            <video
+              
+              autoplay
+              muted
+              loop
+              playsinline
+              style="width: 100%; height: 100%; object-fit: cover"
+            >
+              <source src="silp bg gif.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </v-responsive>
+         
+        </div> -->
         <v-row>
           <v-col cols lg="6" md="12" sm="12">
             <v-card
@@ -105,7 +126,7 @@ function reserve() {
 </template>
 
 <style scoped>
-.bg-color {
+.bg-wrapper {
   position: fixed;
   top: 0;
   left: 0;
@@ -113,8 +134,34 @@ function reserve() {
   height: 100%;
   z-index: 0;
   overflow: hidden;
-  background-color: #ecc5fb;
 }
+
+/* Make sure v-responsive fills the wrapper */
+.bg-wrapper > .v-responsive {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The dark overlay */
+.bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4); /* 25% opacity */
+  z-index: 1;
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 2; /* Above video & overlay */
+  /* Add your padding, layout styles, etc. */
+}
+
 .card-shadow {
   box-shadow:
     -4px 0px 12px rgba(0, 0, 0, 0.1),

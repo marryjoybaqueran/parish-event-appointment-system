@@ -38,9 +38,9 @@ export const useEventStore = defineStore('events', () => {
   }
 
   return { events, getEventsFromApi, addEvent, deleteEvent }
-})*/
+})
 
-import axios from 'axios'
+// import axios from 'axios'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -56,4 +56,4 @@ export const useEventsStore = defineStore('events', () => {
 
   // Return state and actions
   return { events, getEventsFromApi }
-})
+})*/

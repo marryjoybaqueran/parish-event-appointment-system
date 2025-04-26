@@ -1,4 +1,12 @@
 <script setup>
+import { RouterView } from 'vue-router'
+</script>
+
+<template>
+  <RouterView />
+</template>
+
+<!-- <script setup>
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import { onMounted } from 'vue'
 import { useEventsStore } from '@/stores/eventStore'
@@ -61,7 +69,7 @@ onMounted(async () => {
       </v-row>
     </template>
   </AdminHeader>
-</template>
+</template> -->
 
 <!-- <script setup>
 import AdminHeader from '@/components/layout/AdminHeader.vue'
