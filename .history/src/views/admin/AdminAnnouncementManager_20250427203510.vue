@@ -11,19 +11,20 @@ const announcementsStore = useAnnouncementsStore()
 const tableFilters = ref({
   search: '',
 })
-const announcementsData = ref(null)
+const announcementData = ref(null)
 const isDialogVisible = ref(false)
 const isUpdateMode = ref(false)
 
 // Add Items
 const onAdd = () => {
-  announcementsData.value = null
+  announcementData.value = null
+  isUpdateMode.value = false
   isDialogVisible.value = true
 }
 
 // When editing existing event
 const onEdit = (item) => {
-  announcementsData.value = { ...item } // ← clone item to form
+  announcementData.value = { ...item } // ← clone item to form
   isUpdateMode.value = true
   isDialogVisible.value = true
 }

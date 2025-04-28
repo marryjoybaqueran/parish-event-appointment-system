@@ -64,5 +64,5 @@ export const fetchBookings = async () => {
 }
 
 export const tableSearch = (search) => {
-  return (search ||= '')
+  return (search || = '')
 }

@@ -1,10 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { supabase } from '@/utils/supabase.js'
+import { supabase } from '@/utils/supabase.js' // Make sure you have supabase initialized
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
+// State to store Thanksgiving data
 const thanks_giving_info = ref([])
 
+// Fetch Thanksgiving data from Supabase when the component mounts
 const fetchThanksgivingInfo = async () => {
   const { data, error } = await supabase.from('bookings').select('*')
 
@@ -15,9 +17,32 @@ const fetchThanksgivingInfo = async () => {
   }
 }
 
+// Call the function on mounted
 onMounted(() => {
   fetchThanksgivingInfo()
 })
+
+// Mock function to simulate adding a new record (can be replaced with your actual form logic)
+const addThanksgivingRecord = async () => {
+  const newRecord = {
+    first_name: 'Elsa',
+    last_name: 'Rose',
+    middle_initial: 'M.',
+    selected_date: '2025-04-30',
+    selected_time: '10:00 AM',
+    venue: 'Brgy. Bonbon',
+  }
+
+  const { data, error } = await supabase.from('bookings').insert([newRecord])
+
+  if (error) {
+    console.error('Error inserting Thanksgiving data:', error.message)
+  } else {
+    console.log('Thanksgiving record inserted:', data)
+    // Optionally re-fetch the data to update the list
+    fetchThanksgivingInfo()
+  }
+}
 </script>
 
 <template>
@@ -46,15 +71,20 @@ onMounted(() => {
                 <tr v-for="(item, index) in thanks_giving_info" :key="index">
                   <td>{{ item.first_name }}</td>
                   <td>{{ item.last_name }}</td>
-                  <td>{{ item.middle_name }}</td>
-                  <td>{{ item.date }}</td>
-                  <td>{{ item.time }}</td>
+                  <td>{{ item.middle_initial }}</td>
+                  <td>{{ item.selected_date }}</td>
+                  <td>{{ item.selected_time }}</td>
                   <td>{{ item.venue }}</td>
                 </tr>
               </tbody>
             </v-table>
           </v-col>
         </v-row>
+
+        <!-- Button to simulate adding a new record -->
+        <v-btn @click="addThanksgivingRecord" color="primary" large>
+          Add Thanksgiving Booking
+        </v-btn>
       </v-container>
     </template>
   </AdminHeader>

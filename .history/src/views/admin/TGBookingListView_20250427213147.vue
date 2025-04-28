@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { supabase } from '@/utils/supabase.js'
+import { supabase } from '@/utils/supabase.js' // Make sure you have supabase initialized
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
 const thanks_giving_info = ref([])

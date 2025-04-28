@@ -58,7 +58,7 @@ const onSubmit = async () => {
       date: formData.value.date,
       time: formData.value.time,
       venue: formData.value.venue,
-      user_id: user.id,
+      user_id: user.id, // Add the user_id here
     },
   ])
 

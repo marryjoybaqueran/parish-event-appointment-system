@@ -23,7 +23,7 @@ const onAdd = () => {
 
 // When editing existing event
 const onEdit = (item) => {
-  announcementsData.value = { ...item } // ← clone item to form
+  announcementData.value = { ...item } // ← clone item to form
   isUpdateMode.value = true
   isDialogVisible.value = true
 }

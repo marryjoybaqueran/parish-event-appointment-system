@@ -11,20 +11,12 @@ const announcementsStore = useAnnouncementsStore()
 const tableFilters = ref({
   search: '',
 })
-const announcementsData = ref(null)
+const announcementData = ref(null)
 const isDialogVisible = ref(false)
-const isUpdateMode = ref(false)
 
 // Add Items
 const onAdd = () => {
-  announcementsData.value = null
-  isDialogVisible.value = true
-}
-
-// When editing existing event
-const onEdit = (item) => {
-  announcementsData.value = { ...item } // ← clone item to form
-  isUpdateMode.value = true
+  announcementData.value = null
   isDialogVisible.value = true
 }
 
@@ -79,7 +71,7 @@ onMounted(async () => {
           {{ announcement.summary }}
         </v-card-text>
         <v-card-actions>
-          <v-btn variant="elevated" density="comfortable" @click="onEdit(announcement)" icon>
+          <v-btn variant="elevated" density="comfortable" icon>
             <v-icon icon="mdi-pencil"></v-icon>
           </v-btn>
           <v-btn variant="elevated" density="comfortable" icon>

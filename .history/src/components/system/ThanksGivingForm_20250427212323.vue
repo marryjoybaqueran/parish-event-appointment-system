@@ -58,7 +58,7 @@ const onSubmit = async () => {
       date: formData.value.date,
       time: formData.value.time,
       venue: formData.value.venue,
-      user_id: user.id,
+      user_id: user.id, // Add the user_id here
     },
   ])
 
@@ -159,7 +159,6 @@ const onFormSubmit = () => {
               variant="tonal"
               width="300"
               type="submit"
-              v-blind:width="mdAndDown ? '80%' : '10%'"
               block
               :disabled="formAction.formProcess"
               :loading="formAction.formProcess"

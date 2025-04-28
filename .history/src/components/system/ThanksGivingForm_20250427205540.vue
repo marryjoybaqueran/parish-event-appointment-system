@@ -25,30 +25,9 @@ const nameRules = [(v) => !!v || 'This field is required']
 const dateRules = [(v) => !!v || 'Date is required']
 const timeRules = [(v) => !!v || 'Time is required']
 
-// Fetch the authenticated user
-const getUser = async () => {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error) {
-    console.error('Error fetching user:', error.message)
-  }
-  return user
-}
-
-// Insert form data and user_id into the bookings table
 const onSubmit = async () => {
   formAction.value = { ...formActionDefault }
   formAction.value.formProcess = true
-
-  // Fetch the authenticated user ID
-  const user = await getUser()
-  if (!user) {
-    formAction.value.formErrorMessage = 'User not authenticated'
-    formAction.value.formStatus = 'error'
-    return
-  }
 
   const { data, error } = await supabase.from('bookings').insert([
     {
@@ -58,7 +37,6 @@ const onSubmit = async () => {
       date: formData.value.date,
       time: formData.value.time,
       venue: formData.value.venue,
-      user_id: user.id,
     },
   ])
 

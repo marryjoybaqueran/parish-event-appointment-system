@@ -37,8 +37,6 @@ export const useAnnouncementsStore = defineStore('announcements', () => {
     })
 
     const { data } = await supabase.from('announcements').insert(transformedData).select()
-
-    if (data) await getAnnouncements({ search: '' })
   }
 
   // Retrieve from Supabase
