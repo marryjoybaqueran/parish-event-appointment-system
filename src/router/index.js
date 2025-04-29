@@ -17,10 +17,17 @@ import FFBookingListView from '@/views/admin/FFBookingListView.vue'
 import BFBookingListView from '@/views/admin/BFBookingListView.vue'
 import TGBookingListView from '@/views/admin/TGBookingListView.vue'
 import ForbiddenView from '@/views/error/ForbiddenView.vue'
+import TrialPage from '@/views/error/TrialPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    {
+      path: '/trial-page',
+      name: 'trial-page',
+      component: TrialPage,
+    },
+
     {
       path: '/',
       name: 'home',
@@ -125,6 +132,19 @@ router.beforeEach(async (to) => {
   // Redirect to appropriate page if accessing home route
   if (to.name === 'home') {
     return isLoggedIn ? { name: 'homepage' } : { name: 'login' }
+  }
+
+  // If not logged in
+  if (!isLoggedIn) {
+    // Only allow access to login and register
+    if (to.name === 'login' || to.name === 'register') {
+      return true
+    } else if (to.name === 'page-not-found' || to.name === 'forbidden') {
+      return true
+    } else {
+      // any other page (even /homepage) = not allowed
+      return { name: 'page-not-found' }
+    }
   }
 
   // If logged in, prevent access to login or register pages

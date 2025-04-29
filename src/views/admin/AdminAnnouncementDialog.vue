@@ -1,4 +1,4 @@
-<script setup>
+<!--<script setup>
 import AlertNotification from '@/components/common/AlertNotification.vue'
 import { requiredValidator, imageValidator } from '@/utils/validators'
 import { formActionDefault } from '@/utils/supabase.js'
@@ -197,6 +197,85 @@ const onFormReset = () => {
           </v-btn>
         </v-card-actions>
       </v-form>
+    </v-card>
+  </v-dialog>
+</template>
+-->
+
+<script setup>
+import { ref, watch, onMounted } from 'vue'
+import { useAnnouncementsStore } from '@/stores/eventStore.js'
+
+const props = defineProps({
+  modelValue: Boolean,
+  announcementData: Object,
+  isUpdateMode: Boolean,
+  tableFilters: Object,
+})
+
+const emit = defineEmits(['update:modelValue'])
+
+// Local state for dialog
+const dialogVisible = ref(props.modelValue)
+const title = ref('')
+const summary = ref('')
+const datePosted = ref('')
+
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    dialogVisible.value = newVal
+  },
+)
+
+watch(
+  () => props.announcementData,
+  (newData) => {
+    if (newData) {
+      title.value = newData.title
+      summary.value = newData.summary
+      datePosted.value = newData.date_posted
+    }
+  },
+)
+
+const saveAnnouncement = async () => {
+  const announcement = {
+    title: title.value,
+    summary: summary.value,
+    date_posted: datePosted.value,
+  }
+
+  if (props.isUpdateMode) {
+    announcement.id = props.announcementData.id
+    await useAnnouncementsStore().updateAnnouncement(announcement)
+  } else {
+    await useAnnouncementsStore().addAnnouncement(announcement)
+  }
+
+  emit('update:modelValue', false) // Close the dialog
+}
+
+const cancelDialog = () => {
+  emit('update:modelValue', false) // Close the dialog
+}
+</script>
+
+<template>
+  <v-dialog v-model="dialogVisible" persistent max-width="600px">
+    <v-card>
+      <v-card-title>{{ props.isUpdateMode ? 'Edit' : 'Add' }} Announcement</v-card-title>
+      <v-card-text>
+        <v-text-field v-model="title" label="Title" outlined dense></v-text-field>
+        <v-textarea v-model="summary" label="Summary" outlined dense></v-textarea>
+        <v-text-field v-model="datePosted" label="Date Posted" outlined dense></v-text-field>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn text @click="cancelDialog">Cancel</v-btn>
+        <v-btn color="primary" @click="saveAnnouncement">{{
+          props.isUpdateMode ? 'Save' : 'Add'
+        }}</v-btn>
+      </v-card-actions>
     </v-card>
   </v-dialog>
 </template>

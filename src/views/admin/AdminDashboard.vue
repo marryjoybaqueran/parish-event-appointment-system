@@ -108,7 +108,7 @@ function view() {
               </v-card-item>
 
               <v-divider class="mx-4 mb-1"></v-divider>
-              <RouterLink to="/admin-booking-view" class="router-link">
+              <RouterLink to="/thanksgiving-mass-form-bookinglist-view" class="router-link">
                 <v-card-actions>
                   <v-btn
                     color="deep-purple-lighten-2"

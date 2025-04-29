@@ -1,4 +1,4 @@
-<script setup>
+<!--<script setup>
 import NavBar from '@/components/layout/NavBar.vue'
 import { ref } from 'vue'
 
@@ -12,7 +12,7 @@ const show3 = ref(false)
     <template #content>
       <v-container fluid>
         <div class="bg-wrapper">
-          <!-- Video background -->
+          <!-- Video background 
           <v-responsive aspect-ratio="16/9">
             <video
               autoplay
@@ -26,10 +26,10 @@ const show3 = ref(false)
             </video>
           </v-responsive>
 
-          <!-- Black overlay -->
+          <!-- Black overlay 
           <div class="bg-overlay"></div>
         </div>
-        <!-- <div class="bg-color"></div> -->
+        <!-- <div class="bg-color"></div> 
 
         <v-row>
           <v-col><h3 class="uppercase-text">Announcement Dashboard</h3> </v-col></v-row
@@ -49,7 +49,7 @@ const show3 = ref(false)
                 Jesus Christ this <b>Holy Week</b>. Here are the important activities happening in
                 our parish:
               </v-card-text>
-              <!-- <v-icon right>mdi-arrow-right</v-icon>-->
+              <!-- <v-icon right>mdi-arrow-right</v-icon>
               <v-card-actions>
                 <v-btn color="orange-lighten-2" text="See more ➔"> </v-btn>
                 <v-spacer></v-spacer>
@@ -357,5 +357,144 @@ const show3 = ref(false)
 
 .no-italic {
   font-style: normal;
+}
+</style>
+-->
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useAnnouncementsStore } from '@/stores/eventStore.js'
+import NavBar from '@/components/layout/NavBar.vue'
+
+const announcementsStore = useAnnouncementsStore()
+const tableFilters = ref({
+  search: '',
+})
+
+// On page load, fetch announcements
+onMounted(async () => {
+  // Fetch announcements if they aren't already loaded
+  if (announcementsStore.announcements.length === 0) {
+    await announcementsStore.getAnnouncements(tableFilters.value)
+  }
+})
+</script>
+
+<template>
+  <NavBar>
+    <template #content>
+      <v-container fluid>
+        <!-- Background Video Section -->
+        <div class="bg-wrapper">
+          <v-responsive aspect-ratio="16/9">
+            <video
+              autoplay
+              muted
+              loop
+              playsinline
+              style="width: 100%; height: 100%; object-fit: cover"
+            >
+              <source src="public/homepage-bg.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </v-responsive>
+          <div class="bg-overlay"></div>
+        </div>
+
+        <v-row>
+          <v-col><h3 class="uppercase-text">Announcement Dashboard</h3></v-col>
+        </v-row>
+
+        <v-row>
+          <v-col
+            cols="12"
+            sm="4"
+            v-for="announcement in announcementsStore.announcements"
+            :key="announcement.id"
+          >
+            <v-card class="mx-auto card-shadow" max-width="344">
+              <v-img
+                :src="announcement.imageUrl || 'public/default.jpg'"
+                height="200px"
+                cover
+              ></v-img>
+              <v-card-title class="card-title">
+                <b>{{ announcement.title }}</b>
+              </v-card-title>
+              <v-card-subtitle class="dates">
+                <b>Date Posted:</b> {{ announcement.date_posted }}
+              </v-card-subtitle>
+              <v-card-text class="text2">
+                {{ announcement.summary }}
+              </v-card-text>
+              <!-- See More Button -->
+              <v-card-actions>
+                <v-btn
+                  color="orange-lighten-2"
+                  :href="announcement.moreDetailsLink"
+                  text="See more ➔"
+                ></v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </template>
+  </NavBar>
+</template>
+
+<style scoped>
+/* your CSS remains same */
+.bg-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-wrapper > .v-responsive {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.15);
+  z-index: 1;
+}
+
+.card-shadow {
+  box-shadow:
+    -4px 0px 12px rgba(0, 0, 0, 0.1),
+    4px 0px 12px rgba(0, 0, 0, 0.1),
+    0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+  font-family: Cambria, Georgia, serif;
+  font-weight: bolder;
+}
+
+.dates {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.text2 {
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+}
+.uppercase-text {
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 24px;
 }
 </style>
