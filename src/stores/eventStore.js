@@ -1,5 +1,5 @@
 import { supabase, tableSearch } from '@/utils/supabase'
-import axios from 'axios'
+//import axios from 'axios'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useAuthUserStore } from './authUser'
@@ -19,9 +19,9 @@ export const useAnnouncementsStore = defineStore('announcements', () => {
   // Actions
   // Retrieve from Api and insert more to items in Supabase
   async function getAnnouncementsFromApi() {
-    const response = await axios.get('https://api.restful-api.dev/objects')
+    //const response = await axios.get('https://api.restful-api.dev/objects')
 
-    announcementsFromApi.value = response.data
+    // announcementsFromApi.value = response.data
 
     await supabase.from('announcements').delete().eq('id', 0)
 

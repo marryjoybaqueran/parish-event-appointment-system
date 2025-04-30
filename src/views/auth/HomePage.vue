@@ -370,6 +370,9 @@ const tableFilters = ref({
   search: '',
 })
 
+import { useDisplay } from 'vuetify'
+const { mobile, smAndDown } = useDisplay()
+
 // On page load, fetch announcements
 onMounted(async () => {
   // Fetch announcements if they aren't already loaded
@@ -378,7 +381,7 @@ onMounted(async () => {
   }
 })
 
-const cards = [
+/*const cards = [
   {
     title: 'Weddings',
     src: 'https://www.lumina.com.ph/assets/news-and-blogs-photos/Wedding-Planning-Checklist-in-the-Philippines/Wedding-Planning-Checklist-in-the-Philippines.webp',
@@ -399,13 +402,62 @@ const cards = [
     src: 'https://theholysacramentofbaptism.weebly.com/uploads/1/2/3/1/12312478/2447529.jpg?338',
     flex: 6,
   },
-]
+]*/
+
+onMounted(() => {
+  class TxtType {
+    constructor(el, toRotate, period) {
+      this.toRotate = toRotate
+      this.el = el
+      this.loopNum = 0
+      this.period = parseInt(period, 10) || 2000
+      this.txt = ''
+      this.tick()
+      this.isDeleting = false
+    }
+
+    tick() {
+      const i = this.loopNum % this.toRotate.length
+      const fullTxt = this.toRotate[i]
+
+      this.txt = this.isDeleting
+        ? fullTxt.substring(0, this.txt.length - 1)
+        : fullTxt.substring(0, this.txt.length + 1)
+
+      this.el.innerHTML = '<span class="wrap">' + this.txt + '</span>'
+
+      let delta = 200 - Math.random() * 100
+      if (this.isDeleting) delta /= 2
+
+      if (!this.isDeleting && this.txt === fullTxt) {
+        delta = this.period
+        this.isDeleting = true
+      } else if (this.isDeleting && this.txt === '') {
+        this.isDeleting = false
+        this.loopNum++
+        delta = 500
+      }
+
+      setTimeout(() => this.tick(), delta)
+    }
+  }
+
+  const elements = document.getElementsByClassName('typewrite')
+  for (let i = 0; i < elements.length; i++) {
+    const toRotate = elements[i].getAttribute('data-type')
+    const period = elements[i].getAttribute('data-period')
+    if (toRotate) {
+      new TxtType(elements[i], JSON.parse(toRotate), period)
+    }
+  }
+})
 </script>
 
 <template>
   <NavBar>
     <template #content>
-      <v-container fluid class="pa-0" style="height: 100vh; width: 100vw; overflow: hidden">
+      <v-container fluid pa-0>
+        <!--Background Image-->
         <div class="bg-wrapper">
           <v-responsive aspect-ratio="16/9">
             <video
@@ -413,72 +465,60 @@ const cards = [
               muted
               loop
               playsinline
-              style="width: 100%; height: 100%; object-fit: cover"
+              style="height: 100%; width: 100%; object-fit: cover"
             >
-              <source src="/homepage-bg.mp4" type="video/mp4" />
+              <source src="public/homepage-bg.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </v-responsive>
         </div>
 
-        <v-row>
+        <v-row class="mt-10">
           <!-- Left Half: Video Background with Welcome Text -->
+
           <v-col cols="12" md="6" class="position-relative">
-            <!-- Overlay Content -->
-            <div
-              class="overlay-content"
-              style="
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100vh;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                text-align: center;
-                color: white;
-                padding: 2rem;
-              "
+            <!-- Headline Top Left -->
+            <h1 class="text-top text-uppercase" :class="mobile ? 'small-text' : 'large-text'">
+              Faith. Community. Worship.
+              <a
+                href="#"
+                class="typewrite"
+                data-period="2000"
+                data-type='["Welcome to our website!"]'
+              >
+                <span class="wrap"></span>
+              </a>
+            </h1>
+
+            <!-- Centered Text & Button -->
+
+            <p class="text-left" :class="smAndDown ? 'small-p text-center' : 'large-p'">
+              Easily book parish services and pick the perfect schedule for your special moment —
+              anytime, online.
+            </p>
+            <br />
+            <br />
+
+            <RouterLink to="/book-event" class="router-link">
+              <v-btn
+                class="btn-0 mt-4 rounded-pill button"
+                size="x-large"
+                variant="flat"
+                :class="smAndDown ? 'small-header' : 'large-header'"
+              >
+                Book Now
+              </v-btn></RouterLink
             >
-              <!-- Headline Top Left -->
-              <div style="position: absolute; top: 2rem; left: 2rem">
-                <h1 class="text-left text-uppercase" style="margin: 0">
-                  Faith. Community. Worship. Welcome to our website!
-                </h1>
-              </div>
+          </v-col>
+          <br />
 
-              <br />
-              <br />
-              <br />
-
-              <br />
-              <br />
-              <br />
-              <!-- Centered Text & Button -->
-              <div>
-                <p style="font-size: 1.25rem; max-width: 600px" class="text-left">
-                  Where you can now easily book parish services and choose your schedule for your
-                  special moment online.
-                </p>
-                <br />
-                <br />
-                <br />
-                <br />
-
-                <RouterLink to="/book-event" class="router-link">
-                  <v-btn class="btn-0 mt-4 rounded-pill" size="x-large" variant="flat">
-                    Book Now
-                  </v-btn></RouterLink
-                >
-              </div>
-            </div>
+          <v-col cols="12" md="6">
+            <v-img src="gridpic.jpg" class="float-card"></v-img>
           </v-col>
 
-          <!-- Right Half: Gallery + Description Card -->
-          <v-col cols lg="6" md="12" sm="12">
-            <v-card class="mx-auto" max-width="auto">
+          <!-- Right Half: Gallery + Description Card
+          <v-col cols="12" md="5" sm="12">
+            <v-card>
               <v-container>
                 <v-row dense>
                   <v-col v-for="card in cards" :key="card.title" :cols="card.flex">
@@ -508,7 +548,7 @@ const cards = [
                 </v-row>
               </v-container>
             </v-card>
-          </v-col>
+          </v-col> -->
         </v-row>
       </v-container>
     </template>
@@ -533,7 +573,10 @@ const cards = [
 
 <style scoped>
 /* your CSS remains same */
-
+.button {
+  display: block;
+  margin: 0 auto;
+}
 @keyframes float {
   0% {
     transform: translateY(0);
@@ -556,6 +599,7 @@ const cards = [
 .heart {
   background-color: whitesmoke;
 }
+
 body {
   height: 100%;
   width: 100%;
@@ -565,8 +609,16 @@ body {
 h1 {
   font-family: 'Jomolhari', serif;
   font-weight: 700;
-  font-size: 3rem;
   color: rgb(49, 49, 95);
+}
+
+.small-text {
+  font-size: 30px;
+  text-align: center;
+}
+
+.large-text {
+  font-size: 3rem;
 }
 
 .bg-wrapper {
@@ -577,6 +629,8 @@ h1 {
   height: 100%;
   z-index: 0;
   overflow: hidden;
+  padding-left: 40px;
+  object-fit: cover;
 }
 
 p {
@@ -624,6 +678,11 @@ p {
     0px 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.typewrite {
+  color: rgb(116, 39, 39);
+  text-decoration: none;
+}
+
 .card-title {
   font-family: Cambria, Georgia, serif;
   font-weight: bolder;
@@ -640,6 +699,32 @@ p {
 .text-uppercase {
   text-transform: uppercase;
   font-weight: bold;
-  font-size: 50px;
+}
+
+.text-left {
+  padding-bottom: 60px;
+  text-align: center;
+}
+
+.text-top {
+  padding-bottom: 60px;
+}
+
+.small-p {
+  font-size: 20px;
+  text-align: center;
+}
+
+.large-p {
+  font-size: 22px;
+}
+
+.router-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.router-link:hover {
+  text-decoration: none;
 }
 </style>
