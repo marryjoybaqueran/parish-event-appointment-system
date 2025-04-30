@@ -2,8 +2,9 @@
 import { ref } from 'vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { useDisplay } from 'vuetify'
 
+//Display for mobile & desktop
+import { useDisplay } from 'vuetify'
 const { mobile } = useDisplay()
 </script>
 

@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
-// Mock data: You can expand this or match it to actual form data
 const baptise_info = ref([
   {
     BaptisedFirstName: 'Rapunzel',

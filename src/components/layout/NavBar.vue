@@ -23,6 +23,8 @@ const drawer = ref(false)
 function onClick() {
   localStorage.setItem('theme', theme.value)
 }
+
+//Display for mobile & desktop
 import { useDisplay } from 'vuetify'
 const { mobile, smAndDown } = useDisplay()
 
@@ -54,6 +56,7 @@ onMounted(async () => {
 
         <!-- Desktop Nav -->
         <div v-if="!smAndDown" class="d-flex align-center nav">
+          <!---->
           <div class="d-flex nav">
             <v-btn class="home-btn mr-2" flat>
               <v-icon class="home-icon">mdi-home</v-icon>

@@ -13,6 +13,8 @@ const isDark = computed({
 function onClick() {
   localStorage.setItem('theme', theme.value)
 }
+
+//Display for desktop & mobile
 import { useDisplay } from 'vuetify'
 const { mobile } = useDisplay()
 const { smAndDown } = useDisplay()

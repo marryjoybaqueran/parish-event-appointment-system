@@ -297,7 +297,7 @@ const show3 = ref(false)
   </NavBar>
 </template>
 
-<style scoped>
+<style scoped></style>
 .bg-wrapper {
   position: fixed;
   top: 0;
@@ -378,13 +378,58 @@ onMounted(async () => {
     await announcementsStore.getAnnouncements(tableFilters.value)
   }
 })
+
+const cards = [
+  {
+    title: 'Weddings',
+    src: 'https://www.lumina.com.ph/assets/news-and-blogs-photos/Wedding-Planning-Checklist-in-the-Philippines/Wedding-Planning-Checklist-in-the-Philippines.webp',
+    flex: 6,
+  },
+  {
+    title: 'Thanksgiving',
+    src: 'https://images.squarespace-cdn.com/content/v1/5b3d1a1136099bf25be26f35/7830e2f3-c50b-4ef3-80b0-c61ad2cc7c74/IMG_8191.jpg',
+    flex: 6,
+  },
+  {
+    title: 'Funeral',
+    src: 'https://uploads.weconnect.com/a809286533cd8081f5c8efed39e52504fa350c0f/jlapx25nkkowxg6fu33m6zomn7l.jpg',
+    flex: 6,
+  },
+  {
+    title: 'Christening',
+    src: 'https://theholysacramentofbaptism.weebly.com/uploads/1/2/3/1/12312478/2447529.jpg?338',
+    flex: 6,
+  },
+]
+
+const card = ref([
+  {
+    title: 'Card 1',
+    src: 'https://via.placeholder.com/300x200',
+    flex: 12,
+    flipped: false,
+  },
+  {
+    title: 'Card 2',
+    src: 'https://via.placeholder.com/300x200',
+    flex: 12,
+    flipped: false,
+  },
+])
+
+function flipCard(index) {
+  card.value[index].flipped = !card.value[index].flipped
+}
 </script>
 
 <template>
   <NavBar>
     <template #content>
-      <v-container fluid>
-        <!-- Background Video Section -->
+      <v-container
+        fluid
+        class="pa-0 ma-0 fill-height"
+        style="height: 100vh; width: 100vw; overflow: hidden"
+      >
         <div class="bg-wrapper">
           <v-responsive aspect-ratio="16/9">
             <video
@@ -394,47 +439,94 @@ onMounted(async () => {
               playsinline
               style="width: 100%; height: 100%; object-fit: cover"
             >
-              <source src="public/homepage-bg.mp4" type="video/mp4" />
+              <source src="/homepage-bg.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </v-responsive>
-          <div class="bg-overlay"></div>
         </div>
-
         <v-row>
-          <v-col><h3 class="uppercase-text">Announcement Dashboard</h3></v-col>
-        </v-row>
+          <!-- Left Half: Video Background with Welcome Text -->
+          <v-col cols lg="6" md="12" sm="12" class="position-relative">
+            <!-- Overlay Content -->
+            <div
+              class="overlay-content"
+              style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                color: white;
+                padding: 2rem;
+              "
+            >
+              <!-- Headline Top Left -->
+              <div style="position: absolute; top: 2rem; left: 2rem">
+                <h1 class="text-left text-uppercase" style="margin: 0">
+                  Faith. Community. Worship. Welcome to our website!
+                </h1>
+              </div>
+              <br />
+              <br />
+              <br />
 
-        <v-row>
-          <v-col
-            cols="12"
-            sm="4"
-            v-for="announcement in announcementsStore.announcements"
-            :key="announcement.id"
-          >
-            <v-card class="mx-auto card-shadow" max-width="344">
-              <v-img
-                :src="announcement.imageUrl || 'public/default.jpg'"
-                height="200px"
-                cover
-              ></v-img>
-              <v-card-title class="card-title">
-                <b>{{ announcement.title }}</b>
-              </v-card-title>
-              <v-card-subtitle class="dates">
-                <b>Date Posted:</b> {{ announcement.date_posted }}
-              </v-card-subtitle>
-              <v-card-text class="text2">
-                {{ announcement.summary }}
-              </v-card-text>
-              <!-- See More Button -->
-              <v-card-actions>
-                <v-btn
-                  color="orange-lighten-2"
-                  :href="announcement.moreDetailsLink"
-                  text="See more ➔"
-                ></v-btn>
-              </v-card-actions>
+              <br />
+              <br />
+              <br />
+              <!-- Centered Text & Button -->
+              <div>
+                <p style="font-size: 1.25rem; max-width: 600px" class="text-left">
+                  You can now easily book parish services and choose your schedule for your special
+                  moment online.
+                </p>
+                <br />
+                <br />
+                <br />
+                <br />
+
+                <v-btn class="btn-0 mt-4 rounded-pill" size="x-large" variant="flat">
+                  Book Now
+                </v-btn>
+              </div>
+            </div>
+          </v-col>
+
+          <!-- Right Half: Gallery + Description Card -->
+          <v-col cols lg="6" md="12" sm="12">
+            <v-card class="mx-auto" max-width="990">
+              <v-container fluid>
+                <v-row dense>
+                  <v-col v-for="card in cards" :key="card.title" :cols="card.flex">
+                    <v-card class="cardx float-card">
+                      <v-img
+                        :src="card.src"
+                        class="align-end"
+                        gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+                        height="200px"
+                        cover
+                      >
+                        <v-card-title class="text-white" v-text="card.title"></v-card-title>
+                      </v-img>
+
+                      <v-card-actions>
+                        <v-spacer></v-spacer>
+
+                        <v-btn
+                          color="red"
+                          icon="mdi-heart"
+                          size="small"
+                          class="heart rounded-circle"
+                        ></v-btn>
+                      </v-card-actions>
+                    </v-card>
+                  </v-col>
+                </v-row>
+              </v-container>
             </v-card>
           </v-col>
         </v-row>
@@ -442,9 +534,60 @@ onMounted(async () => {
     </template>
   </NavBar>
 </template>
+<!-- Gallery Carousel
+            <v-carousel hide-delimiters cycle height="300" show-arrows-on-hover class="mb-4">
+              <v-carousel-item v-for="(img, i) in images" :key="i">
+                <v-img :src="img" height="300" contain></v-img>
+              </v-carousel-item>
+            </v-carousel>
+
+            Description Card 
+            <v-card width="90%" elevation="6">
+              <v-card-title class="headline">About Our Parish</v-card-title>
+              <v-card-text>
+                San Isidro Labrador Parish is a vibrant community of faith. We welcome everyone to
+                join our worship, community events, and outreach programs dedicated to spiritual and
+                social growth.
+              </v-card-text> 
+            </v-card>-->
 
 <style scoped>
 /* your CSS remains same */
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.float-card {
+  animation: float 3s ease-in-out infinite;
+}
+
+.cardx {
+  border-color: rgb(49, 49, 95);
+}
+.heart {
+  background-color: whitesmoke;
+}
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+h1 {
+  font-family: 'Jomolhari', serif;
+  font-weight: 700;
+  font-size: 3rem;
+  color: rgb(49, 49, 95);
+}
+
 .bg-wrapper {
   position: fixed;
   top: 0;
@@ -453,6 +596,26 @@ onMounted(async () => {
   height: 100%;
   z-index: 0;
   overflow: hidden;
+}
+
+p {
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  color: rgb(23, 26, 25);
+}
+
+.btn-0 {
+  background-color: rgb(49, 49, 95);
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  color: rgb(204, 195, 195);
+  font-weight: bold;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.btn-0:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .bg-wrapper > .v-responsive {
@@ -483,6 +646,7 @@ onMounted(async () => {
 .card-title {
   font-family: Cambria, Georgia, serif;
   font-weight: bolder;
+  text-align: center;
 }
 
 .dates {

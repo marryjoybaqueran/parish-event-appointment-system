@@ -163,7 +163,6 @@ async function addAnnouncement() {
         summary: newAnnouncement.value.summary,
         details: newAnnouncement.value.details,
         image: newAnnouncement.value.image,
-        additional_info: newAnnouncement.value.additionalInfo,
       },
     ])
 
@@ -184,7 +183,6 @@ async function addAnnouncement() {
         file: null,
         summary: '',
         details: '',
-        additionalInfo: [],
       }
     }
   } else {
@@ -198,22 +196,10 @@ function toggleEdit(announcementItem) {
 }
 
 // Optional: You can add editing file upload later if you want
-function handleEditFileUpload(event, announcementItem) {
-  const file = event.target.files[0]
-  if (file) {
-    supabase.storage
-      .from('event-images')
-      .upload(`public/${file.name}`, file)
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Error uploading edit file:', error)
-          return
-        }
-        const { publicURL } = supabase.storage.from('event-images').getPublicUrl(data.path)
-        ann.img_url = publicURL
-      })
-  }
-}
+const { data, error } = await supabase
+  .from('announcements')
+  .insert([{ some_column: 'someValue', other_column: 'otherValue' }])
+  .select()
 
 onMounted(async () => {
   await loadAnnouncement()
