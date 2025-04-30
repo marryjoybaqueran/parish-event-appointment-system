@@ -405,7 +405,11 @@ const cards = [
 <template>
   <NavBar>
     <template #content>
-      <v-container fluid class="pa-0" style="height: 100vh; width: 100vw; overflow: hidden">
+      <v-container
+        fluid
+        class="pa-0 ma-0 fill-height"
+        style="height: 100vh; width: 100vw; overflow: hidden"
+      >
         <div class="bg-wrapper">
           <v-responsive aspect-ratio="16/9">
             <video
@@ -420,7 +424,6 @@ const cards = [
             </video>
           </v-responsive>
         </div>
-
         <v-row>
           <!-- Left Half: Video Background with Welcome Text -->
           <v-col cols="12" md="6" class="position-relative">
@@ -479,7 +482,7 @@ const cards = [
           <!-- Right Half: Gallery + Description Card -->
           <v-col cols lg="6" md="12" sm="12">
             <v-card class="mx-auto" max-width="auto">
-              <v-container>
+              <v-container fluid>
                 <v-row dense>
                   <v-col v-for="card in cards" :key="card.title" :cols="card.flex">
                     <v-card class="cardx float-card">
@@ -487,7 +490,7 @@ const cards = [
                         :src="card.src"
                         class="align-end"
                         gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
-                        height="200px"
+                        height="300px"
                         cover
                       >
                         <v-card-title class="text-white">{{ card.title }}</v-card-title>
@@ -637,9 +640,9 @@ p {
 .text2 {
   font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
 }
-.text-uppercase {
+.uppercase-text {
   text-transform: uppercase;
   font-weight: bold;
-  font-size: 50px;
+  font-size: 24px;
 }
 </style>

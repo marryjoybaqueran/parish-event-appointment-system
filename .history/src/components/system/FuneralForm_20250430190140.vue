@@ -24,6 +24,7 @@ const formData = ref({
 
 // Form action refs
 const formAction = ref({ ...formActionDefault })
+const valid = ref(false)
 const refVform = ref()
 
 // Fetch the authenticated user
@@ -51,9 +52,8 @@ const onSubmit = async () => {
     return
   }
 
-  const { data, error } = await supabase.from('funeral_bookings').insert([
+  const { data, error } = await supabase.from('bookings').insert([
     {
-      user_id: user.id,
       first_name: formData.value.first_name,
       last_name: formData.value.last_name,
       middle_name: formData.value.middle_name,
@@ -75,7 +75,7 @@ const onSubmit = async () => {
     formAction.value.formStatus = error.code
   } else {
     console.log('Data inserted successfully:', data)
-    formAction.value.formSuccessMessage = 'Funeral mass booking submitted successfully!'
+    formAction.value.formSuccessMessage = 'Thanksgiving booking submitted successfully!'
     refVform.value?.reset()
   }
 
@@ -84,6 +84,7 @@ const onSubmit = async () => {
 
 const showRequirements = ref(false)
 const requirements = ref(['Birth Certificate', 'Death Certificates '])
+const isHovering = ref(false)
 // Validation
 const valid = ref(false)
 const nameRules = [(v) => !!v || 'This field is required']
@@ -91,19 +92,24 @@ const emailRules = [(v) => !!v || 'This field is required']
 const dateRules = [(v) => !!v || 'Date is required']
 const timeRules = [(v) => !!v || 'Time is required']
 
-const onFormSubmit = () => {
-  refVform.value?.validate().then(({ valid }) => {
-    if (valid) onSubmit()
-  })
-}
+const Bfirstname = ref('')
+const Blastname = ref('')
+const BMI = ref('')
+const dateofbirth = ref('')
+const dateofdeath = ref('')
+const age = ref('')
+
+const fullname = ref('')
+const relationship = ref('')
+const phonenum = ref('')
+
+// Wedding date/time
+const date = ref('')
+const time = ref('')
 </script>
 
 <template>
-  <AlertNotification
-    :form-success-message="formAction.formSuccessMessage"
-    :form-error-message="formAction.formErrorMessage"
-  />
-  <v-form v-model="valid" ref="refVform" @submit.prevent="onFormSubmit">
+  <v-form v-model="valid" ref="form">
     <v-container>
       <h2 class="info mt-7">Deceased Information</h2>
 
@@ -111,7 +117,7 @@ const onFormSubmit = () => {
       <v-row>
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="formData.first_name"
+            v-model="Bfirstname"
             :rules="nameRules"
             label="First name"
             required
@@ -120,7 +126,7 @@ const onFormSubmit = () => {
 
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="formData.last_name"
+            v-model="Blastname"
             :rules="nameRules"
             label="Last name"
             required
@@ -129,8 +135,8 @@ const onFormSubmit = () => {
 
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="formData.middle_name"
-            :rules="nameRules"
+            v-model="BMI"
+            :rules="emailRules"
             label="Middle Name"
             required
           ></v-text-field>
@@ -140,7 +146,7 @@ const onFormSubmit = () => {
       <v-row>
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="formData.birth_date"
+            v-model="dateofbirth"
             :rules="nameRules"
             label="Date of Birth "
             type="date"
@@ -150,7 +156,7 @@ const onFormSubmit = () => {
 
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="formData.death_date"
+            v-model="dateofdeath"
             :rules="dateRules"
             type="date"
             label="Date of Death"
@@ -160,7 +166,7 @@ const onFormSubmit = () => {
 
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="formData.age"
+            v-model="age"
             :rules="dateRules"
             type="number"
             label="Age"
@@ -173,7 +179,7 @@ const onFormSubmit = () => {
       <v-row>
         <v-col cols="12" md="6">
           <v-text-field
-            v-model="formData.funeral_date"
+            v-model="date"
             :rules="dateRules"
             type="date"
             label="Select funeral date  "
@@ -183,7 +189,7 @@ const onFormSubmit = () => {
 
         <v-col cols="12" md="6">
           <v-text-field
-            v-model="formData.funeral_time"
+            v-model="time"
             :items="items"
             :item-props="itemProps"
             type="time"
@@ -202,7 +208,7 @@ const onFormSubmit = () => {
       <v-row>
         <v-col cols="12" md="12">
           <v-text-field
-            v-model="formData.contact_fullname"
+            v-model="fullname"
             :rules="nameRules"
             label="Complete Name"
             required
@@ -214,7 +220,7 @@ const onFormSubmit = () => {
       <v-row>
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="formData.relationship"
+            v-model="relationship"
             :rules="nameRules"
             label="Relationship"
             required
@@ -222,19 +228,13 @@ const onFormSubmit = () => {
         </v-col>
 
         <v-col cols="12" md="4">
-          <v-text-field
-            v-model="formData.email"
-            :rules="emailRules"
-            label="Email"
-            required
-          ></v-text-field>
+          <v-text-field v-model="email" :rules="emailRules" label="Email" required></v-text-field>
         </v-col>
 
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="formData.number"
+            v-model="phonenum"
             :rules="emailRules"
-            type="number"
             label="Phone Number"
             inputmode="+63"
             required
@@ -264,26 +264,23 @@ const onFormSubmit = () => {
 
       <br />
 
-      <v-row justify="center">
+      <v-row justify="center" class="my-9">
         <v-col cols="auto">
-          <v-hover v-slot:default="{ isHovering, props }">
-            <v-btn
-              v-bind="props"
-              class="bg-primary pt-0 mt-0"
-              :class="{ 'on-hover': isHovering }"
-              :elevation="isHovering ? 16 : 2"
-              size="large"
-              variant="tonal"
-              width="350"
-              type="submit"
-              v-blind:width="mdAndDown ? '80%' : '10%'"
-              block
-              :disabled="formAction.formProcess"
-              :loading="formAction.formProcess"
-            >
-              Submit Funeral Mass Form
-            </v-btn>
-          </v-hover>
+          <v-btn
+            v-model="valid"
+            class="bg-primary pt-0"
+            :class="{ 'green-hover': isHovering }"
+            :elevation="isHovering ? 16 : 2"
+            size="large"
+            variant="tonal"
+            width="300"
+            v-blind:width="mdAndDown ? '80%' : '10%'"
+            @mouseenter="isHovering = true"
+            @mouseleave="isHovering = false"
+            @click="valid = $refs.form.validate()"
+          >
+            <span>SUBMIT FUNERAL MASS FORM</span>
+          </v-btn>
         </v-col>
       </v-row>
     </v-container>

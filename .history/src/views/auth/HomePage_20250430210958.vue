@@ -573,7 +573,7 @@ h1 {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 50%;
   height: 100%;
   z-index: 0;
   overflow: hidden;

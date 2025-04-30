@@ -421,6 +421,8 @@ const cards = [
           </v-responsive>
         </div>
 
+        <v-container fluid class="pa-0">
+
         <v-row>
           <!-- Left Half: Video Background with Welcome Text -->
           <v-col cols="12" md="6" class="position-relative">
@@ -506,6 +508,8 @@ const cards = [
                     </v-card>
                   </v-col>
                 </v-row>
+              </v-container>
+
               </v-container>
             </v-card>
           </v-col>

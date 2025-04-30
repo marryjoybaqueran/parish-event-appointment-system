@@ -569,6 +569,10 @@ h1 {
   color: rgb(49, 49, 95);
 }
 
+.h1 {
+  padding-left: 20px;
+}
+
 .bg-wrapper {
   position: fixed;
   top: 0;

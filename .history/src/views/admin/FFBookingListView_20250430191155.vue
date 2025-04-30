@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
@@ -22,11 +22,11 @@ const deceased_info = ref([
 ])
 
 const loadFuneralInfo = async () => {
-  const { data, error } = await supabase.from('funeral_bookings').select('*')
+  const { data, error } = await supabase.from('bookings').select('*')
   if (error) {
     console.error('Error loading funeral form info:', error.message)
   } else {
-    deceased_info.value = data
+    funeral_info.value = data
   }
 }
 
@@ -62,15 +62,14 @@ onMounted(() => {
                   <th class="text-left font-weight-bold">Selected Funeral Time</th>
 
                   <!-- Contact Person Information -->
-                  <th class="text-left font-weight-bold">Contact Full Name</th>
+                  <th class="text-left font-weight-bold">Contact Fullname</th>
                   <th class="text-left font-weight-bold">Relationship</th>
-                  <th class="text-left font-weight-bold">Email Address</th>
                   <th class="text-left font-weight-bold">Phone Number</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(item, index) in deceased_info" :key="index">
-                  <!-- Deceased's Info -->
+                  <!-- Bride's Info -->
                   <td>{{ item.first_name }}</td>
                   <td>{{ item.last_name }}</td>
                   <td>{{ item.middle_name }}</td>
@@ -80,6 +79,7 @@ onMounted(() => {
                   <td>{{ item.funeral_date }}</td>
                   <td>{{ item.funeral_time }}</td>
 
+                  <!-- Groom's Info -->
                   <td>{{ item.contact_fullname }}</td>
                   <td>{{ item.relationship }}</td>
                   <td>{{ item.email }}</td>

@@ -62,15 +62,14 @@ onMounted(() => {
                   <th class="text-left font-weight-bold">Selected Funeral Time</th>
 
                   <!-- Contact Person Information -->
-                  <th class="text-left font-weight-bold">Contact Full Name</th>
+                  <th class="text-left font-weight-bold">Contact Fullname</th>
                   <th class="text-left font-weight-bold">Relationship</th>
-                  <th class="text-left font-weight-bold">Email Address</th>
                   <th class="text-left font-weight-bold">Phone Number</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(item, index) in deceased_info" :key="index">
-                  <!-- Deceased's Info -->
+                  <!-- Bride's Info -->
                   <td>{{ item.first_name }}</td>
                   <td>{{ item.last_name }}</td>
                   <td>{{ item.middle_name }}</td>
@@ -80,6 +79,7 @@ onMounted(() => {
                   <td>{{ item.funeral_date }}</td>
                   <td>{{ item.funeral_time }}</td>
 
+                  <!-- Groom's Info -->
                   <td>{{ item.contact_fullname }}</td>
                   <td>{{ item.relationship }}</td>
                   <td>{{ item.email }}</td>

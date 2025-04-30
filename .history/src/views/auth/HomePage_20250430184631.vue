@@ -420,7 +420,9 @@ const cards = [
             </video>
           </v-responsive>
         </div>
+      </v-container>
 
+      <v-container fluid class="pa-0">
         <v-row>
           <!-- Left Half: Video Background with Welcome Text -->
           <v-col cols="12" md="6" class="position-relative">

@@ -53,7 +53,6 @@ const onSubmit = async () => {
 
   const { data, error } = await supabase.from('funeral_bookings').insert([
     {
-      user_id: user.id,
       first_name: formData.value.first_name,
       last_name: formData.value.last_name,
       middle_name: formData.value.middle_name,
@@ -84,6 +83,7 @@ const onSubmit = async () => {
 
 const showRequirements = ref(false)
 const requirements = ref(['Birth Certificate', 'Death Certificates '])
+const isHovering = ref(false)
 // Validation
 const valid = ref(false)
 const nameRules = [(v) => !!v || 'This field is required']
@@ -234,7 +234,6 @@ const onFormSubmit = () => {
           <v-text-field
             v-model="formData.number"
             :rules="emailRules"
-            type="number"
             label="Phone Number"
             inputmode="+63"
             required
@@ -264,26 +263,23 @@ const onFormSubmit = () => {
 
       <br />
 
-      <v-row justify="center">
+      <v-row justify="center" class="my-9">
         <v-col cols="auto">
-          <v-hover v-slot:default="{ isHovering, props }">
-            <v-btn
-              v-bind="props"
-              class="bg-primary pt-0 mt-0"
-              :class="{ 'on-hover': isHovering }"
-              :elevation="isHovering ? 16 : 2"
-              size="large"
-              variant="tonal"
-              width="350"
-              type="submit"
-              v-blind:width="mdAndDown ? '80%' : '10%'"
-              block
-              :disabled="formAction.formProcess"
-              :loading="formAction.formProcess"
-            >
-              Submit Funeral Mass Form
-            </v-btn>
-          </v-hover>
+          <v-btn
+            v-model="valid"
+            class="bg-primary pt-0"
+            :class="{ 'green-hover': isHovering }"
+            :elevation="isHovering ? 16 : 2"
+            size="large"
+            variant="tonal"
+            width="300"
+            v-blind:width="mdAndDown ? '80%' : '10%'"
+            :disabled="formAction.formProcess"
+            :loading="formAction.formProcess"
+            block
+          >
+            <span>SUBMIT FUNERAL MASS FORM</span>
+          </v-btn>
         </v-col>
       </v-row>
     </v-container>

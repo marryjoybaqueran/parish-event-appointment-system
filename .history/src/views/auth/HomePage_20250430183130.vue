@@ -400,12 +400,35 @@ const cards = [
     flex: 6,
   },
 ]
+
+const card = ref([
+  {
+    title: 'Card 1',
+    src: 'https://via.placeholder.com/300x200',
+    flex: 12,
+    flipped: false,
+  },
+  {
+    title: 'Card 2',
+    src: 'https://via.placeholder.com/300x200',
+    flex: 12,
+    flipped: false,
+  },
+])
+
+function flipCard(index) {
+  cards.value[index].flipped = !cards.value[index].flipped
+}
 </script>
 
 <template>
   <NavBar>
     <template #content>
-      <v-container fluid class="pa-0" style="height: 100vh; width: 100vw; overflow: hidden">
+      <v-container
+        fluid
+        class="pa-0 ma-0 fill-height"
+        style="height: 100vh; width: 100vw; overflow: hidden"
+      >
         <div class="bg-wrapper">
           <v-responsive aspect-ratio="16/9">
             <video
@@ -420,7 +443,6 @@ const cards = [
             </video>
           </v-responsive>
         </div>
-
         <v-row>
           <!-- Left Half: Video Background with Welcome Text -->
           <v-col cols="12" md="6" class="position-relative">
@@ -478,8 +500,8 @@ const cards = [
 
           <!-- Right Half: Gallery + Description Card -->
           <v-col cols lg="6" md="12" sm="12">
-            <v-card class="mx-auto" max-width="auto">
-              <v-container>
+            <v-card class="mx-auto" max-width="990">
+              <v-container fluid>
                 <v-row dense>
                   <v-col v-for="card in cards" :key="card.title" :cols="card.flex">
                     <v-card class="cardx float-card">
@@ -637,9 +659,9 @@ p {
 .text2 {
   font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
 }
-.text-uppercase {
+.uppercase-text {
   text-transform: uppercase;
   font-weight: bold;
-  font-size: 50px;
+  font-size: 24px;
 }
 </style>

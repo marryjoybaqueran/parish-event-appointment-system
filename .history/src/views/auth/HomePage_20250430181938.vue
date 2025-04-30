@@ -12,7 +12,7 @@ const show3 = ref(false)
     <template #content>
       <v-container fluid>
         <div class="bg-wrapper">
-         Video background
+          <!-- Video background
           <v-responsive aspect-ratio="16/9">
             <video
               autoplay
@@ -26,10 +26,10 @@ const show3 = ref(false)
             </video>
           </v-responsive>
 
-         Black overlay
+          <!-- Black overlay
           <div class="bg-overlay"></div>
         </div>
-     <div class="bg-color"></div>
+        <!-- <div class="bg-color"></div>
 
         <v-row>
           <v-col><h3 class="uppercase-text">Announcement Dashboard</h3> </v-col></v-row
@@ -49,7 +49,7 @@ const show3 = ref(false)
                 Jesus Christ this <b>Holy Week</b>. Here are the important activities happening in
                 our parish:
               </v-card-text>
-              <v-icon right>mdi-arrow-right</v-icon>
+              <!-- <v-icon right>mdi-arrow-right</v-icon>
               <v-card-actions>
                 <v-btn color="orange-lighten-2" text="See more ➔"> </v-btn>
                 <v-spacer></v-spacer>
@@ -400,12 +400,31 @@ const cards = [
     flex: 6,
   },
 ]
+
+const card = ref([
+  {
+    title: 'Card 1',
+    src: 'https://via.placeholder.com/300x200',
+    flex: 12,
+    flipped: false,
+  },
+  {
+    title: 'Card 2',
+    src: 'https://via.placeholder.com/300x200',
+    flex: 12,
+    flipped: false,
+  },
+])
 </script>
 
 <template>
   <NavBar>
     <template #content>
-      <v-container fluid class="pa-0" style="height: 100vh; width: 100vw; overflow: hidden">
+      <v-container
+        fluid
+        class="pa-0 ma-0 fill-height"
+        style="height: 100vh; width: 100vw; overflow: hidden"
+      >
         <div class="bg-wrapper">
           <v-responsive aspect-ratio="16/9">
             <video
@@ -420,7 +439,6 @@ const cards = [
             </video>
           </v-responsive>
         </div>
-
         <v-row>
           <!-- Left Half: Video Background with Welcome Text -->
           <v-col cols="12" md="6" class="position-relative">
@@ -478,8 +496,8 @@ const cards = [
 
           <!-- Right Half: Gallery + Description Card -->
           <v-col cols lg="6" md="12" sm="12">
-            <v-card class="mx-auto" max-width="auto">
-              <v-container>
+            <v-card class="mx-auto" max-width="990">
+              <v-container fluid>
                 <v-row dense>
                   <v-col v-for="card in cards" :key="card.title" :cols="card.flex">
                     <v-card class="cardx float-card">
@@ -490,7 +508,7 @@ const cards = [
                         height="200px"
                         cover
                       >
-                        <v-card-title class="text-white">{{ card.title }}</v-card-title>
+                        <v-card-title class="text-white" v-text="card.title"></v-card-title>
                       </v-img>
 
                       <v-card-actions>
@@ -637,9 +655,9 @@ p {
 .text2 {
   font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
 }
-.text-uppercase {
+.uppercase-text {
   text-transform: uppercase;
   font-weight: bold;
-  font-size: 50px;
+  font-size: 24px;
 }
 </style>

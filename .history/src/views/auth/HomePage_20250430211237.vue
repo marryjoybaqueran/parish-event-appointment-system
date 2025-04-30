@@ -439,7 +439,7 @@ const cards = [
                 align-items: center;
                 text-align: center;
                 color: white;
-                padding: 2rem;
+                padding-left: 2rem;
               "
             >
               <!-- Headline Top Left -->

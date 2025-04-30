@@ -53,7 +53,6 @@ const onSubmit = async () => {
 
   const { data, error } = await supabase.from('funeral_bookings').insert([
     {
-      user_id: user.id,
       first_name: formData.value.first_name,
       last_name: formData.value.last_name,
       middle_name: formData.value.middle_name,
@@ -84,6 +83,7 @@ const onSubmit = async () => {
 
 const showRequirements = ref(false)
 const requirements = ref(['Birth Certificate', 'Death Certificates '])
+const isHovering = ref(false)
 // Validation
 const valid = ref(false)
 const nameRules = [(v) => !!v || 'This field is required']
@@ -234,7 +234,6 @@ const onFormSubmit = () => {
           <v-text-field
             v-model="formData.number"
             :rules="emailRules"
-            type="number"
             label="Phone Number"
             inputmode="+63"
             required

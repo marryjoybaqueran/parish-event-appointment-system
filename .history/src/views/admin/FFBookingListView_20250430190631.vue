@@ -1,6 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { supabase } from '@/utils/supabase.js'
+import { ref } from 'vue'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
 // Mock data: You can expand this or match it to actual form data
@@ -20,19 +19,6 @@ const deceased_info = ref([
     number: '',
   },
 ])
-
-const loadFuneralInfo = async () => {
-  const { data, error } = await supabase.from('funeral_bookings').select('*')
-  if (error) {
-    console.error('Error loading funeral form info:', error.message)
-  } else {
-    deceased_info.value = data
-  }
-}
-
-onMounted(() => {
-  loadFuneralInfo()
-})
 </script>
 
 <template>
@@ -62,28 +48,29 @@ onMounted(() => {
                   <th class="text-left font-weight-bold">Selected Funeral Time</th>
 
                   <!-- Contact Person Information -->
-                  <th class="text-left font-weight-bold">Contact Full Name</th>
+                  <th class="text-left font-weight-bold">Complete Name</th>
                   <th class="text-left font-weight-bold">Relationship</th>
-                  <th class="text-left font-weight-bold">Email Address</th>
                   <th class="text-left font-weight-bold">Phone Number</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(item, index) in deceased_info" :key="index">
-                  <!-- Deceased's Info -->
-                  <td>{{ item.first_name }}</td>
-                  <td>{{ item.last_name }}</td>
-                  <td>{{ item.middle_name }}</td>
-                  <td>{{ item.birth_date }}</td>
-                  <td>{{ item.death_date }}</td>
-                  <td>{{ item.age }}</td>
-                  <td>{{ item.funeral_date }}</td>
-                  <td>{{ item.funeral_time }}</td>
+                  <!-- Bride's Info -->
+                  <td>{{ item.deceasedFirstName }}</td>
+                  <td>{{ item.deceasedLastName }}</td>
+                  <td>{{ item.deceasedMiddleInitial }}</td>
+                  <td>{{ item.deceasedDateOfBirth }}</td>
+                  <td>{{ item.deceasedDateOfDeath }}</td>
+                  <td>{{ item.deceasedAge }}</td>
+                  <td>{{ item.deceasedSelectedFuneralDate }}</td>
+                  <td>{{ item.deceasedSelectedFuneralTime }}</td>
 
-                  <td>{{ item.contact_fullname }}</td>
-                  <td>{{ item.relationship }}</td>
-                  <td>{{ item.email }}</td>
-                  <td>{{ item.number }}</td>
+                  <!-- Groom's Info -->
+                  <td>{{ item.ContactPersonFirstName }}</td>
+                  <td>{{ item.ContactPersonLastName }}</td>
+                  <td>{{ item.ContactPersonMiddleInitial }}</td>
+                  <td>{{ item.ContactPersonRelationship }}</td>
+                  <td>{{ item.ContactPersonPhoneNumber }}</td>
                 </tr>
               </tbody>
             </v-table>

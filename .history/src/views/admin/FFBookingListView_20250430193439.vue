@@ -62,9 +62,8 @@ onMounted(() => {
                   <th class="text-left font-weight-bold">Selected Funeral Time</th>
 
                   <!-- Contact Person Information -->
-                  <th class="text-left font-weight-bold">Contact Full Name</th>
+                  <th class="text-left font-weight-bold">Contact Fullname</th>
                   <th class="text-left font-weight-bold">Relationship</th>
-                  <th class="text-left font-weight-bold">Email Address</th>
                   <th class="text-left font-weight-bold">Phone Number</th>
                 </tr>
               </thead>

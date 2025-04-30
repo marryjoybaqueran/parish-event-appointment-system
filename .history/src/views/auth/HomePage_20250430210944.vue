@@ -570,7 +570,7 @@ h1 {
 }
 
 .bg-wrapper {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
