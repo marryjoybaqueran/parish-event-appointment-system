@@ -23,12 +23,15 @@ const drawer = ref(false)
 function onClick() {
   localStorage.setItem('theme', theme.value)
 }
+
+//Display for mobile & desktop
 import { useDisplay } from 'vuetify'
 const { mobile, smAndDown } = useDisplay()
 
 // Load Functions during component rendering
 onMounted(async () => {
   isLoggedIn.value = await authStore.isAuthenticated()
+
   //isMobileLogged.value = mobile.value && isLoggedIn.value
   // isDesktop.value = !mobile.value && (isLoggedIn.value || !isLoggedIn.value)
 })

@@ -53,7 +53,7 @@ function view() {
             <v-card
               :disabled="loading"
               :loading="loading"
-              class="mx-auto my-12 card-shadow"
+              class="my-12 card-shadow float-card"
               max-width="374"
             >
               <template v-slot:loader="{ isActive }">
@@ -65,43 +65,7 @@ function view() {
                 ></v-progress-linear>
               </template>
 
-              <v-img height="250" src="public/announcement8.gif" cover></v-img>
-
-              <v-card-item>
-                <v-card-title class="card-title"> MANAGE ANNOUNCEMENT </v-card-title>
-              </v-card-item>
-
-              <v-divider class="mx-4 mb-1"></v-divider>
-              <RouterLink to="/admin-announcement-manager" class="router-link">
-                <v-card-actions>
-                  <v-btn
-                    class="view"
-                    color="deep-purple-lighten-2"
-                    text="View"
-                    block
-                    border
-                    @click="view"
-                  ></v-btn> </v-card-actions
-              ></RouterLink>
-            </v-card>
-          </v-col>
-          <v-col cols lg="6" md="12" sm="12">
-            <v-card
-              :disabled="loading"
-              :loading="loading"
-              class="my-12 card-shadow"
-              max-width="374"
-            >
-              <template v-slot:loader="{ isActive }">
-                <v-progress-linear
-                  :active="isActive"
-                  color="deep-purple"
-                  height="4"
-                  indeterminate
-                ></v-progress-linear>
-              </template>
-
-              <v-img height="250" src="public/appointment5.gif" cover></v-img>
+              <v-img height="250" src="public/calendar.gif" cover></v-img>
 
               <v-card-item>
                 <v-card-title class="card-title"> APPOINTMENTS LIST </v-card-title>
@@ -126,6 +90,21 @@ function view() {
 </template>
 
 <style scoped>
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.float-card {
+  animation: float 3s ease-in-out infinite;
+}
 .bg-wrapper {
   position: fixed;
   top: 0;

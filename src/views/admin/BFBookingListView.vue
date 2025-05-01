@@ -1,38 +1,37 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
-const baptise_info = ref([
+const baptism_info = ref([
   {
-    BaptisedFirstName: 'Rapunzel',
-    BaptisedLastName: 'Ron',
-    BaptisedMiddleInitial: 'M.',
-    BaptisedPlaceOfBirth: 'Bonbon',
-    BaptisedDateOfBirth: '2024-06-12',
-    BaptisedDateSelected: '8:45 AM',
-    BaptisedTimeSelected: 'Filipino',
-
-    MotherFirstName: 'Liam',
-    MotherLastName: 'Smith',
-    MotherMiddleInitial: 'J.',
-
-    FatherFirstName: 'Liam',
-    FatherLastName: 'Smith',
-    FatherMiddleInitial: 'J.',
-
-    Sponsor1FirstName: 'Liam',
-    Sponsor1LastName: 'Smith',
-    Sponsor1MiddleInitial: 'J.',
-
-    Sponsor2FirstName: 'Liam',
-    Sponsor2LastName: 'Smith',
-    Sponsor2MiddleInitial: 'J.',
-
-    Sponsor3FirstName: 'Liam',
-    Sponsor3LastName: 'Smith',
-    Sponsor3MiddleInitial: 'J.',
+    first_name: '',
+    last_name: '',
+    middle_name: '',
+    place_of_birth: '',
+    birthdate: '',
+    date_selected: '',
+    time_selected: '',
+    mother_fullname: '',
+    father_fullname: '',
+    sponsor1_fullname: '',
+    sponsor2_fullname: '',
+    sponsor3_fullname: '',
   },
 ])
+
+const loadBaptismInfo = async () => {
+  const { data, error } = await supabase.from('baptism_bookings').select('*')
+  if (error) {
+    console.error('Error loading baptism info:', error.message)
+  } else {
+    baptism_info.value = data
+  }
+}
+
+onMounted(() => {
+  loadBaptismInfo()
+})
 </script>
 
 <template>
@@ -46,18 +45,18 @@ const baptise_info = ref([
               <thead>
                 <tr>
                   <th colspan="7" class="text-left"><b>Baptised Information</b></th>
-                  <th colspan="3">
-                    <b>Mother's Name</b>
+                  <th colspan="1">
+                    <b>Mother's Information</b>
                   </th>
 
-                  <th colspan="3" class="text-left"><b>Father's Name</b></th>
-                  <th colspan="3">
-                    <b>Sponsor 1</b>
+                  <th colspan="1" class="text-left"><b>Father's Information</b></th>
+                  <th colspan="1">
+                    <b>Sponsor 1 Information</b>
                   </th>
 
-                  <th colspan="3" class="text-left"><b>Sponsor 2</b></th>
-                  <th colspan="3">
-                    <b>Sponsor 3</b>
+                  <th colspan="1" class="text-left"><b>Sponsor 2 Information</b></th>
+                  <th colspan="1">
+                    <b>Sponsor 3 Information</b>
                   </th>
                 </tr>
                 <tr>
@@ -71,66 +70,47 @@ const baptise_info = ref([
                   <th class="text-left font-weight-bold">Time Selected</th>
 
                   <!-- Mother's Name -->
-                  <th class="text-left font-weight-bold">First Name</th>
-                  <th class="text-left font-weight-bold">Last Name</th>
-                  <th class="text-left font-weight-bold">Middle Initial</th>
+                  <th class="text-left font-weight-bold">
+                    Complete Name (First Name, Middle Name, Last Name)
+                  </th>
 
                   <!-- Father's Name -->
-                  <th class="text-left font-weight-bold">First Name</th>
-                  <th class="text-left font-weight-bold">Last Name</th>
-                  <th class="text-left font-weight-bold">Middle Initial</th>
+                  <th class="text-left font-weight-bold">
+                    Complete Name (First Name, Middle Name, Last Name)
+                  </th>
 
                   <!-- Sponsored by: -->
-                  <th class="text-left font-weight-bold">First Name</th>
-                  <th class="text-left font-weight-bold">Last Name</th>
-                  <th class="text-left font-weight-bold">Middle Initial</th>
+                  <th class="text-left font-weight-bold">
+                    Complete Name (First Name, Middle Name, Last Name)
+                  </th>
 
                   <!-- Sponsored by: -->
-                  <th class="text-left font-weight-bold">First Name</th>
-                  <th class="text-left font-weight-bold">Last Name</th>
-                  <th class="text-left font-weight-bold">Middle Initial</th>
+                  <th class="text-left font-weight-bold">
+                    Complete Name (First Name, Middle Name, Last Name)
+                  </th>
 
                   <!-- Sponsored by: -->
-                  <th class="text-left font-weight-bold">First Name</th>
-                  <th class="text-left font-weight-bold">Last Name</th>
-                  <th class="text-left font-weight-bold">Middle Initial</th>
+                  <th class="text-left font-weight-bold">
+                    Complete Name (First Name, Middle Name, Last Name)
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in baptise_info" :key="index">
+                <tr v-for="(item, index) in baptism_info" :key="index">
                   <!-- Baptised Info -->
-                  <td>{{ item.BaptisedFirstName }}</td>
-                  <td>{{ item.BaptisedLastName }}</td>
-                  <td>{{ item.BaptisedMiddleInitial }}</td>
-                  <td>{{ item.BaptisedPlaceOfBirth }}</td>
-                  <td>{{ item.BaptisedDateOfBirth }}</td>
-                  <td>{{ item.BaptisedDateSelected }}</td>
-                  <td>{{ item.BaptisedTimeSelected }}</td>
+                  <td>{{ item.first_name }}</td>
+                  <td>{{ item.last_name }}</td>
+                  <td>{{ item.middle_name }}</td>
+                  <td>{{ item.place_of_birth }}</td>
+                  <td>{{ item.birthdate }}</td>
+                  <td>{{ item.date_selected }}</td>
+                  <td>{{ item.time_selected }}</td>
 
-                  <!-- Mothers Info -->
-                  <td>{{ item.MotherFirstName }}</td>
-                  <td>{{ item.MotherLastName }}</td>
-                  <td>{{ item.MotherMiddleInitial }}</td>
-
-                  <!-- Groom's Info -->
-                  <td>{{ item.FatherFirstName }}</td>
-                  <td>{{ item.FatherLastName }}</td>
-                  <td>{{ item.FatherMiddleInitial }}</td>
-
-                  <!-- Groom's Info -->
-                  <td>{{ item.Sponsor1FirstName }}</td>
-                  <td>{{ item.Sponsor1LastName }}</td>
-                  <td>{{ item.Sponsor1MiddleInitial }}</td>
-
-                  <!-- Groom's Info -->
-                  <td>{{ item.Sponsor2FirstName }}</td>
-                  <td>{{ item.Sponsor2LastName }}</td>
-                  <td>{{ item.Sponsor2MiddleInitial }}</td>
-
-                  <!-- Groom's Info -->
-                  <td>{{ item.Sponsor3FirstName }}</td>
-                  <td>{{ item.Sponsor3LastName }}</td>
-                  <td>{{ item.Sponsor3MiddleInitial }}</td>
+                  <td>{{ item.mother_fullname }}</td>
+                  <td>{{ item.father_fullname }}</td>
+                  <td>{{ item.sponsor1_fullname }}</td>
+                  <td>{{ item.sponsor2_fullname }}</td>
+                  <td>{{ item.sponsor3_fullname }}</td>
                 </tr>
               </tbody>
             </v-table>
@@ -149,7 +129,8 @@ const baptise_info = ref([
   flex-grow: 1;
 }
 
-th {
+th,
+td {
   white-space: nowrap;
 }
 

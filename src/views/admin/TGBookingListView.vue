@@ -3,20 +3,28 @@ import { ref, onMounted } from 'vue'
 import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
-const thanks_giving_info = ref([])
+const thanks_giving_info = ref([
+  {
+    first_name: '',
+    last_name: '',
+    middle_name: '',
+    date: '',
+    time: '',
+    venue: '',
+  },
+])
 
-const fetchThanksgivingInfo = async () => {
+const loadThanksGivingInfo = async () => {
   const { data, error } = await supabase.from('bookings').select('*')
-
   if (error) {
-    console.error('Error fetching Thanksgiving data:', error.message)
+    console.error('Error loading thanksgiving form info:', error.message)
   } else {
     thanks_giving_info.value = data
   }
 }
 
 onMounted(() => {
-  fetchThanksgivingInfo()
+  loadThanksGivingInfo()
 })
 </script>
 
@@ -24,7 +32,7 @@ onMounted(() => {
   <AdminHeader>
     <template #content>
       <v-container>
-        <h1 class="pb-5">Thanksgiving Mass List</h1>
+        <h1 class="pb-5">Thanks Giving List</h1>
         <v-row>
           <v-col>
             <v-table>
@@ -33,7 +41,7 @@ onMounted(() => {
                   <th colspan="6" class="text-left"><b>Thanksgiving Mass</b></th>
                 </tr>
                 <tr>
-                  <!-- Headers -->
+                  <!-- Bride's Info Headers -->
                   <th class="text-left font-weight-bold">First Name</th>
                   <th class="text-left font-weight-bold">Last Name</th>
                   <th class="text-left font-weight-bold">Middle Initial</th>
@@ -44,6 +52,7 @@ onMounted(() => {
               </thead>
               <tbody>
                 <tr v-for="(item, index) in thanks_giving_info" :key="index">
+                  <!-- Bride's Info -->
                   <td>{{ item.first_name }}</td>
                   <td>{{ item.last_name }}</td>
                   <td>{{ item.middle_name }}</td>
@@ -68,7 +77,8 @@ onMounted(() => {
   flex-grow: 1;
 }
 
-th {
+th,
+td {
   white-space: nowrap;
 }
 

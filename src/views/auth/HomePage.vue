@@ -360,7 +360,6 @@ const show3 = ref(false)
 }
 </style>
 -->
-
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAnnouncementsStore } from '@/stores/eventStore.js'
@@ -446,7 +445,7 @@ function flipCard(index) {
         </div>
         <v-row>
           <!-- Left Half: Video Background with Welcome Text -->
-          <v-col cols lg="6" md="12" sm="12" class="position-relative">
+          <v-col cols="12" md="6" class="position-relative">
             <!-- Overlay Content -->
             <div
               class="overlay-content"
@@ -471,6 +470,7 @@ function flipCard(index) {
                   Faith. Community. Worship. Welcome to our website!
                 </h1>
               </div>
+
               <br />
               <br />
               <br />
@@ -481,17 +481,19 @@ function flipCard(index) {
               <!-- Centered Text & Button -->
               <div>
                 <p style="font-size: 1.25rem; max-width: 600px" class="text-left">
-                  You can now easily book parish services and choose your schedule for your special
-                  moment online.
+                  Where you can now easily book parish services and choose your schedule for your
+                  special moment online.
                 </p>
                 <br />
                 <br />
                 <br />
                 <br />
 
-                <v-btn class="btn-0 mt-4 rounded-pill" size="x-large" variant="flat">
-                  Book Now
-                </v-btn>
+                <RouterLink to="/book-event" class="router-link">
+                  <v-btn class="btn-0 mt-4 rounded-pill" size="x-large" variant="flat">
+                    Book Now
+                  </v-btn></RouterLink
+                >
               </div>
             </div>
           </v-col>
@@ -553,6 +555,7 @@ function flipCard(index) {
 
 <style scoped>
 /* your CSS remains same */
+
 @keyframes float {
   0% {
     transform: translateY(0);

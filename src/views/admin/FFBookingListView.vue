@@ -93,7 +93,8 @@ const deceased_info = ref([
   flex-grow: 1;
 }
 
-th {
+th,
+td {
   white-space: nowrap;
 }
 

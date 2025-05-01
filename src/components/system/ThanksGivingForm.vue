@@ -157,14 +157,14 @@ const onFormSubmit = () => {
               :elevation="isHovering ? 16 : 2"
               size="large"
               variant="tonal"
-              width="300"
+              width="350"
               type="submit"
               v-blind:width="mdAndDown ? '80%' : '10%'"
               block
               :disabled="formAction.formProcess"
               :loading="formAction.formProcess"
             >
-              Submit Thanksgiving Form
+              Submit Thanksgiving Mass Form
             </v-btn>
           </v-hover>
         </v-col>
