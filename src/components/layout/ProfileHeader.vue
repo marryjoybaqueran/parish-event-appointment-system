@@ -186,7 +186,7 @@ onMounted(() => {
     </div>
 
     <!-- DESKTOP DROPDOWN -->
-    <v-menu v-else min-width="100px" rounded>
+    <v-menu v-else min-width="100px" rounded class="desktop-only">
       <template v-slot:activator="{ props }">
         <v-btn icon v-bind="props">
           <v-avatar color="deep-orange-lighten-1" class="profile-size">
@@ -236,3 +236,11 @@ onMounted(() => {
     </v-menu>
   </div>
 </template>
+
+<style scoped>
+@media (max-width: 600px) {
+  .desktop-only {
+    display: none;
+  }
+}
+</style>

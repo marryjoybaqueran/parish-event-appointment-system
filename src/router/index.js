@@ -1,4 +1,4 @@
-import { /*getUserInformation,*/ isAuthenticated } from '@/utils/supabase'
+import { /*getUserInformation,*/ supabase, isAuthenticated } from '@/utils/supabase'
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue'
@@ -77,12 +77,14 @@ const router = createRouter({
       path: '/admin-dashboard',
       name: 'admin-dashboard',
       component: AdminDashboard,
+      meta: { requiresAdmin: true },
     },
     {
       //path: '/admin/admin-booking-view',
       path: '/admin-booking-view',
       name: 'admin-booking-view',
       component: AdminBookingsView,
+      meta: { requiresAdmin: true },
     },
     {
       //path: '/admin/admin-announcement-manager',
@@ -109,25 +111,28 @@ const router = createRouter({
       path: '/funeral-mass-form-bookinglist-view',
       name: 'funeral-mass-form-bookinglist-view',
       component: FFBookingListView,
+      meta: { requiresAdmin: true },
     },
     {
       path: '/baptism-mass-form-bookinglist-view',
       name: 'baptism-mass-form-bookinglist-view',
       component: BFBookingListView,
+      meta: { requiresAdmin: true },
     },
     {
       path: '/thanksgiving-mass-form-bookinglist-view',
       name: 'thanksgiving-mass-form-bookinglist-view',
       component: TGBookingListView,
+      meta: { requiresAdmin: true },
     },
   ],
 })
 
 router.beforeEach(async (to) => {
   const isLoggedIn = await isAuthenticated()
-  // const userMetadata = await getUserInformation()
-
-  //const isAdmin = userMetadata.is_admin === true
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // Redirect to appropriate page if accessing home route
   if (to.name === 'home') {
@@ -151,6 +156,14 @@ router.beforeEach(async (to) => {
   if (isLoggedIn && (to.name === 'login' || to.name === 'register')) {
     // redirect the user to the dashboard page
     return { name: 'homepage' }
+  }
+
+  const isAdmin = user?.user_metadata?.is_admin
+
+  if (to.meta.requiresAdmin) {
+    if (!isLoggedIn || !isAdmin) {
+      return '/forbidden'
+    }
   }
 
   /*

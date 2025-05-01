@@ -24,7 +24,7 @@ function onClick() {
   localStorage.setItem('theme', theme.value)
 }
 import { useDisplay } from 'vuetify'
-const { mobile, smAndDown } = useDisplay()
+const { mobile, mdAndDown } = useDisplay()
 
 // Load Functions during component rendering
 onMounted(async () => {
@@ -53,7 +53,7 @@ onMounted(async () => {
         <v-spacer></v-spacer>
 
         <!-- Desktop Nav -->
-        <div v-if="!smAndDown" class="d-flex align-center nav">
+        <div v-if="!mdAndDown" class="d-flex align-center nav">
           <div class="d-flex nav">
             <RouterLink to="/homepage" class="router-link">
               <v-btn class="mr-2 outlined-btn" outlined>

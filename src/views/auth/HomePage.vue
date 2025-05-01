@@ -380,30 +380,6 @@ onMounted(async () => {
     await announcementsStore.getAnnouncements(tableFilters.value)
   }
 })
-
-/*const cards = [
-  {
-    title: 'Weddings',
-    src: 'https://www.lumina.com.ph/assets/news-and-blogs-photos/Wedding-Planning-Checklist-in-the-Philippines/Wedding-Planning-Checklist-in-the-Philippines.webp',
-    flex: 6,
-  },
-  {
-    title: 'Thanksgiving',
-    src: 'https://images.squarespace-cdn.com/content/v1/5b3d1a1136099bf25be26f35/7830e2f3-c50b-4ef3-80b0-c61ad2cc7c74/IMG_8191.jpg',
-    flex: 6,
-  },
-  {
-    title: 'Funeral',
-    src: 'https://uploads.weconnect.com/a809286533cd8081f5c8efed39e52504fa350c0f/jlapx25nkkowxg6fu33m6zomn7l.jpg',
-    flex: 6,
-  },
-  {
-    title: 'Christening',
-    src: 'https://theholysacramentofbaptism.weebly.com/uploads/1/2/3/1/12312478/2447529.jpg?338',
-    flex: 6,
-  },
-]*/
-
 onMounted(() => {
   class TxtType {
     constructor(el, toRotate, period) {
@@ -480,12 +456,7 @@ onMounted(() => {
             <!-- Headline Top Left -->
             <h1 class="text-top text-uppercase" :class="mobile ? 'small-text' : 'large-text'">
               Faith. Community. Worship.
-              <a
-                href="#"
-                class="typewrite"
-                data-period="2000"
-                data-type='["Welcome to our website!"]'
-              >
+              <a class="typewrite" data-period="2000" data-type='["Welcome to our website!"]'>
                 <span class="wrap"></span>
               </a>
             </h1>
@@ -515,61 +486,11 @@ onMounted(() => {
           <v-col cols="12" md="6">
             <v-img src="gridpic.jpg" class="float-card"></v-img>
           </v-col>
-
-          <!-- Right Half: Gallery + Description Card
-          <v-col cols="12" md="5" sm="12">
-            <v-card>
-              <v-container>
-                <v-row dense>
-                  <v-col v-for="card in cards" :key="card.title" :cols="card.flex">
-                    <v-card class="cardx float-card">
-                      <v-img
-                        :src="card.src"
-                        class="align-end"
-                        gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
-                        height="200px"
-                        cover
-                      >
-                        <v-card-title class="text-white">{{ card.title }}</v-card-title>
-                      </v-img>
-
-                      <v-card-actions>
-                        <v-spacer></v-spacer>
-
-                        <v-btn
-                          color="red"
-                          icon="mdi-heart"
-                          size="small"
-                          class="heart rounded-circle"
-                        ></v-btn>
-                      </v-card-actions>
-                    </v-card>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card>
-          </v-col> -->
         </v-row>
       </v-container>
     </template>
   </NavBar>
 </template>
-<!-- Gallery Carousel
-            <v-carousel hide-delimiters cycle height="300" show-arrows-on-hover class="mb-4">
-              <v-carousel-item v-for="(img, i) in images" :key="i">
-                <v-img :src="img" height="300" contain></v-img>
-              </v-carousel-item>
-            </v-carousel>
-
-            Description Card
-            <v-card width="90%" elevation="6">
-              <v-card-title class="headline">About Our Parish</v-card-title>
-              <v-card-text>
-                San Isidro Labrador Parish is a vibrant community of faith. We welcome everyone to
-                join our worship, community events, and outreach programs dedicated to spiritual and
-                social growth.
-              </v-card-text>
-            </v-card>-->
 
 <style scoped>
 /* your CSS remains same */
