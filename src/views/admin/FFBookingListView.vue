@@ -111,4 +111,23 @@ th,
 td {
   border: 1px solid black;
 }
+
+th {
+  background: #2a7b9b;
+  background: linear-gradient(
+    90deg,
+    rgba(42, 123, 155, 1) 0%,
+    rgba(87, 199, 133, 1) 50%,
+    rgba(237, 221, 83, 1) 100%
+  );
+}
+
+h1 {
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+th {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-optical-sizing: auto;
+}
 </style>

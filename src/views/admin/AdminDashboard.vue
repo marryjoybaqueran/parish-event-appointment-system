@@ -29,7 +29,7 @@ const cards = [
     image: 'Funeral Mass.png',
     thumb:
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0xNJsvUup5o5clS1lEOBViRkQ0ITR-VQ8NA&s',
-    title: 'Funeral Mass From List',
+    title: 'Funeral Mass Form List',
     link: '/funeral-mass-form-bookinglist-view',
   },
 ]
