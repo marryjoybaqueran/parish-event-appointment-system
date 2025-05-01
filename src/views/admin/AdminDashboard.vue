@@ -1,6 +1,6 @@
 <script setup>
 import DashboardHeader from '@/components/layout/DashboardHeader.vue'
-
+import PreloaderView from '@/components/layout/PreloaderView.vue'
 const surfaceColor = '#fff'
 const curve = 40
 
@@ -36,6 +36,7 @@ const cards = [
 </script>
 
 <template>
+  <PreloaderView></PreloaderView>
   <DashboardHeader>
     <template #content>
       <v-container fluid>

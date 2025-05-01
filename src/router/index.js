@@ -18,7 +18,6 @@ import BFBookingListView from '@/views/admin/BFBookingListView.vue'
 import TGBookingListView from '@/views/admin/TGBookingListView.vue'
 import ForbiddenView from '@/views/error/ForbiddenView.vue'
 import TrialPage from '@/views/error/TrialPage.vue'
-import PreloaderView from '@/components/layout/PreloaderView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -120,11 +119,6 @@ const router = createRouter({
       path: '/thanksgiving-mass-form-bookinglist-view',
       name: 'thanksgiving-mass-form-bookinglist-view',
       component: TGBookingListView,
-    },
-    {
-      path: '/preloader',
-      name: 'preloader',
-      component: PreloaderView,
     },
   ],
 })

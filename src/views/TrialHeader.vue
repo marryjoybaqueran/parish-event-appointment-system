@@ -1310,29 +1310,6 @@ const viewDetails = (announcement) => {
 
 <template>
   <div class="card-container" :style="{ '--surface-color': surfaceColor, '--curve': curve + 'px' }">
-    <div class="card-list">
-      <v-card v-for="(card, index) in cards" :key="index" class="card" flat tile>
-        <img :src="card.image" class="card__image" alt="" />
-        <div class="card__overlay">
-          <div class="card__header">
-            <svg class="card__arc" xmlns="http://www.w3.org/2000/svg">
-              <path />
-            </svg>
-            <img :src="card.thumb" class="card__thumb" alt="" />
-            <div class="card__header-text">
-              <h3 class="card__title">{{ card.title }}</h3>
-              <span v-if="card.tagline" class="card__tagline">{{ card.tagline }}</span>
-              <span class="card__status">{{ card.status }}</span>
-            </div>
-          </div>
-          <p class="card__description">{{ card.description }}</p>
-        </div>
-      </v-card>
-    </div>
-  </div>
-
-  <!--
-  <div class="card-container" :style="{ '--surface-color': surfaceColor, '--curve': curve + 'px' }">
     <ul class="card-list">
       <li v-for="(card, index) in cards" :key="index">
         <a href="#" class="card">
@@ -1354,7 +1331,7 @@ const viewDetails = (announcement) => {
         </a>
       </li>
     </ul>
-  </div>-->
+  </div>
 </template>
 
 <script setup>
