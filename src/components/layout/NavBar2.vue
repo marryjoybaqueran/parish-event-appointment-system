@@ -45,7 +45,7 @@ onMounted(async () => {
         <!-- LOGO + HEADER -->
         <div class="d-flex align-center">
           <v-img src="logo.png" :width="mobile ? '40px' : '45px'" class="me-2" cover />
-          <h2 :class="smAndDown ? 'small-header' : 'large-header'" class="ma-0 header">
+          <h2 :class="mdAndDown ? 'small-header' : 'large-header'" class="ma-0 header">
             SAN ISIDRO LABRADOR PARISH
           </h2>
         </div>
@@ -107,7 +107,7 @@ onMounted(async () => {
           <ProfileHeader v-if="isLoggedIn"></ProfileHeader>
 
           <v-list-item @click="drawer = false">
-            <RouterLink to="/home" class="router-link" style="width: 100%">
+            <RouterLink to="/homepage" class="router-link" style="width: 100%">
               <v-btn flat class="pl-0">
                 <v-icon class="me-2">mdi-home</v-icon>
                 HOME

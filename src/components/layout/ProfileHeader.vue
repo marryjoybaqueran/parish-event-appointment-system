@@ -157,7 +157,7 @@ onMounted(() => {
       <v-list>
         <v-list-item :subtitle="userData.email" :title="userData.fullname">
           <template #prepend>
-            <v-avatar color="orange-darken-3" size="large">
+            <v-avatar color="orange-darken-3" size="small">
               <span class="text-5">
                 {{ getAvatarText(authStore.userData.fname + ' ' + authStore.userData.lname) }}
               </span>
@@ -186,7 +186,7 @@ onMounted(() => {
     </div>
 
     <!-- DESKTOP DROPDOWN -->
-    <v-menu v-else min-width="100px" rounded class="desktop-only">
+    <v-menu v-else min-width="100px" rounded>
       <template v-slot:activator="{ props }">
         <v-btn icon v-bind="props">
           <v-avatar color="deep-orange-lighten-1" class="profile-size">
@@ -236,11 +236,3 @@ onMounted(() => {
     </v-menu>
   </div>
 </template>
-
-<style scoped>
-@media (max-width: 600px) {
-  .desktop-only {
-    display: none;
-  }
-}
-</style>
