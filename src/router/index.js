@@ -10,7 +10,6 @@ import FuneralMass from '@/views/auth/FuneralMass.vue'
 import ThanksGivingMass from '@/views/auth/ThanksGivingMass.vue'
 import TrialHeader from '@/views/TrialHeader.vue'
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
-import AdminAnnouncementManager from '@/views/admin/AdminAnnouncementManager.vue'
 import AdminBookingsView from '@/views/admin/AdminBookingsView.vue'
 import NotFoundView from '@/views/error/NotFoundView.vue'
 import FFBookingListView from '@/views/admin/FFBookingListView.vue'
@@ -86,12 +85,7 @@ const router = createRouter({
       component: AdminBookingsView,
       meta: { requiresAdmin: true },
     },
-    {
-      //path: '/admin/admin-announcement-manager',
-      path: '/admin-announcement-manager',
-      name: 'admin-announcement-manager',
-      component: AdminAnnouncementManager,
-    },
+
     {
       path: '/trial-header',
       name: 'trial-header',

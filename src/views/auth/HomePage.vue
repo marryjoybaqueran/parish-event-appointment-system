@@ -443,7 +443,7 @@ onMounted(() => {
               playsinline
               style="height: 100%; width: 100%; object-fit: cover"
             >
-              <source src="public/homepage-bg.mp4" type="video/mp4" />
+              <source src="/homepage-bg.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </v-responsive>
