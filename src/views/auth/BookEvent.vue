@@ -3,6 +3,7 @@ import NavBar2 from '@/components/layout/NavBar2.vue'
 import { useDisplay } from 'vuetify'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import PreloaderView from '@/components/layout/PreloaderView.vue'
 
 const router = useRouter()
 const { mdAndDown } = useDisplay()
@@ -76,6 +77,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <PreloaderView></PreloaderView>
   <NavBar2>
     <template #content>
       <v-container fluid>
@@ -119,7 +121,6 @@ onBeforeUnmount(() => {
   </NavBar2>
 </template>
 <style scoped>
-/* Scoped styles for the carousel */
 .bg-wrapper {
   position: fixed;
   top: 0;

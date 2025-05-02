@@ -1,45 +1,55 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
-// Mock data: You can expand this or match it to actual form data
-const desserts = ref([
+const wedding_info = ref([
   {
-    brideFirstName: 'Elsa',
-    brideLastName: 'Rose',
-    brideMiddleName: 'M.',
-    bridePlaceOfBirth: 'Manila',
-    brideDOB: '1995-06-12',
-    brideAge: 29,
-    brideCitizenship: 'Filipino',
-    brideReligion: 'Catholic',
-    brideCivilStatus: 'Single',
-    brideSex: 'Female',
-    brideResidence: 'QC',
-    brideMotherName: 'Maria Rose',
-    brideMotherCitizenship: 'Filipino',
-    brideFatherName: 'Jose Rose',
-    brideFatherCitizenship: 'Filipino',
-
-    groomFirstName: 'Liam',
-    groomLastName: 'Smith',
-    groomMiddleName: 'J.',
-    groomPlaceOfBirth: 'Cebu',
-    groomDOB: '1990-11-22',
-    groomAge: 34,
-    groomCitizenship: 'Filipino',
-    groomReligion: 'Catholic',
-    groomCivilStatus: 'Single',
-    groomSex: 'Male',
-    groomResidence: 'Makati',
-    groomMotherName: 'Linda Smith',
-    groomMotherCitizenship: 'Filipino',
-    groomFatherName: 'John Smith',
-    groomFatherCitizenship: 'Filipino',
-    weddingDate: '2025-06-01',
-    weddingTime: '3:00 PM',
+    bride_firstname: '',
+    bride_lastname: '',
+    bride_middlename: '',
+    bride_birthplace: '',
+    bride_birthdate: '',
+    bride_age: '',
+    bride_citizenship: '',
+    bride_religion: '',
+    bride_gender: '',
+    bride_residence: '',
+    bride_motherfullname: '',
+    bride_mothercitizenship: '',
+    bride_fatherfullname: '',
+    bride_fathercitizenship: '',
+    groom_firstname: '',
+    groom_lastname: '',
+    groom_middlename: '',
+    groom_birthplace: '',
+    groom_birthdate: '',
+    groom_age: '',
+    groom_citizenship: '',
+    groom_religion: '',
+    groom_gender: '',
+    groom_residence: '',
+    groom_motherfullname: '',
+    groom_mothercitizenship: '',
+    groom_fatherfullname: '',
+    groom_fathercitizenship: '',
+    wedding_date: '',
+    wedding_time: '',
   },
 ])
+
+const loadWeddingInfo = async () => {
+  const { data, error } = await supabase.from('wedding_bookings').select('*')
+  if (error) {
+    console.error('Error loading wedding form info:', error.message)
+  } else {
+    wedding_info.value = data
+  }
+}
+
+onMounted(() => {
+  loadWeddingInfo()
+})
 </script>
 
 <template>
@@ -52,8 +62,8 @@ const desserts = ref([
             <v-table>
               <thead>
                 <tr>
-                  <th colspan="15" class="text-left"><b>Bride's Information</b></th>
-                  <th colspan="17">
+                  <th colspan="14" class="text-left"><b>Bride's Information</b></th>
+                  <th colspan="16">
                     <b>Groom's Information</b>
                   </th>
                 </tr>
@@ -67,12 +77,11 @@ const desserts = ref([
                   <th class="text-left font-weight-bold">Age</th>
                   <th class="text-left font-weight-bold">Citizenship</th>
                   <th class="text-left font-weight-bold">Religion</th>
-                  <th class="text-left font-weight-bold">Civil Status</th>
-                  <th class="text-left font-weight-bold">Sex</th>
+                  <th class="text-left font-weight-bold">Gender</th>
                   <th class="text-left font-weight-bold">Residence</th>
-                  <th class="text-left font-weight-bold">Mother's Name</th>
+                  <th class="text-left font-weight-bold">Mother's Full Name</th>
                   <th class="text-left font-weight-bold">Mother's Citizenship</th>
-                  <th class="text-left font-weight-bold">Father's Name</th>
+                  <th class="text-left font-weight-bold">Father's Full Name</th>
                   <th class="text-left font-weight-bold">Father's Citizenship</th>
 
                   <!-- Groom's Info Headers -->
@@ -84,54 +93,51 @@ const desserts = ref([
                   <th class="text-left font-weight-bold">Age</th>
                   <th class="text-left font-weight-bold">Citizenship</th>
                   <th class="text-left font-weight-bold">Religion</th>
-                  <th class="text-left font-weight-bold">Civil Status</th>
-                  <th class="text-left font-weight-bold">Sex</th>
+                  <th class="text-left font-weight-bold">Gender</th>
                   <th class="text-left font-weight-bold">Residence</th>
-                  <th class="text-left font-weight-bold">Mother's Name</th>
+                  <th class="text-left font-weight-bold">Mother's Full Name</th>
                   <th class="text-left font-weight-bold">Mother's Citizenship</th>
-                  <th class="text-left font-weight-bold">Father's Name</th>
+                  <th class="text-left font-weight-bold">Father's Full Name</th>
                   <th class="text-left font-weight-bold">Father's Citizenship</th>
-                  <th class="text-left font-weight-bold">Select Date for the Wedding</th>
-                  <th class="text-left font-weight-bold">Select Time for the Wedding</th>
+                  <th class="text-left font-weight-bold">Selected Date for the Wedding</th>
+                  <th class="text-left font-weight-bold">Selected Time for the Wedding</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in desserts" :key="index">
+                <tr v-for="(item, index) in wedding_info" :key="index">
                   <!-- Bride's Info -->
-                  <td>{{ item.brideFirstName }}</td>
-                  <td>{{ item.brideLastName }}</td>
-                  <td>{{ item.brideMiddleName }}</td>
-                  <td>{{ item.bridePlaceOfBirth }}</td>
-                  <td>{{ item.brideDOB }}</td>
-                  <td>{{ item.brideAge }}</td>
-                  <td>{{ item.brideCitizenship }}</td>
-                  <td>{{ item.brideReligion }}</td>
-                  <td>{{ item.brideCivilStatus }}</td>
-                  <td>{{ item.brideSex }}</td>
-                  <td>{{ item.brideResidence }}</td>
-                  <td>{{ item.brideMotherName }}</td>
-                  <td>{{ item.brideMotherCitizenship }}</td>
-                  <td>{{ item.brideFatherName }}</td>
-                  <td>{{ item.brideFatherCitizenship }}</td>
+                  <td>{{ item.bride_firstname }}</td>
+                  <td>{{ item.bride_lastname }}</td>
+                  <td>{{ item.bride_middlename }}</td>
+                  <td>{{ item.bride_birthplace }}</td>
+                  <td>{{ item.bride_birthdate }}</td>
+                  <td>{{ item.bride_age }}</td>
+                  <td>{{ item.bride_citizenship }}</td>
+                  <td>{{ item.bride_religion }}</td>
+                  <td>{{ item.bride_gender }}</td>
+                  <td>{{ item.bride_residence }}</td>
+                  <td>{{ item.bride_motherfullname }}</td>
+                  <td>{{ item.bride_mothercitizenship }}</td>
+                  <td>{{ item.bride_fatherfullname }}</td>
+                  <td>{{ item.bride_fathercitizenship }}</td>
 
-                  <!-- Groom's Info -->
-                  <td>{{ item.groomFirstName }}</td>
-                  <td>{{ item.groomLastName }}</td>
-                  <td>{{ item.groomMiddleName }}</td>
-                  <td>{{ item.groomPlaceOfBirth }}</td>
-                  <td>{{ item.groomDOB }}</td>
-                  <td>{{ item.groomAge }}</td>
-                  <td>{{ item.groomCitizenship }}</td>
-                  <td>{{ item.groomReligion }}</td>
-                  <td>{{ item.groomCivilStatus }}</td>
-                  <td>{{ item.groomSex }}</td>
-                  <td>{{ item.groomResidence }}</td>
-                  <td>{{ item.groomMotherName }}</td>
-                  <td>{{ item.groomMotherCitizenship }}</td>
-                  <td>{{ item.groomFatherName }}</td>
-                  <td>{{ item.groomFatherCitizenship }}</td>
-                  <td>{{ item.weddingDate }}</td>
-                  <td>{{ item.weddingTime }}</td>
+                  <td>{{ item.groom_firstname }}</td>
+                  <td>{{ item.groom_lastname }}</td>
+                  <td>{{ item.groom_middlename }}</td>
+                  <td>{{ item.groom_birthplace }}</td>
+                  <td>{{ item.groom_birthdate }}</td>
+                  <td>{{ item.groom_age }}</td>
+                  <td>{{ item.groom_citizenship }}</td>
+                  <td>{{ item.groom_religion }}</td>
+                  <td>{{ item.groom_gender }}</td>
+                  <td>{{ item.groom_residence }}</td>
+                  <td>{{ item.groom_motherfullname }}</td>
+                  <td>{{ item.groom_mothercitizenship }}</td>
+                  <td>{{ item.groom_fatherfullname }}</td>
+                  <td>{{ item.groom_fathercitizenship }}</td>
+
+                  <td>{{ item.wedding_date }}</td>
+                  <td>{{ item.wedding_time }}</td>
                 </tr>
               </tbody>
             </v-table>
@@ -150,12 +156,32 @@ const desserts = ref([
   flex-grow: 1;
 }
 
-th {
+th,
+td {
   white-space: nowrap;
 }
 
 th,
 td {
   border: 1px solid black;
+}
+
+th {
+  background: #2a7b9b;
+  background: linear-gradient(
+    90deg,
+    rgba(42, 123, 155, 1) 0%,
+    rgba(87, 199, 133, 1) 50%,
+    rgba(237, 221, 83, 1) 100%
+  );
+}
+
+h1 {
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+th {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-optical-sizing: auto;
 }
 </style>

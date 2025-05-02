@@ -1,18 +1,31 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
-// Mock data: You can expand this or match it to actual form data
-const desserts = ref([
+const thanks_giving_info = ref([
   {
-    FirstName: 'Elsa',
-    LastName: 'Rose',
-    MiddleInitial: 'M.',
-    SelectedDate: '2025-04-30',
-    SelectedTime: '10:00 AM',
-    Venue: 'Brgy. Bonbon',
+    first_name: '',
+    last_name: '',
+    middle_name: '',
+    date: '',
+    time: '',
+    venue: '',
   },
 ])
+
+const loadThanksGivingInfo = async () => {
+  const { data, error } = await supabase.from('bookings').select('*')
+  if (error) {
+    console.error('Error loading thanksgiving form info:', error.message)
+  } else {
+    thanks_giving_info.value = data
+  }
+}
+
+onMounted(() => {
+  loadThanksGivingInfo()
+})
 </script>
 
 <template>
@@ -38,14 +51,14 @@ const desserts = ref([
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in desserts" :key="index">
+                <tr v-for="(item, index) in thanks_giving_info" :key="index">
                   <!-- Bride's Info -->
-                  <td>{{ item.FirstName }}</td>
-                  <td>{{ item.LastName }}</td>
-                  <td>{{ item.MiddleInitial }}</td>
-                  <td>{{ item.SelectedDate }}</td>
-                  <td>{{ item.SelectedTime }}</td>
-                  <td>{{ item.Venue }}</td>
+                  <td>{{ item.first_name }}</td>
+                  <td>{{ item.last_name }}</td>
+                  <td>{{ item.middle_name }}</td>
+                  <td>{{ item.date }}</td>
+                  <td>{{ item.time }}</td>
+                  <td>{{ item.venue }}</td>
                 </tr>
               </tbody>
             </v-table>
@@ -64,12 +77,32 @@ const desserts = ref([
   flex-grow: 1;
 }
 
-th {
+th,
+td {
   white-space: nowrap;
 }
 
 th,
 td {
   border: 1px solid black;
+}
+
+th {
+  background: #2a7b9b;
+  background: linear-gradient(
+    90deg,
+    rgba(42, 123, 155, 1) 0%,
+    rgba(87, 199, 133, 1) 50%,
+    rgba(237, 221, 83, 1) 100%
+  );
+}
+
+h1 {
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+th {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-optical-sizing: auto;
 }
 </style>

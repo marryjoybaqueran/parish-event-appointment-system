@@ -1,6 +1,9 @@
 <script setup>
 import { useDisplay } from 'vuetify'
 import { ref } from 'vue'
+import { supabase, formActionDefault } from '@/utils/supabase.js'
+import AlertNotification from '@/components/common/AlertNotification.vue'
+
 const { mdAndDown } = useDisplay()
 
 const showRequirements = ref(false)
@@ -18,57 +21,142 @@ const emailRules = [(v) => !!v || 'This field is required']
 const dateRules = [(v) => !!v || 'Date is required']
 const timeRules = [(v) => !!v || 'Time is required']
 // Bride Data
-const Bfirstname = ref('')
-const Blastname = ref('')
-const BMI = ref('')
-const Bplaceofbirth = ref('')
-const Bdateofbirth = ref('')
-const Bage = ref('')
-const Bcitizenship = ref('')
-const Breligion = ref('')
-const Bcivilstatus = ref('')
-const Bsex = ref('')
-const Bresidence = ref('')
-const Bmother = ref('')
-const Bfather = ref('')
-const BMcitizenship = ref('')
-const BFcitizenship = ref('')
+const formData = ref({
+  bride_firstname: '',
+  bride_lastname: '',
+  bride_middlename: '',
+  bride_birthplace: '',
+  bride_birthdate: '',
+  bride_age: '',
+  bride_citizenship: '',
+  bride_religion: '',
+  bride_gender: '',
+  bride_residence: '',
+  bride_motherfullname: '',
+  bride_mothercitizenship: '',
+  bride_fatherfullname: '',
+  bride_fathercitizenship: '',
+  groom_firstname: '',
+  groom_lastname: '',
+  groom_middlename: '',
+  groom_birthplace: '',
+  groom_birthdate: '',
+  groom_age: '',
+  groom_citizenship: '',
+  groom_religion: '',
+  groom_gender: '',
+  groom_residence: '',
+  groom_motherfullname: '',
+  groom_mothercitizenship: '',
+  groom_fatherfullname: '',
+  groom_fathercitizenship: '',
+  wedding_date: '',
+  wedding_time: '',
+})
 
-// Groom Data
-const Gfirstname = ref('')
-const Glastname = ref('')
-const GMI = ref('')
-const Gplaceofbirth = ref('')
-const Gdateofbirth = ref('')
-const Gage = ref('')
-const Gcitizenship = ref('')
-const Greligion = ref('')
-const Gcivilstatus = ref('')
-const Gsex = ref('')
-const Gresidence = ref('')
-const Gmother = ref('')
-const Gfather = ref('')
-const GMcitizenship = ref('')
-const GFcitizenship = ref('')
+// Form action refs
+const formAction = ref({ ...formActionDefault })
+const refVform = ref()
 
-// Wedding date/time
-const date = ref('')
-const time = ref('')
+// Fetch the authenticated user
+const getUser = async () => {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+  if (error) {
+    console.error('Error fetching user:', error.message)
+  }
+  return user
+}
+
+// Insert form data and user_id into the bookings table
+const onSubmit = async () => {
+  formAction.value = { ...formActionDefault }
+  formAction.value.formProcess = true
+
+  // Fetch the authenticated user ID
+  const user = await getUser()
+  if (!user) {
+    formAction.value.formErrorMessage = 'User not authenticated'
+    formAction.value.formStatus = 'error'
+    return
+  }
+
+  const { data, error } = await supabase.from('wedding_bookings').insert([
+    {
+      user_id: user.id,
+      bride_firstname: formData.value.bride_firstname,
+      bride_lastname: formData.value.bride_lastname,
+      bride_middlename: formData.value.bride_middlename,
+      bride_birthplace: formData.value.bride_birthplace,
+      bride_birthdate: formData.value.bride_birthdate,
+      bride_age: formData.value.bride_age,
+      bride_citizenship: formData.value.bride_citizenship,
+      bride_religion: formData.value.bride_religion,
+      bride_gender: formData.value.bride_gender,
+      bride_residence: formData.value.bride_residence,
+      bride_motherfullname: formData.value.bride_motherfullname,
+      bride_mothercitizenship: formData.value.bride_mothercitizenship,
+      bride_fatherfullname: formData.value.bride_fatherfullname,
+      bride_fathercitizenship: formData.value.bride_fathercitizenship,
+      groom_firstname: formData.value.groom_firstname,
+      groom_lastname: formData.value.groom_lastname,
+      groom_middlename: formData.value.groom_middlename,
+      groom_birthplace: formData.value.groom_birthplace,
+      groom_birthdate: formData.value.groom_birthdate,
+      groom_age: formData.value.groom_age,
+      groom_citizenship: formData.value.groom_citizenship,
+      groom_religion: formData.value.groom_religion,
+      groom_gender: formData.value.groom_gender,
+      groom_residence: formData.value.groom_residence,
+      groom_motherfullname: formData.value.groom_motherfullname,
+      groom_mothercitizenship: formData.value.groom_mothercitizenship,
+      groom_fatherfullname: formData.value.groom_fatherfullname,
+      groom_fathercitizenship: formData.value.groom_fathercitizenship,
+      wedding_date: formData.value.wedding_date,
+      wedding_time: formData.value.wedding_time,
+    },
+  ])
+
+  if (error) {
+    console.error('Error inserting data:', error.message)
+    formAction.value.formErrorMessage = error.message
+    formAction.value.formStatus = error.code
+  } else {
+    console.log('Data inserted successfully:', data)
+    formAction.value.formSuccessMessage = 'Wedding booking submitted successfully!'
+    refVform.value?.reset()
+  }
+
+  formAction.value.formProcess = false
+}
+
+const onFormSubmit = () => {
+  refVform.value?.validate().then(({ valid }) => {
+    if (valid) onSubmit()
+  })
+}
 </script>
 
 <template>
-  <v-form v-model="valid" ref="form">
+  <AlertNotification
+    :form-success-message="formAction.formSuccessMessage"
+    :form-error-message="formAction.formErrorMessage"
+  />
+
+  <v-form v-model="valid" ref="refVform" @submit.prevent="onFormSubmit">
     <v-container>
       <!--Bride info-->
       <v-divider thickness="3" class="mt-7">
-        <h2 class="info mt-7">Bride Information</h2></v-divider
+        <h2 class="info mt-7">Bride's Information</h2></v-divider
       >
 
       <!--First Row-->
       <v-row>
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="Bfirstname"
+            v-model="formData.bride_firstname"
             :rules="nameRules"
             label="First name"
             required
@@ -77,7 +165,7 @@ const time = ref('')
 
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="Blastname"
+            v-model="formData.bride_lastname"
             :rules="nameRules"
             label="Last name"
             required
@@ -86,8 +174,8 @@ const time = ref('')
 
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="BMI"
-            :rules="emailRules"
+            v-model="formData.bride_middlename"
+            :rules="nameRules"
             label="Middle Name"
             required
           ></v-text-field>
@@ -97,7 +185,7 @@ const time = ref('')
       <v-row>
         <v-col cols="12" md="5">
           <v-text-field
-            v-model="Bplaceofbirth"
+            v-model="formData.bride_birthplace"
             :rules="nameRules"
             label="Place of Birth "
             required
@@ -106,7 +194,7 @@ const time = ref('')
 
         <v-col cols="12" md="5">
           <v-text-field
-            v-model="Bdateofbirth"
+            v-model="formData.bride_birthdate"
             :rules="dateRules"
             type="date"
             label="Date of Birth"
@@ -116,7 +204,7 @@ const time = ref('')
 
         <v-col cols="12" md="2">
           <v-text-field
-            v-model="Bage"
+            v-model="formData.bride_age"
             :rules="emailRules"
             type="number"
             label="Age"
@@ -129,7 +217,7 @@ const time = ref('')
       <v-row>
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="Bcitizenship"
+            v-model="formData.bride_citizenship"
             :rules="nameRules"
             v-blind:width="mdAndDown ? '80%' : '300%'"
             label="Citizenship"
@@ -139,7 +227,7 @@ const time = ref('')
         </v-col>
         <v-col cols="12" md="4">
           <v-select
-            v-model="Breligion"
+            v-model="formData.bride_religion"
             :items="[
               'Roman Catholic',
               'Iglesia Ni Cristo (INC)',
@@ -157,25 +245,13 @@ const time = ref('')
           />
         </v-col>
 
-        <v-col cols="12" md="2">
+        <v-col cols="12" md="4">
           <v-select
-            v-model="Bcivilstatus"
-            :items="['Single', 'Married']"
-            v-blind:width="mdAndDown ? '80%' : '300%'"
-            label="Civil Status"
-            :rules="nameRules"
-            outlined
-            dense
-          ></v-select>
-        </v-col>
-
-        <v-col cols="12" md="2">
-          <v-select
-            v-model="Bsex"
+            v-model="formData.bride_gender"
             :items="['Male', 'Female']"
-            v-blind:width="mdAndDown ? '80%' : '300%'"
-            label="Sex"
             :rules="nameRules"
+            v-blind:width="mdAndDown ? '80%' : '300%'"
+            label="Gender"
             outlined
             dense
           />
@@ -186,7 +262,7 @@ const time = ref('')
       <v-row>
         <v-col cols="12" md="12">
           <v-text-field
-            v-model="Bresidence"
+            v-model="formData.bride_residence"
             :rules="nameRules"
             label="Residence "
             required
@@ -197,16 +273,16 @@ const time = ref('')
       <v-row>
         <v-col cols="12" md="9">
           <v-text-field
-            v-model="Bmother"
+            v-model="formData.bride_motherfullname"
             :rules="nameRules"
-            label="Mother's Name "
+            label="Mother's Complete Name "
             required
           ></v-text-field>
         </v-col>
 
         <v-col cols="12" md="3">
           <v-text-field
-            v-model="BMcitizenship"
+            v-model="formData.bride_mothercitizenship"
             v-blind:width="mdAndDown ? '80%' : '300%'"
             label="Citizenship"
             dense
@@ -219,16 +295,16 @@ const time = ref('')
       <v-row>
         <v-col cols="12" md="9">
           <v-text-field
-            v-model="Bfather"
+            v-model="formData.bride_fatherfullname"
             :rules="nameRules"
-            label="Fathers's Name "
+            label="Fathers's Complete Name "
             required
           ></v-text-field>
         </v-col>
 
         <v-col cols="12" md="3">
           <v-text-field
-            v-model="BFcitizenship"
+            v-model="formData.bride_fathercitizenship"
             label="Citizenship"
             outlined
             dense
@@ -238,14 +314,14 @@ const time = ref('')
       </v-row>
       <!--Groom info-->
       <v-divider thickness="3" class="mt-7">
-        <h2 class="info mt-7">Groom Information</h2></v-divider
+        <h2 class="info mt-7">Groom's Information</h2></v-divider
       >
 
       <!--First Row-->
       <v-row>
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="Gfirstname"
+            v-model="formData.groom_firstname"
             :rules="nameRules"
             label="First name"
             required
@@ -254,7 +330,7 @@ const time = ref('')
 
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="Glastname"
+            v-model="formData.groom_lastname"
             :rules="nameRules"
             label="Last name"
             required
@@ -263,8 +339,8 @@ const time = ref('')
 
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="GMI"
-            :rules="emailRules"
+            v-model="formData.groom_middlename"
+            :rules="nameRules"
             label="Middle Name"
             required
           ></v-text-field>
@@ -274,7 +350,7 @@ const time = ref('')
       <v-row>
         <v-col cols="12" md="5">
           <v-text-field
-            v-model="Gplaceofbirth"
+            v-model="formData.groom_birthplace"
             :rules="nameRules"
             label="Place of Birth "
             required
@@ -283,8 +359,8 @@ const time = ref('')
 
         <v-col cols="12" md="5">
           <v-text-field
-            v-model="Gdateofbirth"
-            :rules="nameRules"
+            v-model="formData.groom_birthdate"
+            :rules="dateRules"
             type="date"
             label="Date of Birth"
             required
@@ -293,7 +369,7 @@ const time = ref('')
 
         <v-col cols="12" md="2">
           <v-text-field
-            v-model="Gage"
+            v-model="formData.groom_age"
             :rules="emailRules"
             type="number"
             label="Age"
@@ -306,19 +382,15 @@ const time = ref('')
       <v-row>
         <v-col cols="12" md="4">
           <v-text-field
-            v-model="Gcitizenship"
-            :items="items"
-            :item-props="itemProps"
-            v-blind:width="mdAndDown ? '80%' : '100%'"
-            label="Citizenship"
-            outlined
+            v-model="formData.groom_citizenship"
             :rules="nameRules"
-            dense
+            label="Citizenship"
+            required
           ></v-text-field>
         </v-col>
         <v-col cols="12" md="4">
           <v-select
-            v-model="Greligion"
+            v-model="formData.groom_religion"
             :items="[
               'Roman Catholic',
               'Iglesia Ni Cristo (INC)',
@@ -336,24 +408,13 @@ const time = ref('')
           />
         </v-col>
 
-        <v-col cols="12" md="2">
+        <v-col cols="12" md="4">
           <v-select
-            v-model="Gcivilstatus"
-            :items="['Single', 'Married']"
-            label="Civil Status"
-            :rules="nameRules"
-            outlined
-            dense
-          />
-        </v-col>
-
-        <v-col cols="12" md="2">
-          <v-select
-            v-model="Gsex"
+            v-model="formData.groom_gender"
             :items="['Male', 'Female']"
             :item-props="itemProps"
             :rules="nameRules"
-            label="Sex"
+            label="Gender"
             outlined
             dense
           />
@@ -364,7 +425,7 @@ const time = ref('')
       <v-row>
         <v-col cols="12" md="12">
           <v-text-field
-            v-model="Gresidence"
+            v-model="formData.groom_residence"
             :rules="nameRules"
             label="Residence "
             required
@@ -373,48 +434,42 @@ const time = ref('')
       </v-row>
       <!--5th Row-->
       <v-row>
-        <v-col cols="12" md="9">
+        <v-col cols="12" md="8">
           <v-text-field
-            v-model="Gmother"
+            v-model="formData.groom_motherfullname"
             :rules="nameRules"
-            label="Mother's Name "
+            label="Mother's Complete Name "
             required
           ></v-text-field>
         </v-col>
 
-        <v-col cols="12" md="3">
+        <v-col cols="12" md="4">
           <v-text-field
-            v-model="GMcitizenship"
-            :items="items"
-            :item-props="itemProps"
-            label="Citizenship"
+            v-model="formData.groom_mothercitizenship"
             :rules="nameRules"
-            outlined
-            dense
+            label="Mother's Citizenship"
+            required
           ></v-text-field>
         </v-col>
       </v-row>
 
       <!--6th Row-->
       <v-row>
-        <v-col cols="12" md="9">
+        <v-col cols="12" md="8">
           <v-text-field
-            v-model="Gfather"
+            v-model="formData.groom_fatherfullname"
             :rules="nameRules"
-            label="Fathers's Name "
+            label="Fathers's Complete Name "
             required
           ></v-text-field>
         </v-col>
 
-        <v-col cols="12" md="3">
+        <v-col cols="12" md="4">
           <v-text-field
-            v-model="GFcitizenship"
-            :items="items"
-            :item-props="itemProps"
+            v-model="formData.groom_fathercitizenship"
             :rules="nameRules"
-            label="Citizenship"
-            outlined
-            dense
+            label="Father's Citizenship"
+            required
           ></v-text-field>
         </v-col>
       </v-row>
@@ -423,7 +478,7 @@ const time = ref('')
       <v-row>
         <v-col cols="6">
           <v-text-field
-            v-model="date"
+            v-model="formData.wedding_date"
             :rules="dateRules"
             type="date"
             label="Select date for the wedding "
@@ -433,7 +488,7 @@ const time = ref('')
 
         <v-col cols="6">
           <v-text-field
-            v-model="time"
+            v-model="formData.wedding_time"
             :items="items"
             :item-props="itemProps"
             type="time"
@@ -468,23 +523,27 @@ const time = ref('')
 
       <br />
 
-      <v-row justify="center" class="my-9">
+      <v-row justify="center">
         <v-col cols="auto">
-          <v-btn
-            v-model="valid"
-            class="bg-primary pt-0"
-            :class="{ 'green-hover': isHovering }"
-            :elevation="isHovering ? 16 : 2"
-            size="large"
-            variant="tonal"
-            width="300"
-            v-blind:width="mdAndDown ? '80%' : '10%'"
-            @mouseenter="isHovering = true"
-            @mouseleave="isHovering = false"
-            @click="valid = $refs.form.validate()"
-          >
-            <span>SUBMIT</span>
-          </v-btn>
+          <v-hover v-slot:default="{ isHovering, props }">
+            <v-btn
+              v-bind="props"
+              class="bg-primary pt-0 mt-0"
+              :class="{ 'on-hover': isHovering }"
+              :elevation="isHovering ? 16 : 2"
+              size="large"
+              variant="tonal"
+              width="300"
+              type="submit"
+              v-blind:width="mdAndDown ? '80%' : '10%'"
+              block
+              :disabled="formAction.formProcess"
+              :loading="formAction.formProcess"
+            >
+              Submit Wedding Mass Form
+            </v-btn>
+          </v-hover>
+          <br />
         </v-col>
       </v-row>
     </v-container>

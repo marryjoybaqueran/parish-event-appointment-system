@@ -23,8 +23,10 @@ const drawer = ref(false)
 function onClick() {
   localStorage.setItem('theme', theme.value)
 }
+
+//Display for mobile & desktop
 import { useDisplay } from 'vuetify'
-const { mobile, smAndDown } = useDisplay()
+const { mobile, mdAndDown } = useDisplay()
 
 // Load Functions during component rendering
 onMounted(async () => {
@@ -53,13 +55,14 @@ onMounted(async () => {
         <v-spacer></v-spacer>
 
         <!-- Desktop Nav -->
-        <div v-if="!smAndDown" class="d-flex align-center nav">
+        <div v-if="!mdAndDown" class="d-flex align-center nav">
+          <!---->
           <div class="d-flex nav">
             <v-btn class="home-btn mr-2" flat>
               <v-icon class="home-icon">mdi-home</v-icon>
               <span class="home-text"> <span class="home-color">HOME</span></span>
             </v-btn>
-
+            <!--
             <RouterLink to="/book-event" class="router-link">
               <v-btn class="mr-2 outlined-btn" outlined>
                 <v-icon class="event-icon">mdi-calendar</v-icon>
@@ -69,7 +72,7 @@ onMounted(async () => {
                   >BOOK EVENT</span
                 >
               </v-btn>
-            </RouterLink>
+            </RouterLink> -->
           </div>
           <v-spacer></v-spacer>
 
@@ -112,6 +115,7 @@ onMounted(async () => {
           </v-list-item>
           <v-divider></v-divider>
           <!-- BOOK EVENT -->
+          <!--
           <v-list-item @click="drawer = false">
             <RouterLink to="/book-event" class="router-link" style="width: 100%">
               <v-btn flat class="pl-0">
@@ -119,7 +123,7 @@ onMounted(async () => {
                 BOOK EVENT
               </v-btn>
             </RouterLink>
-          </v-list-item>
+          </v-list-item>-->
           <v-divider></v-divider>
 
           <v-divider></v-divider>
@@ -221,6 +225,7 @@ onMounted(async () => {
   padding-bottom: 2px;
   letter-spacing: 2px;
   font-weight: 600;
+  padding-right: 50px;
 }
 
 .home-btn:hover {

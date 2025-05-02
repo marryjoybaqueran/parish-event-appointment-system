@@ -35,3 +35,34 @@ export const getUserInformation = async () => {
 
   return user_metadata
 }
+
+// Function to fetch all bookings from the database
+/* export const fetchBookings = async () => {
+  const { data, error } = await supabase.from('bookings').select('*').limit(1000)
+
+  if (error) {
+    console.error('Error fetching bookings:', error)
+    return { error }
+  }
+
+  return { data }
+}*/
+
+export const fetchBookings = async () => {
+  const { data, error, count } = await supabase
+    .from('bookings')
+    .select('*', { count: 'exact' })
+    .range(0, 1000)
+
+  if (error) {
+    console.error('Error fetching bookings:', error)
+    return { error }
+  }
+
+  console.log('Total bookings count:', count)
+  return { data, count }
+}
+
+export const tableSearch = (search) => {
+  return (search ||= '')
+}

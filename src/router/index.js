@@ -1,4 +1,4 @@
-import { isAuthenticated } from '@/utils/supabase'
+import { /*getUserInformation,*/ supabase, isAuthenticated } from '@/utils/supabase'
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue'
@@ -16,10 +16,18 @@ import NotFoundView from '@/views/error/NotFoundView.vue'
 import FFBookingListView from '@/views/admin/FFBookingListView.vue'
 import BFBookingListView from '@/views/admin/BFBookingListView.vue'
 import TGBookingListView from '@/views/admin/TGBookingListView.vue'
+import ForbiddenView from '@/views/error/ForbiddenView.vue'
+import TrialPage from '@/views/error/TrialPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    {
+      path: '/trial-page',
+      name: 'trial-page',
+      component: TrialPage,
+    },
+
     {
       path: '/',
       name: 'home',
@@ -65,16 +73,21 @@ const router = createRouter({
       component: ThanksGivingMass,
     },
     {
+      //path: '/admin/admin-dashboard',
       path: '/admin-dashboard',
       name: 'admin-dashboard',
       component: AdminDashboard,
+      meta: { requiresAdmin: true },
     },
     {
+      //path: '/admin/admin-booking-view',
       path: '/admin-booking-view',
       name: 'admin-booking-view',
       component: AdminBookingsView,
+      meta: { requiresAdmin: true },
     },
     {
+      //path: '/admin/admin-announcement-manager',
       path: '/admin-announcement-manager',
       name: 'admin-announcement-manager',
       component: AdminAnnouncementManager,
@@ -90,29 +103,53 @@ const router = createRouter({
       component: NotFoundView,
     },
     {
+      path: '/forbidden',
+      name: 'forbidden',
+      component: ForbiddenView,
+    },
+    {
       path: '/funeral-mass-form-bookinglist-view',
       name: 'funeral-mass-form-bookinglist-view',
       component: FFBookingListView,
+      meta: { requiresAdmin: true },
     },
     {
       path: '/baptism-mass-form-bookinglist-view',
       name: 'baptism-mass-form-bookinglist-view',
       component: BFBookingListView,
+      meta: { requiresAdmin: true },
     },
     {
       path: '/thanksgiving-mass-form-bookinglist-view',
       name: 'thanksgiving-mass-form-bookinglist-view',
       component: TGBookingListView,
+      meta: { requiresAdmin: true },
     },
   ],
 })
 
 router.beforeEach(async (to) => {
   const isLoggedIn = await isAuthenticated()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // Redirect to appropriate page if accessing home route
   if (to.name === 'home') {
     return isLoggedIn ? { name: 'homepage' } : { name: 'login' }
+  }
+
+  // If not logged in
+  if (!isLoggedIn) {
+    // Only allow access to login and register
+    if (to.name === 'login' || to.name === 'register') {
+      return true
+    } else if (to.name === 'page-not-found' || to.name === 'forbidden') {
+      return true
+    } else {
+      // any other page (even /homepage) = not allowed
+      return { name: 'page-not-found' }
+    }
   }
 
   // If logged in, prevent access to login or register pages
@@ -120,9 +157,25 @@ router.beforeEach(async (to) => {
     // redirect the user to the dashboard page
     return { name: 'homepage' }
   }
+
+  const isAdmin = user?.user_metadata?.is_admin
+
+  if (to.meta.requiresAdmin) {
+    if (!isLoggedIn || !isAdmin) {
+      return '/forbidden'
+    }
+  }
+
   /*
+  // Check user if the user is logged in or not admin
+  if (isLoggedIn && !isAdmin) {
+    if (to.path.startsWith('/admin/users')) {
+      return { name: 'forbidden' }
+    }
+  }
+
   // If not logged in, prevent access to system pages
-  if (!isLoggedIn && to.path.startsWith('/system')) {
+  if (!isLoggedIn && to.path.startsWith('/admin')) {
     // redirect the user to the login page
     return { name: 'login' }
   }

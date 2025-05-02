@@ -23,7 +23,7 @@ const formAction = ref({
 
 const isPasswordVisible = ref(false)
 const refVform = ref()
-
+/*
 const onSubmit = async () => {
   formAction.value = { ...formActionDefault }
   formAction.value.formProcess = true
@@ -41,6 +41,37 @@ const onSubmit = async () => {
     formAction.value.formSuccessMessage = 'Successfully Logged Account!'
     router.replace('/homepage')
   }
+
+  refVform.value?.reset()
+  formAction.value.formProcess = false
+}*/
+
+const onSubmit = async () => {
+  formAction.value = { ...formActionDefault }
+  formAction.value.formProcess = true
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: formData.value.email,
+    password: formData.value.password,
+  })
+
+  if (error) {
+    console.log(error)
+    formAction.value.formErrorMessage = error.message
+    formAction.value.formStatus = error.status
+  } else if (data) {
+    console.log(data)
+    formAction.value.formSuccessMessage = 'Successfully Logged Account!'
+
+    // 🔐 Admin-only redirect logic
+    if (data.user.user_metadata?.is_admin) {
+      router.replace('/admin-dashboard')
+    } else {
+      router.replace('/homepage')
+    }
+  }
+
+  //End of admin/guest
 
   refVform.value?.reset()
   formAction.value.formProcess = false

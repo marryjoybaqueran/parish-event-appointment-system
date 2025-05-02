@@ -1,14 +1,15 @@
 <script setup>
 import LoginForm from '@/components/auth/LoginForm.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { useDisplay } from 'vuetify'
-import { ref } from 'vue'
+import PreloaderView from '@/components/layout/PreloaderView.vue'
 
-// Utilize pre-defined vue functions
+//Display for mobile & desktop
+import { useDisplay } from 'vuetify'
 const { mobile } = useDisplay()
 </script>
 
 <template>
+  <PreloaderView></PreloaderView>
   <AppLayout>
     <template #content>
       <v-container fluid>

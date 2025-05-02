@@ -1,26 +1,38 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 
 // Mock data: You can expand this or match it to actual form data
-const desserts = ref([
+const deceased_info = ref([
   {
-    deceasedFirstName: 'Elsa',
-    deceasedLastName: 'Snowman',
-    deceasedMiddleInitial: 'B.',
-    deceasedDateOfBirth: '1995-02-23',
-    deceasedDateOfDeath: '2023-06-12',
-    deceasedAge: 60,
-    deceasedSelectedFuneralDate: '2023-06-24',
-    deceasedSelectedFuneralTime: '8:00AM',
-
-    ContactPersonFirstName: 'Via',
-    ContactPersonLastName: 'Reid',
-    ContactPersonMiddleInitial: 'J.',
-    ContactPersonRelationship: 'Mother',
-    ContactPersonPhoneNumber: '0985747648',
+    first_name: '',
+    last_name: '',
+    middle_name: '',
+    birth_date: '',
+    death_date: '',
+    age: '',
+    funeral_date: '',
+    funeral_time: '',
+    contact_fullname: '',
+    relationship: '',
+    email: '',
+    number: '',
   },
 ])
+
+const loadFuneralInfo = async () => {
+  const { data, error } = await supabase.from('funeral_bookings').select('*')
+  if (error) {
+    console.error('Error loading funeral form info:', error.message)
+  } else {
+    deceased_info.value = data
+  }
+}
+
+onMounted(() => {
+  loadFuneralInfo()
+})
 </script>
 
 <template>
@@ -50,31 +62,28 @@ const desserts = ref([
                   <th class="text-left font-weight-bold">Selected Funeral Time</th>
 
                   <!-- Contact Person Information -->
-                  <th class="text-left font-weight-bold">First Name</th>
-                  <th class="text-left font-weight-bold">Last Name</th>
-                  <th class="text-left font-weight-bold">Middle Initial</th>
+                  <th class="text-left font-weight-bold">Contact Full Name</th>
                   <th class="text-left font-weight-bold">Relationship</th>
+                  <th class="text-left font-weight-bold">Email Address</th>
                   <th class="text-left font-weight-bold">Phone Number</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in desserts" :key="index">
-                  <!-- Bride's Info -->
-                  <td>{{ item.deceasedFirstName }}</td>
-                  <td>{{ item.deceasedLastName }}</td>
-                  <td>{{ item.deceasedMiddleInitial }}</td>
-                  <td>{{ item.deceasedDateOfBirth }}</td>
-                  <td>{{ item.deceasedDateOfDeath }}</td>
-                  <td>{{ item.deceasedAge }}</td>
-                  <td>{{ item.deceasedSelectedFuneralDate }}</td>
-                  <td>{{ item.deceasedSelectedFuneralTime }}</td>
+                <tr v-for="(item, index) in deceased_info" :key="index">
+                  <!-- Deceased's Info -->
+                  <td>{{ item.first_name }}</td>
+                  <td>{{ item.last_name }}</td>
+                  <td>{{ item.middle_name }}</td>
+                  <td>{{ item.birth_date }}</td>
+                  <td>{{ item.death_date }}</td>
+                  <td>{{ item.age }}</td>
+                  <td>{{ item.funeral_date }}</td>
+                  <td>{{ item.funeral_time }}</td>
 
-                  <!-- Groom's Info -->
-                  <td>{{ item.ContactPersonFirstName }}</td>
-                  <td>{{ item.ContactPersonLastName }}</td>
-                  <td>{{ item.ContactPersonMiddleInitial }}</td>
-                  <td>{{ item.ContactPersonRelationship }}</td>
-                  <td>{{ item.ContactPersonPhoneNumber }}</td>
+                  <td>{{ item.contact_fullname }}</td>
+                  <td>{{ item.relationship }}</td>
+                  <td>{{ item.email }}</td>
+                  <td>{{ item.number }}</td>
                 </tr>
               </tbody>
             </v-table>
@@ -93,12 +102,32 @@ const desserts = ref([
   flex-grow: 1;
 }
 
-th {
+th,
+td {
   white-space: nowrap;
 }
 
 th,
 td {
   border: 1px solid black;
+}
+
+th {
+  background: #2a7b9b;
+  background: linear-gradient(
+    90deg,
+    rgba(42, 123, 155, 1) 0%,
+    rgba(87, 199, 133, 1) 50%,
+    rgba(237, 221, 83, 1) 100%
+  );
+}
+
+h1 {
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+th {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-optical-sizing: auto;
 }
 </style>

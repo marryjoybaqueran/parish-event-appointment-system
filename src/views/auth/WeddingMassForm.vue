@@ -3,8 +3,6 @@ import NavBar2 from '@/components/layout/NavBar2.vue'
 import WeddingForm from '@/components/system/WeddingForm.vue'
 import { useDisplay } from 'vuetify'
 const { smAndDown } = useDisplay()
-
-// Utilize pre-defined vue functions
 </script>
 
 <template>
