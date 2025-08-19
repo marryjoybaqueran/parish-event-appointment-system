@@ -47,54 +47,34 @@ const onSubmit = async () => {
 }*/
 
 const onSubmit = async () => {
-  // Reset form state
   formAction.value = { ...formActionDefault }
   formAction.value.formProcess = true
 
-  try {
-    // Authenticate user
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: formData.value.email,
-      password: formData.value.password,
-    })
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: formData.value.email,
+    password: formData.value.password,
+  })
 
-    if (error) {
-      // Handle authentication error
-      formAction.value.formErrorMessage = error.message
-      formAction.value.formStatus = error.status
-      return
+  if (error) {
+    console.log(error)
+    formAction.value.formErrorMessage = error.message
+    formAction.value.formStatus = error.status
+  } else if (data) {
+    console.log(data)
+    formAction.value.formSuccessMessage = 'Successfully Logged Account!'
+
+    // 🔐 Admin-only redirect logic
+    if (data.user.user_metadata?.is_admin) {
+      router.replace('/admin-dashboard')
+    } else {
+      router.replace('/homepage')
     }
-
-    // Fetch user role more efficiently
-    const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
-      check_user_id: data.user.id,
-    })
-    if (roleError) {
-      console.error('Role fetch error:', roleError)
-      // Fallback to default user role if fetch fails
-      formAction.value.formErrorMessage = 'Could not determine user role'
-      return
-    }
-
-    // Determine routing based on role
-    const userRole = roleData?.trim().toLowerCase()
-    formAction.value.formSuccessMessage = 'Successfully Logged in!'
-
-    switch (userRole) {
-      case 'admin':
-        router.replace('/admin-dashboard')
-        break
-      default:
-        router.replace('/homepage')
-    }
-  } catch (err) {
-    console.error('Unexpected error:', err)
-    formAction.value.formErrorMessage = 'An unexpected error occurred'
-  } finally {
-    // Always reset form and stop processing
-    refVform.value?.reset()
-    formAction.value.formProcess = false
   }
+
+  //End of admin/guest
+
+  refVform.value?.reset()
+  formAction.value.formProcess = false
 }
 
 const onFormSubmit = () => {
