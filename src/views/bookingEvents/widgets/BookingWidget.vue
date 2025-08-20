@@ -1,5 +1,5 @@
 <script setup>
-const emit = defineEmits(['selected'])
+
 
 const items = [
   {
@@ -28,13 +28,11 @@ const items = [
   },
 ]
 
-function selectItem(item) {
-  emit('selected', item)
-}
+
 </script>
 
 <template>
-  <v-card rounded="lg" elevation="12">
+  <div rounded="lg" elevation="12">
     <v-card-title class="text-h6 text-center">Choose an event</v-card-title>
     <v-card-text>
       <v-row class="g-6">
@@ -43,7 +41,7 @@ function selectItem(item) {
             rounded="lg"
             elevation="8"
             :class="item.color"
-            @click.stop="selectItem(item)"
+            
             hover
             class="mass-card fixed-size-card"
           >
@@ -120,7 +118,7 @@ function selectItem(item) {
         </v-col>
       </v-row>
     </v-card-text>
-  </v-card>
+  </div>
 </template>
 
 <style scoped>
