@@ -1,1 +1,0 @@
-direa ipang butang ang pdf related nga code.

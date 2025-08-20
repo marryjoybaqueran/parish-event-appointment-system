@@ -1,11 +1,10 @@
 <script setup>
 import NavBar2 from '@/components/layout/NavBar2.vue'
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
-import EventGuide from './widgets/EventGuide.vue'
+import EventGuide from './widgets/EventGuideWidget.vue'
+import BookingWidget from './widgets/BookingWidget.vue'
 
-const router = useRouter()
 const images = [
   '/wedding mass background image.jpg',
   'thanksgiving mass background image.png',
@@ -15,42 +14,24 @@ const images = [
 
 const isLoaded = ref(false)
 
-const items = [
-  {
-    name: '💍 Special Wedding Mass',
-    route: '/wedding-mass-form',
-    description: 'Celebrate your sacred union',
-    color: 'pink-lighten-4',
-    icon: 'mdi-heart'
-  },
-  {
-    name: '⚰️ Funeral Mass',
-    route: '/funeral-mass',
-    description: 'Honor and remember',
-    color: 'grey-lighten-3',
-    icon: 'mdi-cross'
-  },
-  {
-    name: '🎁 Thanksgiving Mass',
-    route: '/thanks-giving-mass',
-    description: 'Express gratitude and joy',
-    color: 'amber-lighten-4',
-    icon: 'mdi-gift'
-  },
-  {
-    name: '✝️ Baptism Mass (Christening)',
-    route: '/baptism-mass',
-    description: 'Welcome new life in faith',
-    color: 'blue-lighten-4',
-    icon: 'mdi-water'
-  },
-]
 
-function handleEventSelectByName(selectedName) {
-  const selected = items.find((item) => item.name === selectedName)
-  if (selected?.route) {
-    router.push(selected.route)
+
+const selectedItem = ref(null)
+
+
+// dialog state for booking widget
+const dialog = ref(false)
+
+function onStepClick(step) {
+  // open booking dialog when Step 1 or Step 2 is clicked
+  if (step && (step.id === 1 || step.id === 2)) {
+    dialog.value = true
   }
+}
+
+function onBookingSelected(item) {
+  selectedItem.value = item
+  dialog.value = false
 }
 
 onMounted(() => {
@@ -67,91 +48,45 @@ onMounted(() => {
     <template #content>
       <v-container fluid class="pa-0">
         <!-- Background Carousel -->
-              <!-- Background carousel using Vuetify -->
-              <v-carousel
-                cycle
-                hide-delimiters
-                :show-arrows="false"
-                height="100vh"
-                class="position-fixed top-0 left-0 w-100"
-              >
-                <v-carousel-item v-for="(image, index) in images" :key="index">
-                  <v-img
-                    :src="image"
-                    class="fill-height"
-                    gradient="to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.4)"
-                    cover
-                  />
-                </v-carousel-item>
-              </v-carousel>
+        <!-- Background carousel using Vuetify -->
+        <v-carousel
+          cycle
+          hide-delimiters
+          :show-arrows="false"
+          height="100vh"
+          class="position-fixed top-0 left-0 w-100"
+        >
+          <v-carousel-item v-for="(image, index) in images" :key="index">
+            <v-img
+              :src="image"
+              class="fill-height"
+              gradient="to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.4)"
+              cover
+            />
+          </v-carousel-item>
+        </v-carousel>
 
         <!-- Content -->
-  <v-container class="py-12 position-relative">
+        <v-container class="py-12 position-relative">
           <v-row>
             <v-col cols="12">
-              <EventGuide />
+              <EventGuide @step-click="onStepClick" />
             </v-col>
           </v-row>
 
-          <v-row justify="center" class="main-content">
-            <v-col cols="12" lg="10" xl="8">
-              <v-fade-transition>
-                <div v-if="isLoaded" class="text-center mb-12">
-                  <h1 class="text-h2 white--text font-light mb-4">
-                    Sacred Moments
-                  </h1>
-                  <p class="text-subtitle-1 white--text mb-8">
-                    Book your special mass celebration with us
-                  </p>
-                </div>
-              </v-fade-transition>
+          <!-- Booking dialog triggered from Step 1 -->
+          <v-dialog v-model="dialog" width="1200" max-width="95vw">
+            <v-card>
+              <v-card-text>
+                <BookingWidget @selected="onBookingSelected" />
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer />
+                <v-btn text color="primary" @click="dialog = false">Close</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
 
-              <v-row class="g-6" v-if="isLoaded">
-                <v-col
-                  v-for="item in items"
-                  :key="item.name"
-                  cols="12"
-                  sm="6"
-                  lg="3"
-                >
-                  <v-card
-              rounded="lg"
-              elevation="8"
-              :class="item.color"
-              @click="handleEventSelectByName(item.name)"
-              hover
-              class="mass-card fixed-size-card"
-                  >
-                    <v-card-text class="pa-6 text-center">
-                      <v-icon
-                        :icon="item.icon"
-                        size="48"
-                        class="mb-4"
-                        color="primary"
-                      />
-
-                      <h3 class="text-subtitle-2 font-weight-medium mb-3">
-                        {{ item.name.replace(/^[^\s]*\s/, '') }}
-                      </h3>
-
-                      <p class="text-body-2 mb-4">
-                                {{ item.description }}
-                      </p>
-
-                      <v-btn
-                        variant="outlined"
-                        color="primary"
-                        size="small"
-                      >
-                        Download Form
-                        <v-icon end>mdi-arrow-right</v-icon>
-                      </v-btn>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
         </v-container>
       </v-container>
     </template>
@@ -245,7 +180,6 @@ onMounted(() => {
 }
 
 .main-content {
-  
   align-items: center;
 }
 
@@ -373,19 +307,19 @@ onMounted(() => {
   .content-wrapper {
     padding-top: 60px;
   }
-  
+
   .card-grid {
     gap: 16px;
   }
-  
+
   .mass-card {
     margin: 0 8px;
   }
-  
+
   .welcome-title {
     margin-bottom: 1rem;
   }
-  
+
   .welcome-subtitle {
     margin-bottom: 2rem;
   }
