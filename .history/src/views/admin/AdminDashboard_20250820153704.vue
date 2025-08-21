@@ -554,12 +554,12 @@ onMounted(() => {
                 ]"
                 class="booking-table"
               >
-                <template #item.type="{ item }">
+                <template >
                   <v-chip :color="getEventColor(item.type)" size="small">
                     {{ item.type }}
                   </v-chip>
                 </template>
-                <template #item.details="{ item }">
+                <template >
                   {{ formatBookingDetails(item).subtitle }}
                 </template>
                 <template #item.date="{ item }">

@@ -477,7 +477,7 @@ onMounted(() => {
                   @click="openBookingDetails(booking)"
                   class="booking-item"
                 >
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-chip :color="getEventColor(booking.type)" size="small" class="me-3">
                       {{ booking.type }}
                     </v-chip>

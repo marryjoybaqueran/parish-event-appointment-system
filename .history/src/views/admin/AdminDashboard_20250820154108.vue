@@ -477,7 +477,7 @@ onMounted(() => {
                   @click="openBookingDetails(booking)"
                   class="booking-item"
                 >
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-chip :color="getEventColor(booking.type)" size="small" class="me-3">
                       {{ booking.type }}
                     </v-chip>
@@ -489,7 +489,7 @@ onMounted(() => {
                     {{ formatBookingDetails(booking).date }} -
                     {{ formatBookingDetails(booking).time }}
                   </v-list-item-subtitle>
-                  <template v-slot:append>
+                  <template #append>
                     <v-btn icon="mdi-chevron-right" variant="text" size="small"></v-btn>
                   </template>
                 </v-list-item>

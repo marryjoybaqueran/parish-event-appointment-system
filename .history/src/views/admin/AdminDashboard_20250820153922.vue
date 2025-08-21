@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/valid-v-slot -->
+<!-- eslint-disable vue/valid-v-slot -->
 <script setup>
 import { ref, onMounted } from 'vue'
 import { supabase } from '@/utils/supabase.js'
@@ -554,6 +556,7 @@ onMounted(() => {
                 ]"
                 class="booking-table"
               >
+                // eslint-disable-next-line vue/valid-v-slot
                 <template #item.type="{ item }">
                   <v-chip :color="getEventColor(item.type)" size="small">
                     {{ item.type }}

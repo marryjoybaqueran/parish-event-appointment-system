@@ -33,18 +33,6 @@ const selectedBooking = ref(null)
 const calendarEvents = ref([])
 const selectedDateEvents = ref([])
 
-// Event categories (defined in app instead of database)
-const eventCategories = ref([
-  { name: 'announcement', label: 'Announcement', color: '#9C27B0', icon: 'mdi-bullhorn' },
-  { name: 'mass', label: 'Holy Mass', color: '#2196F3', icon: 'mdi-church' },
-  { name: 'event', label: 'Parish Event', color: '#4CAF50', icon: 'mdi-calendar-star' },
-  { name: 'celebration', label: 'Celebration', color: '#FF9800', icon: 'mdi-party-popper' },
-  { name: 'wedding', label: 'Wedding', color: '#E91E63', icon: 'mdi-heart' },
-  { name: 'baptism', label: 'Baptism', color: '#00BCD4', icon: 'mdi-water' },
-  { name: 'funeral', label: 'Funeral', color: '#424242', icon: 'mdi-cross' },
-  { name: 'thanksgiving', label: 'Thanksgiving', color: '#FF5722', icon: 'mdi-hands-pray' },
-])
-
 // Load all data
 const loadDashboardData = async () => {
   await Promise.all([loadPendingBookings(), loadEvents(), loadStats(), loadCalendarEvents()])
@@ -187,11 +175,15 @@ const loadCalendarEvents = async () => {
 }
 
 const getEventColor = (type) => {
-  const category = eventCategories.value.find((cat) => cat.name === type)
-  return category?.color || '#757575'
+  const colors = {
+    wedding: '#E91E63',
+    baptism: '#2196F3',
+    funeral: '#424242',
+    thanksgiving: '#FF9800',
+    event: '#9C27B0',
+  }
+  return colors[type] || '#757575'
 }
-
-// Removed unused function getCategoryLabel
 
 const updateSelectedDateEvents = () => {
   const dateStr = selectedDate.value.toISOString().split('T')[0]
@@ -521,7 +513,7 @@ onMounted(() => {
                       :key="index"
                       class="mb-2"
                     >
-                      <template v-slot:prepend>
+                      <template #prepend>
                         <v-chip :color="event.color" size="small" class="me-3">
                           {{ event.type }}
                         </v-chip>
@@ -554,21 +546,21 @@ onMounted(() => {
                 ]"
                 class="booking-table"
               >
-                <template #item.type="{ item }">
+                <template v-slot:item.type="{ item }">
                   <v-chip :color="getEventColor(item.type)" size="small">
                     {{ item.type }}
                   </v-chip>
                 </template>
-                <template #item.details="{ item }">
+                <template v-slot:item.details="{ item }">
                   {{ formatBookingDetails(item).subtitle }}
                 </template>
-                <template #item.date="{ item }">
+                <template v-slot:item.date="{ item }">
                   {{ formatBookingDetails(item).date }}
                 </template>
-                <template #item.time="{ item }">
+                <template v-slot:item.time="{ item }">
                   {{ formatBookingDetails(item).time }}
                 </template>
-                <template #item.actions="{ item }">
+                <template v-slot:item.actions="{ item }">
                   <v-btn
                     color="green"
                     size="small"
@@ -625,11 +617,9 @@ onMounted(() => {
               />
               <v-select
                 v-model="newEvent.type"
-                :items="eventCategories.map((cat) => ({ value: cat.name, title: cat.label }))"
+                :items="['announcement', 'mass', 'event', 'celebration']"
                 label="Event Type"
                 prepend-icon="mdi-tag"
-                item-title="title"
-                item-value="value"
               />
             </v-form>
           </v-card-text>

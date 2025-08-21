@@ -13,7 +13,7 @@ const stats = ref({
   totalBookings: 0,
   pendingApprovals: 0,
   upcomingEvents: 0,
-  totalMembers: 0,
+  totalMembers: 0
 })
 
 // Event creation
@@ -22,7 +22,7 @@ const newEvent = ref({
   description: '',
   date: '',
   time: '',
-  type: 'announcement',
+  type: 'announcement'
 })
 
 const eventDialog = ref(false)
@@ -42,33 +42,36 @@ const eventCategories = ref([
   { name: 'wedding', label: 'Wedding', color: '#E91E63', icon: 'mdi-heart' },
   { name: 'baptism', label: 'Baptism', color: '#00BCD4', icon: 'mdi-water' },
   { name: 'funeral', label: 'Funeral', color: '#424242', icon: 'mdi-cross' },
-  { name: 'thanksgiving', label: 'Thanksgiving', color: '#FF5722', icon: 'mdi-hands-pray' },
+  { name: 'thanksgiving', label: 'Thanksgiving', color: '#FF5722', icon: 'mdi-hands-pray' }
 ])
 
 // Load all data
 const loadDashboardData = async () => {
-  await Promise.all([loadPendingBookings(), loadEvents(), loadStats(), loadCalendarEvents()])
+  await Promise.all([
+    loadPendingBookings(),
+    loadEvents(),
+    loadStats(),
+    loadCalendarEvents()
+  ])
 }
 
 const loadPendingBookings = async () => {
   try {
     // Load from multiple booking tables
-    const tables = [
-      'wedding_bookings',
-      'baptism_bookings',
-      'funeral_bookings',
-      'thanksgiving_bookings',
-    ]
+    const tables = ['wedding_bookings', 'baptism_bookings', 'funeral_bookings', 'thanksgiving_bookings']
     const allBookings = []
 
     for (const table of tables) {
-      const { data, error } = await supabase.from(table).select('*').eq('status', 'pending')
+      const { data, error } = await supabase
+        .from(table)
+        .select('*')
+        .eq('status', 'pending')
 
       if (data && !error) {
-        const bookingsWithType = data.map((booking) => ({
+        const bookingsWithType = data.map(booking => ({
           ...booking,
           type: table.replace('_bookings', ''),
-          table: table,
+          table: table
         }))
         allBookings.push(...bookingsWithType)
       }
@@ -90,7 +93,7 @@ const loadEvents = async () => {
 
     if (data && !error) {
       events.value = data
-      stats.value.upcomingEvents = data.filter((e) => new Date(e.date) >= new Date()).length
+      stats.value.upcomingEvents = data.filter(e => new Date(e.date) >= new Date()).length
     }
   } catch (error) {
     console.error('Error loading events:', error)
@@ -99,16 +102,13 @@ const loadEvents = async () => {
 
 const loadStats = async () => {
   try {
-    const tables = [
-      'wedding_bookings',
-      'baptism_bookings',
-      'funeral_bookings',
-      'thanksgiving_bookings',
-    ]
+    const tables = ['wedding_bookings', 'baptism_bookings', 'funeral_bookings', 'thanksgiving_bookings']
     let totalBookings = 0
 
     for (const table of tables) {
-      const { count, error } = await supabase.from(table).select('*', { count: 'exact' })
+      const { count, error } = await supabase
+        .from(table)
+        .select('*', { count: 'exact' })
 
       if (!error) {
         totalBookings += count || 0
@@ -124,19 +124,17 @@ const loadStats = async () => {
 
 const loadCalendarEvents = async () => {
   try {
-    const tables = [
-      'wedding_bookings',
-      'baptism_bookings',
-      'funeral_bookings',
-      'thanksgiving_bookings',
-    ]
+    const tables = ['wedding_bookings', 'baptism_bookings', 'funeral_bookings', 'thanksgiving_bookings']
     const allEvents = []
 
     for (const table of tables) {
-      const { data, error } = await supabase.from(table).select('*').eq('status', 'approved')
+      const { data, error } = await supabase
+        .from(table)
+        .select('*')
+        .eq('status', 'approved')
 
       if (data && !error) {
-        const events = data.map((booking) => {
+        const events = data.map(booking => {
           let date, time, title
 
           if (table === 'wedding_bookings') {
@@ -158,7 +156,7 @@ const loadCalendarEvents = async () => {
             time,
             title,
             type: table.replace('_bookings', ''),
-            color: getEventColor(table.replace('_bookings', '')),
+            color: getEventColor(table.replace('_bookings', ''))
           }
         })
         allEvents.push(...events)
@@ -166,15 +164,17 @@ const loadCalendarEvents = async () => {
     }
 
     // Add parish events
-    const { data: parishEvents, error } = await supabase.from('parish_events').select('*')
+    const { data: parishEvents, error } = await supabase
+      .from('parish_events')
+      .select('*')
 
     if (parishEvents && !error) {
-      const events = parishEvents.map((event) => ({
+      const events = parishEvents.map(event => ({
         date: event.date,
         time: event.time,
         title: event.title,
         type: 'event',
-        color: '#9C27B0',
+        color: '#9C27B0'
       }))
       allEvents.push(...events)
     }
@@ -187,7 +187,7 @@ const loadCalendarEvents = async () => {
 }
 
 const getEventColor = (type) => {
-  const category = eventCategories.value.find((cat) => cat.name === type)
+  const category = eventCategories.value.find(cat => cat.name === type)
   return category?.color || '#757575'
 }
 
@@ -195,7 +195,9 @@ const getEventColor = (type) => {
 
 const updateSelectedDateEvents = () => {
   const dateStr = selectedDate.value.toISOString().split('T')[0]
-  selectedDateEvents.value = calendarEvents.value.filter((event) => event.date === dateStr)
+  selectedDateEvents.value = calendarEvents.value.filter(event =>
+    event.date === dateStr
+  )
 }
 
 const approveBooking = async (booking) => {
@@ -232,16 +234,16 @@ const denyBooking = async (booking) => {
 
 const createEvent = async () => {
   try {
-    const { error } = await supabase.from('parish_events').insert([
-      {
+    const { error } = await supabase
+      .from('parish_events')
+      .insert([{
         title: newEvent.value.title,
         description: newEvent.value.description,
         date: newEvent.value.date,
         time: newEvent.value.time,
         type: newEvent.value.type,
-        created_at: new Date().toISOString(),
-      },
-    ])
+        created_at: new Date().toISOString()
+      }])
 
     if (!error) {
       await loadDashboardData()
@@ -259,7 +261,7 @@ const resetEventForm = () => {
     description: '',
     date: '',
     time: '',
-    type: 'announcement',
+    type: 'announcement'
   }
 }
 
@@ -279,8 +281,8 @@ const formatBookingDetails = (booking) => {
         { label: 'Bride', value: `${booking.bride_firstname} ${booking.bride_lastname}` },
         { label: 'Groom', value: `${booking.groom_firstname} ${booking.groom_lastname}` },
         { label: 'Date', value: booking.wedding_date },
-        { label: 'Time', value: booking.wedding_time },
-      ],
+        { label: 'Time', value: booking.wedding_time }
+      ]
     }
   } else if (booking.type === 'baptism') {
     return {
@@ -293,8 +295,8 @@ const formatBookingDetails = (booking) => {
         { label: 'Mother', value: booking.mother_fullname },
         { label: 'Father', value: booking.father_fullname },
         { label: 'Date', value: booking.date_selected },
-        { label: 'Time', value: booking.time_selected },
-      ],
+        { label: 'Time', value: booking.time_selected }
+      ]
     }
   }
   return {
@@ -302,7 +304,7 @@ const formatBookingDetails = (booking) => {
     subtitle: booking.name || 'Details',
     date: booking.date_selected || booking.selected_date,
     time: booking.time_selected || booking.selected_time,
-    details: [],
+    details: []
   }
 }
 
@@ -425,10 +427,7 @@ onMounted(() => {
                   Today's Schedule
                 </v-card-title>
                 <v-card-text>
-                  <div
-                    v-if="selectedDateEvents.length === 0"
-                    class="text-center text-grey-darken-1 py-8"
-                  >
+                  <div v-if="selectedDateEvents.length === 0" class="text-center text-grey-darken-1 py-8">
                     <v-icon size="64" color="grey-lighten-2">mdi-calendar-blank</v-icon>
                     <p class="mt-3">No events scheduled</p>
                   </div>
@@ -486,8 +485,7 @@ onMounted(() => {
                     {{ formatBookingDetails(booking).subtitle }}
                   </v-list-item-title>
                   <v-list-item-subtitle>
-                    {{ formatBookingDetails(booking).date }} -
-                    {{ formatBookingDetails(booking).time }}
+                    {{ formatBookingDetails(booking).date }} - {{ formatBookingDetails(booking).time }}
                   </v-list-item-subtitle>
                   <template v-slot:append>
                     <v-btn icon="mdi-chevron-right" variant="text" size="small"></v-btn>
@@ -527,9 +525,7 @@ onMounted(() => {
                         </v-chip>
                       </template>
                       <v-list-item-title>{{ event.title }}</v-list-item-title>
-                      <v-list-item-subtitle
-                        >{{ event.date }} - {{ event.time }}</v-list-item-subtitle
-                      >
+                      <v-list-item-subtitle>{{ event.date }} - {{ event.time }}</v-list-item-subtitle>
                     </v-list-item>
                   </v-list>
                 </v-col>
@@ -550,22 +546,22 @@ onMounted(() => {
                   { title: 'Details', key: 'details' },
                   { title: 'Date', key: 'date' },
                   { title: 'Time', key: 'time' },
-                  { title: 'Actions', key: 'actions', sortable: false },
+                  { title: 'Actions', key: 'actions', sortable: false }
                 ]"
                 class="booking-table"
               >
-                <template #item.type="{ item }">
+                <template v-slot:item.type="{ item }">
                   <v-chip :color="getEventColor(item.type)" size="small">
                     {{ item.type }}
                   </v-chip>
                 </template>
-                <template #item.details="{ item }">
+                <template v-slot:item.details="{ item }">
                   {{ formatBookingDetails(item).subtitle }}
                 </template>
-                <template #item.date="{ item }">
+                <template v-slot:item.date="{ item }">
                   {{ formatBookingDetails(item).date }}
                 </template>
-                <template #item.time="{ item }">
+                <template v-slot:item.time="{ item }">
                   {{ formatBookingDetails(item).time }}
                 </template>
                 <template #item.actions="{ item }">
@@ -578,7 +574,12 @@ onMounted(() => {
                   >
                     Approve
                   </v-btn>
-                  <v-btn color="red" size="small" variant="outlined" @click="denyBooking(item)">
+                  <v-btn
+                    color="red"
+                    size="small"
+                    variant="outlined"
+                    @click="denyBooking(item)"
+                  >
                     Deny
                   </v-btn>
                 </template>
@@ -625,7 +626,7 @@ onMounted(() => {
               />
               <v-select
                 v-model="newEvent.type"
-                :items="eventCategories.map((cat) => ({ value: cat.name, title: cat.label }))"
+                :items="eventCategories.map(cat => ({ value: cat.name, title: cat.label }))"
                 label="Event Type"
                 prepend-icon="mdi-tag"
                 item-title="title"
@@ -675,9 +676,7 @@ onMounted(() => {
 
 <style scoped>
 .stat-card {
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   border-radius: 16px;
 }
 
@@ -707,7 +706,7 @@ onMounted(() => {
 }
 
 .text-h3 {
-  background: linear-gradient(45deg, #1976d2, #42a5f5);
+  background: linear-gradient(45deg, #1976D2, #42A5F5);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -743,16 +742,8 @@ onMounted(() => {
   animation: fadeInUp 0.6s ease forwards;
 }
 
-.stat-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.stat-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.stat-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-.stat-card:nth-child(4) {
-  animation-delay: 0.4s;
-}
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
 </style>

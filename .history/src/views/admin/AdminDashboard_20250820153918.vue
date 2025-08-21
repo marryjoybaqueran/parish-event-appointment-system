@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/valid-v-slot -->
+<!-- eslint-disable vue/valid-v-slot -->
 <script setup>
 import { ref, onMounted } from 'vue'
 import { supabase } from '@/utils/supabase.js'

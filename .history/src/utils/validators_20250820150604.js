@@ -1,9 +1,8 @@
 // 👉 IsEmpty
 export const isEmpty = (value) => {
   if (value === null || value === undefined || value === '') return true
-  if (Array.isArray(value)) return value.length === 0
-  if (typeof value === 'object') return Object.keys(value).length === 0
-  return false
+
+  return !!(Array.isArray(value) && value.length === 0)
 }
 
 //  IsNullOrUndefined
@@ -129,7 +128,6 @@ export const alphaDashValidator = (value) => {
 //  Image Validator
 export const imageValidator = (value) => {
   if (isEmpty(value)) return true
-  if (Array.isArray(value) && value[0] && value[0].size >= 2000000)
-    return 'Image size should be less than 2 MB'
-  return true
+
+  return !value || !value.length || value[0].size < 2000000 || 'Image size should be less than 2 MB'
 }

@@ -42,25 +42,23 @@ onMounted(async () => {
     <v-app :theme="theme">
       <!-- Elegant App Bar -->
       <v-app-bar
-        class="px-4 app-bar-elegant"
+        class="px-6 app-bar-elegant"
         :color="themeMode === 'light' ? 'light-blue-lighten-1' : 'light-blue-accent-4'"
         elevate-on-scroll
         flat
       >
         <!-- Logo + Title -->
         <div class="d-flex align-center">
-          <v-img src="logo.png" :width="mobile ? '36px' : '50px'" class="me-2" cover />
+          <v-img src="logo.png" :width="mobile ? '40px' : '50px'" class="me-3" cover />
           <div>
-            <h2 :class="smAndDown ? 'header-title-sm' : 'header-title-lg'">
-              SAN ISIDRO LABRADOR PARISH
-            </h2>
-            <p v-if="!mobile" class="header-sub">Parish Information System</p>
+            <h2 class="header-title">SAN ISIDRO LABRADOR PARISH</h2>
+            <p class="header-sub">Parish Information System</p>
           </div>
         </div>
 
         <v-spacer></v-spacer>
 
-        <!-- Theme Toggle (desktop only) -->
+        <!-- Theme Toggle (desktop) -->
         <v-switch
           v-if="!mobile"
           v-model="isDark"
@@ -83,7 +81,7 @@ onMounted(async () => {
       </v-app-bar>
 
       <!-- Navigation Drawer -->
-      <v-navigation-drawer v-model="drawer" temporary location="right" :width="mobile ? 240 : 280">
+      <v-navigation-drawer v-model="drawer" temporary location="right" width="280">
         <v-list density="comfortable">
           <v-list-item prepend-icon="mdi-view-dashboard">
             <RouterLink to="/admin-dashboard" class="router-link">Dashboard</RouterLink>
@@ -99,32 +97,30 @@ onMounted(async () => {
             <RouterLink to="/funeral-mass-form-bookinglist-view" class="router-link">Funeral Mass</RouterLink>
           </v-list-item>
 
-          <v-list-item prepend-icon="mdi-water">
+          <v-list-item title="Baptism Mass" prepend-icon="mdi-water">
             <RouterLink to="/baptism-mass-form-bookinglist-view" class="router-link">Baptism Mass</RouterLink>
           </v-list-item>
 
-          <v-list-item prepend-icon="mdi-church">
+          <v-list-item title="Thanksgiving Mass" prepend-icon="mdi-church">
             <RouterLink to="/thanksgiving-mass-form-bookinglist-view" class="router-link">Thanksgiving Mass</RouterLink>
           </v-list-item>
 
           <v-divider class="my-2" />
 
-          <!-- Mobile Theme Toggle -->
           <v-list-item v-if="mobile" @click="isDark = !isDark">
             <v-icon class="me-2">{{ isDark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}</v-icon>
             <span>{{ isDark ? 'Dark Mode' : 'Light Mode' }}</span>
           </v-list-item>
 
-          <!-- Logout -->
           <v-list-item @click="onLogout" prepend-icon="mdi-logout">
-            <v-btn variant="text" color="error" block>Log Out</v-btn>
+            <v-btn variant="text" color="error">Log Out</v-btn>
           </v-list-item>
         </v-list>
       </v-navigation-drawer>
 
       <!-- Main -->
       <v-main>
-        <v-container fluid>
+        <v-container>
           <slot name="content"></slot>
         </v-container>
       </v-main>
@@ -138,20 +134,11 @@ onMounted(async () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.header-title-lg {
+.header-title {
   font-family: 'Jomolhari', serif;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 1.5px;
-  margin: 0;
-  color: #fff;
-}
-
-.header-title-sm {
-  font-family: 'Jomolhari', serif;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 1px;
   margin: 0;
   color: #fff;
 }

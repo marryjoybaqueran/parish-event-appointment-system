@@ -129,7 +129,6 @@ export const alphaDashValidator = (value) => {
 //  Image Validator
 export const imageValidator = (value) => {
   if (isEmpty(value)) return true
-  if (Array.isArray(value) && value[0] && value[0].size >= 2000000)
-    return 'Image size should be less than 2 MB'
-  return true
+
+  return !value || !value.length || value[0].size < 2000000 || 'Image size should be less than 2 MB'
 }
