@@ -655,6 +655,7 @@ onUnmounted(() => {
       <div :class="['floating-shape shape-2', { 'dark-mode': isDark }]"></div>
       <div :class="['floating-shape shape-3', { 'dark-mode': isDark }]"></div>
 
+
       <v-container fluid class="pa-4 pa-md-8" :class="{ 'dark-mode': isDark }">
         <!-- Header Section -->
         <div class="glass-card pa-6 mb-8">

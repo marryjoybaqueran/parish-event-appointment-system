@@ -3,7 +3,6 @@ import { useAuthUserStore } from '@/stores/authUser'
 import { onMounted, ref, computed, watch } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
 
-
 const authStore = useAuthUserStore()
 const { mobile, smAndDown } = useDisplay()
 const theme = useTheme()
@@ -55,7 +54,7 @@ onMounted(async () => {
             <h2 :class="smAndDown ? 'header-title-sm' : 'header-title-lg'">
               SAN ISIDRO LABRADOR PARISH
             </h2>
-            <p v-if="!mobile" class="header-sub">Parish Information Management System</p>
+            <p v-if="!mobile" class="header-sub">Parish Information System</p>
           </div>
         </div>
 
@@ -175,21 +174,5 @@ onMounted(async () => {
 }
 .router-link:hover {
   text-decoration: underline;
-}
-
-/* Custom styles for the navigation drawer */
-.v-navigation-drawer {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.v-list-item {
-  transition: background 0.3s ease;
-}
-
-.v-list-item:hover {
-  background: rgba(0, 0, 0, 0.05);
 }
 </style>

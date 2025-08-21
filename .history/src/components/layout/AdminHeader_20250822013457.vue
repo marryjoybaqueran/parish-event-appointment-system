@@ -55,7 +55,7 @@ onMounted(async () => {
             <h2 :class="smAndDown ? 'header-title-sm' : 'header-title-lg'">
               SAN ISIDRO LABRADOR PARISH
             </h2>
-            <p v-if="!mobile" class="header-sub">Parish Information Management System</p>
+            <p v-if="!mobile" class="header-sub">Parish Information ManSystem</p>
           </div>
         </div>
 

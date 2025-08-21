@@ -4,7 +4,7 @@ import { onMounted, ref, computed, watch } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
 
 
-const authStore = useAuthUserStore()
+const authStore = useAuthUser Store()
 const { mobile, smAndDown } = useDisplay()
 const theme = useTheme()
 
@@ -55,7 +55,7 @@ onMounted(async () => {
             <h2 :class="smAndDown ? 'header-title-sm' : 'header-title-lg'">
               SAN ISIDRO LABRADOR PARISH
             </h2>
-            <p v-if="!mobile" class="header-sub">Parish Information Management System</p>
+            <p v-if="!mobile" class="header-sub">Parish Information System</p>
           </div>
         </div>
 

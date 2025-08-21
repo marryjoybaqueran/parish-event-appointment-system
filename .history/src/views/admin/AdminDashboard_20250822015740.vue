@@ -650,12 +650,12 @@ onUnmounted(() => {
   <AdminHeader>
     <template #content>
       <!-- Animated Background -->
-      <div :class="['animated-bg', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-1', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-2', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-3', { 'dark-mode': isDark }]"></div>
+      <div class="animated-bg"></div>
+      <div class="floating-shape shape-1"></div>
+      <div class="floating-shape shape-2"></div>
+      <div class="floating-shape shape-3"></div>
 
-      <v-container fluid class="pa-4 pa-md-8" :class="{ 'dark-mode': isDark }">
+      <v-container fluid class="pa-4 pa-md-8">
         <!-- Header Section -->
         <div class="glass-card pa-6 mb-8">
           <div

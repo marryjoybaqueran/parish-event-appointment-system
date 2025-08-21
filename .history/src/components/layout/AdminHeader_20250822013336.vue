@@ -1,8 +1,7 @@
 <script setup>
-import { useAuthUserStore } from '@/stores/authUser'
+import { useAuthUser Store } from '@/stores/authUser '
 import { onMounted, ref, computed, watch } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
-
 
 const authStore = useAuthUserStore()
 const { mobile, smAndDown } = useDisplay()
@@ -55,7 +54,7 @@ onMounted(async () => {
             <h2 :class="smAndDown ? 'header-title-sm' : 'header-title-lg'">
               SAN ISIDRO LABRADOR PARISH
             </h2>
-            <p v-if="!mobile" class="header-sub">Parish Information Management System</p>
+            <p v-if="!mobile" class="header-sub">Parish Information System</p>
           </div>
         </div>
 

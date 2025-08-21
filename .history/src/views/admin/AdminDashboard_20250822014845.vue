@@ -3,11 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
-import { useTheme } from 'vuetify'
 
 // Data refs
-const theme = useTheme()
-const isDark = computed(() => theme.global.current.value.dark)
 const notifications = ref([])
 const notificationDialog = ref(false)
 const selectedDate = ref(new Date())
@@ -152,20 +149,9 @@ const loadRecentActivities = async () => {
       .from('audit_log')
       .select('*')
       .order('changed_at', { ascending: false })
-      .limit(10)
+      .limit(10) // Limit to the latest 10 activities
     if (data && !error) {
-      recentActivities.value = data.map((activity) => {
-        let icon = 'mdi-history'
-        let color = 'grey'
-        if (activity.action.includes('Approved')) {
-          icon = 'mdi-check-circle'
-          color = 'green'
-        } else if (activity.action.includes('Denied')) {
-          icon = 'mdi-close-circle'
-          color = 'red'
-        }
-        return { ...activity, icon, color }
-      })
+      recentActivities.value = data
     } else {
       console.error('Error loading recent activities:', error)
     }
@@ -173,14 +159,6 @@ const loadRecentActivities = async () => {
     console.error('Error loading recent activities:', error)
   }
 }
-
-// Quick actions
-const quickActions = ref([
-  { icon: 'mdi-plus', label: 'Add Event', click: () => (eventDialog.value = true) },
-  { icon: 'mdi-file-document', label: 'Reports', click: () => console.log('Reports clicked') },
-  { icon: 'mdi-email', label: 'Messages', click: () => console.log('Messages clicked') },
-  { icon: 'mdi-cog', label: 'Settings', click: () => console.log('Settings clicked') },
-])
 
 const subscribeToBookingUpdates = () => {
   const tables = [
@@ -538,13 +516,14 @@ const denyBooking = async (booking) => {
     // Log the denial action
     await supabase.from('audit_log').insert([
       {
-        action: `Approved ${booking.type} booking`,
+        action: `Denied ${booking.type} booking`,
         user_id: user.id,
         old_role: 'pending',
-        new_role: 'approved',
+        new_role: 'denied',
         changed_at: new Date().toISOString(),
       },
     ])
+
     await loadDashboardData()
     bookingDialog.value = false
 
@@ -650,12 +629,12 @@ onUnmounted(() => {
   <AdminHeader>
     <template #content>
       <!-- Animated Background -->
-      <div :class="['animated-bg', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-1', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-2', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-3', { 'dark-mode': isDark }]"></div>
+      <div class="animated-bg"></div>
+      <div class="floating-shape shape-1"></div>
+      <div class="floating-shape shape-2"></div>
+      <div class="floating-shape shape-3"></div>
 
-      <v-container fluid class="pa-4 pa-md-8" :class="{ 'dark-mode': isDark }">
+      <v-container fluid class="pa-4 pa-md-8">
         <!-- Header Section -->
         <div class="glass-card pa-6 mb-8">
           <div

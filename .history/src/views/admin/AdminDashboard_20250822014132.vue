@@ -3,11 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
-import { useTheme } from 'vuetify'
 
 // Data refs
-const theme = useTheme()
-const isDark = computed(() => theme.global.current.value.dark)
 const notifications = ref([])
 const notificationDialog = ref(false)
 const selectedDate = ref(new Date())
@@ -22,51 +19,13 @@ const stats = ref({
 })
 
 // Add stats trends for visual appeal
-const previousStats = ref({
-  totalBookings: 0,
-  pendingApprovals: 0,
-  upcomingEvents: 0,
-  totalMembers: 0,
+const statsTrends = ref({
+  totalBookings: { value: 12, isUp: true },
+  pendingApprovals: { urgent: 3 },
+  upcomingEvents: { next: 'Tomorrow 10:00 AM' },
+  totalMembers: { value: 48, isUp: true },
 })
 
-// Compute stats trends based on current and previous stats
-const statsTrends = computed(() => {
-  // Calculate percentage change for bookings and members
-  const bookingChange = previousStats.value.totalBookings
-    ? Math.round(
-        ((stats.value.totalBookings - previousStats.value.totalBookings) /
-          previousStats.value.totalBookings) *
-          100,
-      )
-    : 0
-
-  const memberChange = previousStats.value.totalMembers
-    ? Math.round(
-        ((stats.value.totalMembers - previousStats.value.totalMembers) /
-          previousStats.value.totalMembers) *
-          100,
-      )
-    : 0
-
-  // Pending approvals: count urgent (e.g., bookings older than 2 days)
-  const urgent = pendingBookings.value.filter((b) => {
-    const created = new Date(b.created_at)
-    return (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24) > 2
-  }).length
-
-  // Upcoming events: get next event date/time
-  const nextEvent = events.value
-    .filter((e) => new Date(e.date) >= new Date())
-    .sort((a, b) => new Date(a.date) - new Date(b.date))[0]
-  const nextEventStr = nextEvent ? `${nextEvent.date} ${nextEvent.time}` : 'No upcoming events'
-
-  return {
-    totalBookings: { value: bookingChange, isUp: bookingChange >= 0 },
-    pendingApprovals: { urgent },
-    upcomingEvents: { next: nextEventStr },
-    totalMembers: { value: memberChange, isUp: memberChange >= 0 },
-  }
-})
 // Event creation
 const newEvent = ref({
   title: '',
@@ -146,26 +105,16 @@ const eventCategories = ref([
 
 const recentActivities = ref([]) // To store recent activities
 
+
 const loadRecentActivities = async () => {
   try {
     const { data, error } = await supabase
       .from('audit_log')
       .select('*')
       .order('changed_at', { ascending: false })
-      .limit(10)
+      .limit(10) // Limit to the latest 10 activities
     if (data && !error) {
-      recentActivities.value = data.map((activity) => {
-        let icon = 'mdi-history'
-        let color = 'grey'
-        if (activity.action.includes('Approved')) {
-          icon = 'mdi-check-circle'
-          color = 'green'
-        } else if (activity.action.includes('Denied')) {
-          icon = 'mdi-close-circle'
-          color = 'red'
-        }
-        return { ...activity, icon, color }
-      })
+      recentActivities.value = data
     } else {
       console.error('Error loading recent activities:', error)
     }
@@ -174,13 +123,6 @@ const loadRecentActivities = async () => {
   }
 }
 
-// Quick actions
-const quickActions = ref([
-  { icon: 'mdi-plus', label: 'Add Event', click: () => (eventDialog.value = true) },
-  { icon: 'mdi-file-document', label: 'Reports', click: () => console.log('Reports clicked') },
-  { icon: 'mdi-email', label: 'Messages', click: () => console.log('Messages clicked') },
-  { icon: 'mdi-cog', label: 'Settings', click: () => console.log('Settings clicked') },
-])
 
 const subscribeToBookingUpdates = () => {
   const tables = [
@@ -538,13 +480,14 @@ const denyBooking = async (booking) => {
     // Log the denial action
     await supabase.from('audit_log').insert([
       {
-        action: `Approved ${booking.type} booking`,
+        action: `Denied ${booking.type} booking`,
         user_id: user.id,
         old_role: 'pending',
-        new_role: 'approved',
+        new_role: 'denied',
         changed_at: new Date().toISOString(),
       },
     ])
+
     await loadDashboardData()
     bookingDialog.value = false
 
@@ -631,7 +574,7 @@ const formatBookingDetails = (booking) => {
 }
 
 onMounted(async () => {
-  await loadRecentActivities()
+  
   loadDashboardData()
   requestNotificationPermission()
   subscriptions = subscribeToBookingUpdates()
@@ -650,12 +593,12 @@ onUnmounted(() => {
   <AdminHeader>
     <template #content>
       <!-- Animated Background -->
-      <div :class="['animated-bg', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-1', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-2', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-3', { 'dark-mode': isDark }]"></div>
+      <div class="animated-bg"></div>
+      <div class="floating-shape shape-1"></div>
+      <div class="floating-shape shape-2"></div>
+      <div class="floating-shape shape-3"></div>
 
-      <v-container fluid class="pa-4 pa-md-8" :class="{ 'dark-mode': isDark }">
+      <v-container fluid class="pa-4 pa-md-8">
         <!-- Header Section -->
         <div class="glass-card pa-6 mb-8">
           <div
@@ -936,8 +879,8 @@ onUnmounted(() => {
                 </v-card-text>
               </v-card>
 
-              <!-- Recent Activities Section -->
-              <v-card class="glass-card mb-4">
+              <!-- Recent Activity -->
+              <v-card class="glass-card">
                 <v-card-title class="d-flex align-center">
                   <v-icon class="me-2 text-green">mdi-history</v-icon>
                   Recent Activity
@@ -945,7 +888,7 @@ onUnmounted(() => {
                 <v-card-text>
                   <div class="space-y-3">
                     <div
-                      v-for="(activity, index) in recentActivities"
+                      v-for="(activity, index) in recentActivity"
                       :key="index"
                       class="d-flex gap-3"
                     >
@@ -953,10 +896,8 @@ onUnmounted(() => {
                         <v-icon :color="activity.color">{{ activity.icon }}</v-icon>
                       </div>
                       <div class="flex-1">
-                        <div class="text-caption">{{ activity.action }}</div>
-                        <div class="text-caption text-grey-darken-2">
-                          {{ new Date(activity.changed_at).toLocaleString() }}
-                        </div>
+                        <div class="text-caption">{{ activity.text }}</div>
+                        <div class="text-caption text-grey-darken-2">{{ activity.time }}</div>
                       </div>
                     </div>
                   </div>
@@ -1626,7 +1567,7 @@ onUnmounted(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #9c27b0;
+  background: #9C27B0;
   box-shadow: 0 0 0 2px white;
 }
 
@@ -1641,4 +1582,5 @@ onUnmounted(() => {
   border-radius: 50%;
   background: currentColor;
 }
+
 </style>

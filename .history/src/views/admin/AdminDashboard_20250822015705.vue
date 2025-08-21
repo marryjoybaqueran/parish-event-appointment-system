@@ -3,11 +3,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
-import { useTheme } from 'vuetify'
+import
 
 // Data refs
-const theme = useTheme()
-const isDark = computed(() => theme.global.current.value.dark)
 const notifications = ref([])
 const notificationDialog = ref(false)
 const selectedDate = ref(new Date())
@@ -176,11 +174,12 @@ const loadRecentActivities = async () => {
 
 // Quick actions
 const quickActions = ref([
-  { icon: 'mdi-plus', label: 'Add Event', click: () => (eventDialog.value = true) },
+  { icon: 'mdi-plus', label: 'Add Event', click: () => eventDialog.value = true },
   { icon: 'mdi-file-document', label: 'Reports', click: () => console.log('Reports clicked') },
   { icon: 'mdi-email', label: 'Messages', click: () => console.log('Messages clicked') },
-  { icon: 'mdi-cog', label: 'Settings', click: () => console.log('Settings clicked') },
+  { icon: 'mdi-cog', label: 'Settings', click: () => console.log('Settings clicked') }
 ])
+
 
 const subscribeToBookingUpdates = () => {
   const tables = [
@@ -650,12 +649,12 @@ onUnmounted(() => {
   <AdminHeader>
     <template #content>
       <!-- Animated Background -->
-      <div :class="['animated-bg', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-1', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-2', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-3', { 'dark-mode': isDark }]"></div>
+      <div class="animated-bg"></div>
+      <div class="floating-shape shape-1"></div>
+      <div class="floating-shape shape-2"></div>
+      <div class="floating-shape shape-3"></div>
 
-      <v-container fluid class="pa-4 pa-md-8" :class="{ 'dark-mode': isDark }">
+      <v-container fluid class="pa-4 pa-md-8">
         <!-- Header Section -->
         <div class="glass-card pa-6 mb-8">
           <div

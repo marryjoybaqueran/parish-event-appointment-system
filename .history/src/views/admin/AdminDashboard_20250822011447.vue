@@ -3,11 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
-import { useTheme } from 'vuetify'
 
 // Data refs
-const theme = useTheme()
-const isDark = computed(() => theme.global.current.value.dark)
 const notifications = ref([])
 const notificationDialog = ref(false)
 const selectedDate = ref(new Date())
@@ -21,52 +18,6 @@ const stats = ref({
   totalMembers: 0,
 })
 
-// Add stats trends for visual appeal
-const previousStats = ref({
-  totalBookings: 0,
-  pendingApprovals: 0,
-  upcomingEvents: 0,
-  totalMembers: 0,
-})
-
-// Compute stats trends based on current and previous stats
-const statsTrends = computed(() => {
-  // Calculate percentage change for bookings and members
-  const bookingChange = previousStats.value.totalBookings
-    ? Math.round(
-        ((stats.value.totalBookings - previousStats.value.totalBookings) /
-          previousStats.value.totalBookings) *
-          100,
-      )
-    : 0
-
-  const memberChange = previousStats.value.totalMembers
-    ? Math.round(
-        ((stats.value.totalMembers - previousStats.value.totalMembers) /
-          previousStats.value.totalMembers) *
-          100,
-      )
-    : 0
-
-  // Pending approvals: count urgent (e.g., bookings older than 2 days)
-  const urgent = pendingBookings.value.filter((b) => {
-    const created = new Date(b.created_at)
-    return (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24) > 2
-  }).length
-
-  // Upcoming events: get next event date/time
-  const nextEvent = events.value
-    .filter((e) => new Date(e.date) >= new Date())
-    .sort((a, b) => new Date(a.date) - new Date(b.date))[0]
-  const nextEventStr = nextEvent ? `${nextEvent.date} ${nextEvent.time}` : 'No upcoming events'
-
-  return {
-    totalBookings: { value: bookingChange, isUp: bookingChange >= 0 },
-    pendingApprovals: { urgent },
-    upcomingEvents: { next: nextEventStr },
-    totalMembers: { value: memberChange, isUp: memberChange >= 0 },
-  }
-})
 // Event creation
 const newEvent = ref({
   title: '',
@@ -84,102 +35,16 @@ const selectedBooking = ref(null)
 const calendarEvents = ref([])
 const selectedDateEvents = ref([])
 
-// Enhanced Event categories with gradients
+// Event categories (defined in app instead of database)
 const eventCategories = ref([
-  {
-    name: 'announcement',
-    label: 'Announcement',
-    color: '#9C27B0',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    icon: 'mdi-bullhorn',
-  },
-  {
-    name: 'mass',
-    label: 'Holy Mass',
-    color: '#f093fb',
-    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    icon: 'mdi-church',
-  },
-  {
-    name: 'event',
-    label: 'Parish Event',
-    color: '#43e97b',
-    gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    icon: 'mdi-calendar-star',
-  },
-  {
-    name: 'celebration',
-    label: 'Celebration',
-    color: '#FF9800',
-    gradient: 'linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 52%, #2BFF88 90%)',
-    icon: 'mdi-party-popper',
-  },
-  {
-    name: 'wedding',
-    label: 'Wedding',
-    color: '#667eea',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    icon: 'mdi-heart',
-  },
-  {
-    name: 'baptism',
-    label: 'Baptism',
-    color: '#4facfe',
-    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    icon: 'mdi-water',
-  },
-  {
-    name: 'funeral',
-    label: 'Funeral',
-    color: '#424242',
-    gradient: 'linear-gradient(135deg, #434343 0%, #000000 100%)',
-    icon: 'mdi-cross',
-  },
-  {
-    name: 'thanksgiving',
-    label: 'Thanksgiving',
-    color: '#FF5722',
-    gradient: 'linear-gradient(135deg, #f2994a 0%, #f2c94c 100%)',
-    icon: 'mdi-hands-pray',
-  },
-])
-
-const recentActivities = ref([]) // To store recent activities
-
-const loadRecentActivities = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('audit_log')
-      .select('*')
-      .order('changed_at', { ascending: false })
-      .limit(10)
-    if (data && !error) {
-      recentActivities.value = data.map((activity) => {
-        let icon = 'mdi-history'
-        let color = 'grey'
-        if (activity.action.includes('Approved')) {
-          icon = 'mdi-check-circle'
-          color = 'green'
-        } else if (activity.action.includes('Denied')) {
-          icon = 'mdi-close-circle'
-          color = 'red'
-        }
-        return { ...activity, icon, color }
-      })
-    } else {
-      console.error('Error loading recent activities:', error)
-    }
-  } catch (error) {
-    console.error('Error loading recent activities:', error)
-  }
-}
-
-// Quick actions
-const quickActions = ref([
-  { icon: 'mdi-plus', label: 'Add Event', click: () => (eventDialog.value = true) },
-  { icon: 'mdi-file-document', label: 'Reports', click: () => console.log('Reports clicked') },
-  { icon: 'mdi-email', label: 'Messages', click: () => console.log('Messages clicked') },
-  { icon: 'mdi-cog', label: 'Settings', click: () => console.log('Settings clicked') },
+  { name: 'announcement', label: 'Announcement', color: '#9C27B0', icon: 'mdi-bullhorn' },
+  { name: 'mass', label: 'Holy Mass', color: '#2196F3', icon: 'mdi-church' },
+  { name: 'event', label: 'Parish Event', color: '#4CAF50', icon: 'mdi-calendar-star' },
+  { name: 'celebration', label: 'Celebration', color: '#FF9800', icon: 'mdi-party-popper' },
+  { name: 'wedding', label: 'Wedding', color: '#E91E63', icon: 'mdi-heart' },
+  { name: 'baptism', label: 'Baptism', color: '#00BCD4', icon: 'mdi-water' },
+  { name: 'funeral', label: 'Funeral', color: '#424242', icon: 'mdi-cross' },
+  { name: 'thanksgiving', label: 'Thanksgiving', color: '#FF5722', icon: 'mdi-hands-pray' },
 ])
 
 const subscribeToBookingUpdates = () => {
@@ -258,7 +123,7 @@ const unreadCount = computed(() => {
   return notifications.value.filter((n) => !n.read).length
 })
 
-// Show notification dialog
+// Show notification dialog (using the previously unused variables)
 const showNotifications = () => {
   notificationDialog.value = true
 }
@@ -387,7 +252,6 @@ const loadCalendarEvents = async () => {
             location,
             type: table.replace('_bookings', ''),
             color: getEventColor(table.replace('_bookings', '')),
-            gradient: getEventGradient(table.replace('_bookings', '')),
             status: booking.status,
             booking_data: booking,
           }
@@ -408,7 +272,6 @@ const loadCalendarEvents = async () => {
         location: 'Parish',
         type: event.type,
         color: getEventColor(event.type),
-        gradient: getEventGradient(event.type),
         status: 'confirmed',
         description: event.description,
       }))
@@ -428,41 +291,25 @@ const loadCalendarEvents = async () => {
   }
 }
 
-// Enhanced event dates function for calendar
 const eventDates = computed(() => {
+  // Create a function that returns colors for dates with events
   return (date) => {
     const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0]
     const eventsOnDate = calendarEvents.value.filter((ev) => ev.date === dateStr)
 
     if (eventsOnDate.length === 0) return false
 
-    // Return the color of the first event, or a special indicator for multiple
+    // Return the color of the first event, or a default color if multiple
     if (eventsOnDate.length === 1) {
       return eventsOnDate[0].color
     }
-    return '#9C27B0' // Multiple events color
+    return 'grey' // Multiple events indicator
   }
 })
-
-const hasMultipleEvents = (date) => {
-  const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0]
-  const eventsOnDate = calendarEvents.value.filter((ev) => ev.date === dateStr)
-  return eventsOnDate.length > 1
-}
-
-const hasEvent = (date) => {
-  const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0]
-  return calendarEvents.value.some((event) => event.date === dateStr)
-}
 
 const getEventColor = (type) => {
   const category = eventCategories.value.find((cat) => cat.name === type)
   return category?.color || '#757575'
-}
-
-const getEventGradient = (type) => {
-  const category = eventCategories.value.find((cat) => cat.name === type)
-  return category?.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
 }
 
 const updateSelectedDateEvents = () => {
@@ -538,13 +385,14 @@ const denyBooking = async (booking) => {
     // Log the denial action
     await supabase.from('audit_log').insert([
       {
-        action: `Approved ${booking.type} booking`,
+        action: `Denied ${booking.type} booking`,
         user_id: user.id,
         old_role: 'pending',
-        new_role: 'approved',
+        new_role: 'denied',
         changed_at: new Date().toISOString(),
       },
     ])
+
     await loadDashboardData()
     bookingDialog.value = false
 
@@ -630,8 +478,7 @@ const formatBookingDetails = (booking) => {
   }
 }
 
-onMounted(async () => {
-  await loadRecentActivities()
+onMounted(() => {
   loadDashboardData()
   requestNotificationPermission()
   subscriptions = subscribeToBookingUpdates()
@@ -650,17 +497,15 @@ onUnmounted(() => {
   <AdminHeader>
     <template #content>
       <!-- Animated Background -->
-      <div :class="['animated-bg', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-1', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-2', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-3', { 'dark-mode': isDark }]"></div>
+      <div class="animated-bg"></div>
+      <div class="floating-shape shape-1"></div>
+      <div class="floating-shape shape-2"></div>
+      <div class="floating-shape shape-3"></div>
 
-      <v-container fluid class="pa-4 pa-md-8" :class="{ 'dark-mode': isDark }">
+      <v-container fluid class="pa-4 pa-md-8">
         <!-- Header Section -->
         <div class="glass-card pa-6 mb-8">
-          <div
-            class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-6"
-          >
+          <div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-6">
             <div>
               <h1 class="header-gradient mb-2">Admin Dashboard</h1>
               <p class="text-grey-darken-1 text-h6">Parish Information Management System</p>
@@ -681,7 +526,11 @@ onUnmounted(() => {
               </v-btn>
 
               <!-- Create Event Button -->
-              <v-btn color="primary" @click="eventDialog = true" size="large">
+              <v-btn
+                color="primary"
+                @click="eventDialog = true"
+                size="large"
+              >
                 <v-icon class="me-2">mdi-calendar-plus</v-icon>
                 Create Event
               </v-btn>
@@ -720,10 +569,7 @@ onUnmounted(() => {
         <!-- Stats Grid -->
         <v-row class="mb-8">
           <v-col cols="12" md="3">
-            <v-card
-              class="stat-card"
-              :style="{ '--gradient-start': '#667eea', '--gradient-end': '#764ba2' }"
-            >
+            <v-card class="stat-card" :style="{'--gradient-start': '#667eea', '--gradient-end': '#764ba2'}">
               <v-card-text class="text-center">
                 <div class="stat-icon">
                   <v-icon color="white">mdi-book-multiple</v-icon>
@@ -731,18 +577,14 @@ onUnmounted(() => {
                 <h2 class="stat-value">{{ stats.totalBookings }}</h2>
                 <p class="text-grey-darken-1">Total Bookings</p>
                 <div class="text-caption text-grey-darken-2 mt-2">
-                  <span class="text-green">↑ {{ statsTrends.totalBookings.value }}%</span> from last
-                  month
+                  <span class="text-green">↑ {{ statsTrends.totalBookings.value }}%</span> from last month
                 </div>
               </v-card-text>
             </v-card>
           </v-col>
 
           <v-col cols="12" md="3">
-            <v-card
-              class="stat-card"
-              :style="{ '--gradient-start': '#f093fb', '--gradient-end': '#f5576c' }"
-            >
+            <v-card class="stat-card" :style="{'--gradient-start': '#f093fb', '--gradient-end': '#f5576c'}">
               <v-card-text class="text-center">
                 <div class="stat-icon">
                   <v-icon color="white">mdi-clock-alert</v-icon>
@@ -750,19 +592,14 @@ onUnmounted(() => {
                 <h2 class="stat-value">{{ stats.pendingApprovals }}</h2>
                 <p class="text-grey-darken-1">Pending Approvals</p>
                 <div class="text-caption text-grey-darken-2 mt-2">
-                  <span class="text-orange"
-                    >● {{ statsTrends.pendingApprovals.urgent }} urgent</span
-                  >
+                  <span class="text-orange">● {{ statsTrends.pendingApprovals.urgent }} urgent</span>
                 </div>
               </v-card-text>
             </v-card>
           </v-col>
 
           <v-col cols="12" md="3">
-            <v-card
-              class="stat-card"
-              :style="{ '--gradient-start': '#4facfe', '--gradient-end': '#00f2fe' }"
-            >
+            <v-card class="stat-card" :style="{'--gradient-start': '#4facfe', '--gradient-end': '#00f2fe'}">
               <v-card-text class="text-center">
                 <div class="stat-icon">
                   <v-icon color="white">mdi-calendar-check</v-icon>
@@ -777,10 +614,7 @@ onUnmounted(() => {
           </v-col>
 
           <v-col cols="12" md="3">
-            <v-card
-              class="stat-card"
-              :style="{ '--gradient-start': '#43e97b', '--gradient-end': '#38f9d7' }"
-            >
+            <v-card class="stat-card" :style="{'--gradient-start': '#43e97b', '--gradient-end': '#38f9d7'}">
               <v-card-text class="text-center">
                 <div class="stat-icon">
                   <v-icon color="white">mdi-account-group</v-icon>
@@ -788,8 +622,7 @@ onUnmounted(() => {
                 <h2 class="stat-value">{{ stats.totalMembers }}</h2>
                 <p class="text-grey-darken-1">Parish Members</p>
                 <div class="text-caption text-grey-darken-2 mt-2">
-                  <span class="text-green">↑ {{ statsTrends.totalMembers.value }}</span> new this
-                  month
+                  <span class="text-green">↑ {{ statsTrends.totalMembers.value }}</span> new this month
                 </div>
               </v-card-text>
             </v-card>
@@ -801,9 +634,9 @@ onUnmounted(() => {
           <v-row>
             <!-- Calendar Section -->
             <v-col cols="12" lg="8">
-              <v-card elevation="3" class="mb-4">
+              <v-card class="calendar-container glass-card mb-4">
                 <v-card-title class="d-flex align-center">
-                  <v-icon class="me-2">mdi-calendar</v-icon>
+                  <v-icon class="me-2 text-purple">mdi-calendar</v-icon>
                   Schedule Calendar
                 </v-card-title>
                 <v-card-text>
@@ -813,21 +646,7 @@ onUnmounted(() => {
                     show-adjacent-months
                     :event-color="eventDates"
                     class="calendar-picker"
-                  >
-                    <template #day="{ date }">
-                      <div
-                        class="v-date-picker-month__day"
-                        :class="{
-                          'has-event': hasEvent(date),
-                          'multiple-events': hasMultipleEvents(date),
-                        }"
-                      >
-                        <div class="v-date-picker-month__day-date">
-                          {{ new Date(date).getDate() }}
-                        </div>
-                      </div>
-                    </template>
-                  </v-date-picker>
+                  />
                 </v-card-text>
               </v-card>
 
@@ -855,10 +674,7 @@ onUnmounted(() => {
                   Today's Schedule
                 </v-card-title>
                 <v-card-text>
-                  <div
-                    v-if="selectedDateEvents.length === 0"
-                    class="text-center text-grey-darken-1 py-8"
-                  >
+                  <div v-if="selectedDateEvents.length === 0" class="text-center text-grey-darken-1 py-8">
                     <v-icon size="64" color="grey-lighten-2">mdi-calendar-blank</v-icon>
                     <p class="mt-3">No events scheduled</p>
                   </div>
@@ -893,10 +709,7 @@ onUnmounted(() => {
                   </v-chip>
                 </v-card-title>
                 <v-card-text>
-                  <div
-                    v-if="pendingBookings.length === 0"
-                    class="text-center text-grey-darken-1 py-8"
-                  >
+                  <div v-if="pendingBookings.length === 0" class="text-center text-grey-darken-1 py-8">
                     <v-icon size="64" color="grey-lighten-2">mdi-check-all</v-icon>
                     <p class="mt-3">No pending approvals</p>
                   </div>
@@ -910,12 +723,8 @@ onUnmounted(() => {
                     >
                       <div class="d-flex justify-space-between align-center">
                         <div>
-                          <div class="font-weight-semibold">
-                            {{ formatBookingDetails(booking).title }}
-                          </div>
-                          <div class="text-caption text-grey-darken-2">
-                            {{ formatBookingDetails(booking).subtitle }}
-                          </div>
+                          <div class="font-weight-semibold">{{ formatBookingDetails(booking).title }}</div>
+                          <div class="text-caption text-grey-darken-2">{{ formatBookingDetails(booking).subtitle }}</div>
                           <div class="text-caption text-grey-darken-3 mt-1">
                             {{ formatBookingDetails(booking).date }}
                           </div>
@@ -936,8 +745,8 @@ onUnmounted(() => {
                 </v-card-text>
               </v-card>
 
-              <!-- Recent Activities Section -->
-              <v-card class="glass-card mb-4">
+              <!-- Recent Activity -->
+              <v-card class="glass-card">
                 <v-card-title class="d-flex align-center">
                   <v-icon class="me-2 text-green">mdi-history</v-icon>
                   Recent Activity
@@ -945,7 +754,7 @@ onUnmounted(() => {
                 <v-card-text>
                   <div class="space-y-3">
                     <div
-                      v-for="(activity, index) in recentActivities"
+                      v-for="(activity, index) in recentActivity"
                       :key="index"
                       class="d-flex gap-3"
                     >
@@ -953,10 +762,8 @@ onUnmounted(() => {
                         <v-icon :color="activity.color">{{ activity.icon }}</v-icon>
                       </div>
                       <div class="flex-1">
-                        <div class="text-caption">{{ activity.action }}</div>
-                        <div class="text-caption text-grey-darken-2">
-                          {{ new Date(activity.changed_at).toLocaleString() }}
-                        </div>
+                        <div class="text-caption">{{ activity.text }}</div>
+                        <div class="text-caption text-grey-darken-2">{{ activity.time }}</div>
                       </div>
                     </div>
                   </div>
@@ -1203,18 +1010,14 @@ onUnmounted(() => {
   height: 200%;
   top: -50%;
   left: -50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
   background-size: 50px 50px;
   animation: moveGrid 20s linear infinite;
 }
 
 @keyframes moveGrid {
-  0% {
-    transform: translate(0, 0);
-  }
-  100% {
-    transform: translate(50px, 50px);
-  }
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
 }
 
 /* Floating Shapes */
@@ -1257,19 +1060,10 @@ onUnmounted(() => {
 }
 
 @keyframes float {
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  25% {
-    transform: translate(30px, -30px) rotate(90deg);
-  }
-  50% {
-    transform: translate(-20px, 20px) rotate(180deg);
-  }
-  75% {
-    transform: translate(-30px, -20px) rotate(270deg);
-  }
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(30px, -30px) rotate(90deg); }
+  50% { transform: translate(-20px, 20px) rotate(180deg); }
+  75% { transform: translate(-30px, -20px) rotate(270deg); }
 }
 
 /* Glass Morphism Cards */
@@ -1419,15 +1213,9 @@ onUnmounted(() => {
 }
 
 @keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
 /* Quick Actions */
@@ -1501,15 +1289,9 @@ onUnmounted(() => {
 }
 
 /* Text Colors */
-.text-green {
-  color: #10b981;
-}
-.text-orange {
-  color: #f59e0b;
-}
-.text-purple {
-  color: #8b5cf6;
-}
+.text-green { color: #10b981; }
+.text-orange { color: #f59e0b; }
+.text-purple { color: #8b5cf6; }
 
 /* Animation for stat cards */
 @keyframes fadeInUp {
@@ -1611,34 +1393,5 @@ onUnmounted(() => {
 
 .flex-1 {
   flex: 1;
-}
-
-:deep(.v-date-picker-month__day--event) {
-  position: relative;
-}
-
-:deep(.v-date-picker-month__day--event.multiple-events::after) {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #9c27b0;
-  box-shadow: 0 0 0 2px white;
-}
-
-:deep(.v-date-picker-month__day--event:not(.multiple-events)::after) {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
 }
 </style>
