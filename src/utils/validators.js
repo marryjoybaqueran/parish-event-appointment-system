@@ -44,8 +44,18 @@ export const emailValidator = (value) => {
 
 //  Password Validator
 export const passwordValidator = (password) => {
-  const regExp = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%&*()]).{8,}$/
-  const validPassword = regExp.test(password)
+  // allow empty (use requiredValidator where password is mandatory)
+  if (isEmpty(password)) return true
+
+  const pwd = String(password)
+  const hasMinLength = pwd.length >= 8
+  const hasUpper = /[A-Z]/.test(pwd)
+  const hasLower = /[a-z]/.test(pwd)
+  const hasNumber = /[0-9]/.test(pwd)
+  const hasSpecial = /[^A-Za-z0-9]/.test(pwd)
+
+  const validPassword = hasMinLength && hasUpper && hasLower && hasNumber && hasSpecial
+
   return (
     validPassword ||
     'The password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.'
