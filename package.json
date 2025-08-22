@@ -21,6 +21,7 @@
     "@ionic/pwa-elements": "^3.3.0",
     "@ionic/vue": "^8.7.3",
     "@supabase/supabase-js": "^2.49.4",
+    "@vuepic/vue-datepicker": "^11.0.2",
     "axios": "^1.9.0",
     "ionicons": "^8.0.13",
     "pinia": "^3.0.1",
