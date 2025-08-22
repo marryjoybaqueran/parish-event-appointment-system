@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
 import NavBar2 from '@/components/layout/NavBar2.vue'
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
@@ -39,6 +40,10 @@ const takePicture = async () => {
 const clearImage = () => {
   photo.value = null
 }
+
+// router navigation
+const router = useRouter()
+const goBack = () => router.push('/book-event')
 </script>
 
 <template>
@@ -52,6 +57,8 @@ const clearImage = () => {
         }"
         fluid
       >
+       
+
         <v-card
           class="mx-auto camera-card"
           :class="[
@@ -140,7 +147,7 @@ const clearImage = () => {
             </v-btn>
           </v-card-actions>
         </v-card>
-
+        
         <!-- Tips Card -->
         <v-card class="mt-4 mx-auto tips-card" max-width="500" variant="outlined" rounded="lg">
           <v-list density="compact">
@@ -173,6 +180,12 @@ const clearImage = () => {
             </v-list-item>
           </v-list>
         </v-card>
+
+         <!-- Back button to return to booking page -->
+        <v-btn text color="primary" class="my-4" width="100%" @click="goBack">
+          <v-icon left>mdi-arrow-left</v-icon>
+          Back to Booking
+        </v-btn>
       </v-container>
     </template>
   </NavBar2>

@@ -1,34 +1,7 @@
 <script setup>
+import { getEventItems, isWeddingEvent, cleanEventName } from '../functions/helpers'
 
-
-const items = [
-  {
-    name: '💍 Special Wedding Mass',
-    description: 'Celebrate your sacred union',
-    color: 'pink-lighten-4',
-    icon: 'mdi-heart',
-  },
-  {
-    name: '⚰️ Funeral Mass',
-    description: 'Honor and remember',
-    color: 'grey-lighten-3',
-    icon: 'mdi-cross',
-  },
-  {
-    name: '🎁 Thanksgiving Mass',
-    description: 'Express gratitude and joy',
-    color: 'amber-lighten-4',
-    icon: 'mdi-gift',
-  },
-  {
-    name: '✝️ Baptism Mass (Christening)',
-    description: 'Welcome new life in faith',
-    color: 'blue-lighten-4',
-    icon: 'mdi-water',
-  },
-]
-
-
+const items = getEventItems()
 </script>
 
 <template>
@@ -49,14 +22,14 @@ const items = [
               <v-icon :icon="item.icon" size="48" class="mb-4" color="primary" />
 
               <h3 class="text-subtitle-2 font-weight-medium mb-3">
-                {{ item.name.replace(/^[^\s]*\s/, '') }}
+                {{ cleanEventName(item.name) }}
               </h3>
 
               <p class="text-body-2 mb-4">
                 {{ item.description }}
               </p>
 
-              <div v-if="item.name && item.name.startsWith('💍')">
+              <div v-if="isWeddingEvent(item)">
                 <v-row class="d-flex justify-center" align="center" no-gutters>
                   <v-btn
                     variant="outlined"

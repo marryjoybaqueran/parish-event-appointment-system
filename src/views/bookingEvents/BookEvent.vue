@@ -1,44 +1,35 @@
 <script setup>
 import NavBar2 from '@/components/layout/NavBar2.vue'
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
 import EventGuide from './widgets/EventGuideWidget.vue'
 import BookingWidget from './widgets/BookingWidget.vue'
+import { 
+  getBackgroundImages, 
+  useLoadingState, 
+  useDialog, 
+  useSelectedItem,
+  createStepClickHandler,
+  createBookingSelectionHandler
+} from './functions/helpers'
 
-const images = [
-  '/wedding mass background image.jpg',
-  'thanksgiving mass background image.png',
-  '/funeral mass background image.jpg',
-  '/baptism mass background image.jpg',
-]
+const images = getBackgroundImages()
+const { triggerLoading } = useLoadingState(500)
+const { setSelectedItem } = useSelectedItem()
+const { dialog, openDialog, closeDialog } = useDialog()
 
-const isLoaded = ref(false)
+// router for navigation
+const router = useRouter()
 
+// Create step click handler using the helper
+const onStepClick = createStepClickHandler(router, openDialog)
 
-
-const selectedItem = ref(null)
-
-
-// dialog state for booking widget
-const dialog = ref(false)
-
-function onStepClick(step) {
-  // open booking dialog when Step 1 or Step 2 is clicked
-  if (step && (step.id === 1 || step.id === 2)) {
-    dialog.value = true
-  }
-}
-
-function onBookingSelected(item) {
-  selectedItem.value = item
-  dialog.value = false
-}
+// Create booking selection handler using the helper
+const onBookingSelected = createBookingSelectionHandler(setSelectedItem, closeDialog)
 
 onMounted(() => {
-  // trigger Vuetify transition reveal
-  setTimeout(() => {
-    isLoaded.value = true
-  }, 500)
+  triggerLoading()
 })
 </script>
 
@@ -82,7 +73,7 @@ onMounted(() => {
               </v-card-text>
               <v-card-actions>
                 <v-spacer />
-                <v-btn text color="primary" @click="dialog = false">Close</v-btn>
+                <v-btn text color="primary" @click="closeDialog">Close</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>

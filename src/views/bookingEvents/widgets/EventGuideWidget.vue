@@ -1,61 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
+import { getBookingSteps, useStepHover, useVisibility } from '../functions/helpers'
 
-const isVisible = ref(false)
-const hoveredStep = ref(null)
-
-const steps = [
-  {
-    id: 1,
-    title: 'Choose Your Event',
-    icon: 'mdi-calendar-search',
-    desc: 'Pili-a ang event nga gusto nimo i-book.',
-    englishDesc: 'Browse and select the perfect event for your needs.',
-    color: 'primary',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  },
-  {
-    id: 2,
-    title: 'Download Requirements',
-    icon: 'mdi-download-box',
-    desc: 'I-download ang PDF nga naglangkob sa requirements ug form.',
-    englishDesc: 'Get the official booking form with all requirements.',
-    color: 'success',
-    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-  },
-  {
-    id: 3,
-    title: 'Sign & Scan',
-    icon: 'mdi-scan-helper',
-    desc: 'I-print ug i-sign ang PDF dayon i-scan balik para sa digital copy.',
-    englishDesc: 'Print, complete, sign, and digitize your form.',
-    color: 'warning',
-    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  },
-  {
-    id: 4,
-    title: 'Submit Request',
-    icon: 'mdi-send-check',
-    desc: 'I-upload ang scanned PDF ug isumite ang booking request.',
-    englishDesc: 'Upload your completed form and finalize booking.',
-    color: 'error',
-    gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  },
-]
-
-onMounted(() => {
-  setTimeout(() => {
-    isVisible.value = true
-  }, 100)
-})
-
-const setHoveredStep = (stepId) => {
-  hoveredStep.value = stepId
-}
-
-const clearHoveredStep = () => {
-  hoveredStep.value = null
-}
+const steps = getBookingSteps()
+const { hoveredStep, setHoveredStep, clearHoveredStep } = useStepHover()
+const { isVisible, showWithDelay } = useVisibility(100)
 
 const emit = defineEmits(['step-click'])
 
@@ -63,6 +12,10 @@ function onStepClick(step) {
   // emit a click event for parent components to act on (e.g., open dialog)
   emit('step-click', step)
 }
+
+onMounted(() => {
+  showWithDelay()
+})
 </script>
 
 <template>
@@ -78,7 +31,7 @@ function onStepClick(step) {
       >
         Easy Booking Process
       </v-chip>
-      <h2 class="text-h4 font-weight-bold mb-2 text-gradient">Book Your Event in 4 Simple Steps</h2>
+      <h2 class="text-h4 font-weight-bold mb-2 text-gradient">Book Your Event in 3 Simple Steps</h2>
       <p class="text-body-1 text-medium-emphasis">
         Follow our streamlined process to secure your event booking quickly and easily
       </p>
@@ -97,7 +50,7 @@ function onStepClick(step) {
         :key="step.id"
         cols="12"
         sm="6"
-        lg="3"
+        lg="4"
         class="d-flex step-col"
       >
         <v-card 
