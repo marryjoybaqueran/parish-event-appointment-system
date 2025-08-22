@@ -1,10 +1,12 @@
 <script setup>
 import { useAuthUserStore } from '@/stores/authUser'
+import { useNotificationStore } from '@/stores/notification'
 import ProfileHeader from '@/components/layout/ProfileHeader.vue'
 import { onMounted } from 'vue'
 
-// Use Pinia Store
+// Use Pinia Stores
 const authStore = useAuthUserStore()
+const notificationStore = useNotificationStore()
 
 import { ref, computed } from 'vue'
 const theme = ref(localStorage.getItem('theme') ?? 'light')
@@ -29,6 +31,7 @@ const { mobile, mdAndDown } = useDisplay()
 // Load Functions during component rendering
 onMounted(async () => {
   isLoggedIn.value = await authStore.isAuthenticated()
+  await notificationStore.fetchNotifications()
   //isMobileLogged.value = mobile.value && isLoggedIn.value
   //isDesktop.value = !mobile.value && (isLoggedIn.value || !isLoggedIn.value)
 })
@@ -110,24 +113,25 @@ onMounted(async () => {
 
             <!-- NOTIFICATIONS TAB -->
             <RouterLink to="/notifications" class="router-link">
-              <v-btn 
-                class="mr-3 nav-btn notifications-btn" 
-                variant="outlined"
-                size="large"
-                rounded="lg"
+              <v-badge
+                :model-value="notificationStore.hasUnreadNotifications"
+                :content="notificationStore.unreadCount"
+                color="error"
+                offset-x="10"
+                offset-y="10"
+                class="notification-badge"
               >
-                <v-icon class="nav-icon me-2">mdi-bell</v-icon>
-                <span class="nav-text">NOTIFICATIONS</span>
-                <v-badge 
-                  v-if="false" 
-                  color="error" 
-                  content="3" 
-                  offset-x="10" 
-                  offset-y="10"
+                <v-btn 
+                  class="mr-3 nav-btn notifications-btn" 
+                  variant="outlined"
+                  size="large"
+                  rounded="lg"
                 >
-                </v-badge>
-                <v-ripple />
-              </v-btn>
+                  <v-icon class="nav-icon me-2">mdi-bell</v-icon>
+                  <span class="nav-text">NOTIFICATIONS</span>
+                  <v-ripple />
+                </v-btn>
+              </v-badge>
             </RouterLink>
           </div>
           <v-spacer></v-spacer>
@@ -158,17 +162,26 @@ onMounted(async () => {
 
         <!-- Mobile Nav (Hamburger) -->
         <div v-else class="mobile-nav-container">
-          <v-btn 
-            icon 
-            @click="drawer = !drawer"
-            size="large"
-            variant="outlined"
-            class="mobile-menu-btn"
+          <v-badge
+            :model-value="notificationStore.hasUnreadNotifications"
+            :content="notificationStore.unreadCount"
+            color="error"
+            offset-x="5"
+            offset-y="5"
+            class="mobile-notification-badge"
           >
-            <v-icon size="28" :class="drawer ? 'menu-icon-rotate' : ''">
-              {{ drawer ? 'mdi-close' : 'mdi-menu' }}
-            </v-icon>
-          </v-btn>
+            <v-btn 
+              icon 
+              @click="drawer = !drawer"
+              size="large"
+              variant="outlined"
+              class="mobile-menu-btn"
+            >
+              <v-icon size="28" :class="drawer ? 'menu-icon-rotate' : ''">
+                {{ drawer ? 'mdi-close' : 'mdi-menu' }}
+              </v-icon>
+            </v-btn>
+          </v-badge>
         </div>
       </v-app-bar>
 
@@ -251,7 +264,15 @@ onMounted(async () => {
           >
             <RouterLink to="/notifications" class="router-link mobile-link">
               <template v-slot:prepend>
-                <v-icon class="mobile-nav-icon">mdi-bell</v-icon>
+                <v-badge
+                  :model-value="notificationStore.hasUnreadNotifications"
+                  :content="notificationStore.unreadCount"
+                  color="error"
+                  inline
+                  class="mobile-drawer-notification-badge"
+                >
+                  <v-icon class="mobile-nav-icon">mdi-bell</v-icon>
+                </v-badge>
               </template>
               <v-list-item-title class="mobile-nav-text">NOTIFICATIONS</v-list-item-title>
             </RouterLink>
@@ -584,6 +605,21 @@ onMounted(async () => {
   50% { transform: rotate(15deg); }
 }
 
+@keyframes notificationPulse {
+  0% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+  }
+  70% { 
+    transform: scale(1.1);
+    box-shadow: 0 0 0 8px rgba(244, 67, 54, 0);
+  }
+  100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+  }
+}
+
 @keyframes rotateIn {
   from {
     transform: rotate(0deg);
@@ -591,6 +627,31 @@ onMounted(async () => {
   to {
     transform: rotate(180deg);
   }
+}
+
+/* ===== NOTIFICATION BADGES ===== */
+.notification-badge .v-badge__badge {
+  animation: notificationPulse 2s infinite;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+}
+
+.mobile-notification-badge .v-badge__badge {
+  animation: notificationPulse 2s infinite;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+}
+
+.mobile-drawer-notification-badge .v-badge__badge {
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+  animation: notificationPulse 2s infinite;
 }
 
 /* ===== ROUTER LINK STYLES ===== */
