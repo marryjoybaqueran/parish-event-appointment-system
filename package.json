@@ -11,14 +11,26 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@capacitor/android": "^7.0.1",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/camera": "^7.0.2",
+    "@capacitor/core": "^7.0.1",
+    "@capacitor/haptics": "^7.0.0",
+    "@capacitor/keyboard": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "@ionic/pwa-elements": "^3.3.0",
+    "@ionic/vue": "^8.7.3",
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.9.0",
+    "ionicons": "^8.0.13",
     "pinia": "^3.0.1",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
+    "vue-toastification": "^2.0.0-rc.5",
     "vuetify": "^3.8.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.0.1",
     "@eslint/js": "^9.22.0",
     "@mdi/font": "^7.4.47",
     "@vitejs/plugin-vue": "^5.2.3",

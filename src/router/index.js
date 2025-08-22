@@ -17,6 +17,8 @@ import BFBookingListView from '@/views/admin/BFBookingListView.vue'
 import TGBookingListView from '@/views/admin/TGBookingListView.vue'
 import ForbiddenView from '@/views/error/ForbiddenView.vue'
 import TrialPage from '@/views/error/TrialPage.vue'
+import CameraView from '@/views/camera/CameraView.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -97,11 +99,6 @@ const router = createRouter({
       component: NotFoundView,
     },
     {
-      path: '/forbidden',
-      name: 'forbidden',
-      component: ForbiddenView,
-    },
-    {
       path: '/funeral-mass-form-bookinglist-view',
       name: 'funeral-mass-form-bookinglist-view',
       component: FFBookingListView,
@@ -118,6 +115,17 @@ const router = createRouter({
       name: 'thanksgiving-mass-form-bookinglist-view',
       component: TGBookingListView,
       meta: { requiresAdmin: true },
+    },
+    {
+      path: '/camera',
+      name: 'camera',
+      component: CameraView,
+     // meta: { requiresAdmin: true },
+    },
+    {
+      path: '/forbidden',
+      name: 'forbidden',
+      component: ForbiddenView,
     },
   ],
 })
