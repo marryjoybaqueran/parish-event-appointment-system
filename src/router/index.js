@@ -18,6 +18,8 @@ import TGBookingListView from '@/views/admin/TGBookingListView.vue'
 import ForbiddenView from '@/views/error/ForbiddenView.vue'
 import TrialPage from '@/views/error/TrialPage.vue'
 import CameraView from '@/views/camera/CameraView.vue'
+import Events from '@/views/events/EventsView.vue'
+import Notifications from '@/views/notifications/NotificationsView.vue'
 
 
 const router = createRouter({
@@ -120,7 +122,19 @@ const router = createRouter({
       path: '/camera',
       name: 'camera',
       component: CameraView,
-     // meta: { requiresAdmin: true },
+      meta: { requiresAdmin: true },
+    },
+    {
+      path: '/events',
+      name: 'events',
+      component: Events,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: Notifications,
+      meta: { requiresAuth: true },
     },
     {
       path: '/forbidden',
