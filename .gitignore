@@ -29,5 +29,5 @@ coverage
 # .github
 *.tsbuildinfo
 .history
-
+.github
 .env
