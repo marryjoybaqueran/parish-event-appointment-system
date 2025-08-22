@@ -54,7 +54,7 @@ onMounted(() => {
           hide-delimiters
           :show-arrows="false"
           height="100vh"
-          class="position-fixed top-0 left-0 w-100"
+          class="position-fixed top-0 left-0 w-100 bg-wrapper"
         >
           <v-carousel-item v-for="(image, index) in images" :key="index">
             <v-img
@@ -67,7 +67,7 @@ onMounted(() => {
         </v-carousel>
 
         <!-- Content -->
-        <v-container class="py-12 position-relative">
+  <v-container class="py-12 position-relative content-wrapper">
           <v-row>
             <v-col cols="12">
               <EventGuide @step-click="onStepClick" />
@@ -102,6 +102,7 @@ onMounted(() => {
   height: 100%;
   z-index: 0;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .carousel {
