@@ -105,36 +105,11 @@ const onFormSubmit = () => {
 
 // Social sign-in handlers (use Supabase OAuth)
 const signInWithGoogle = async () => {
-  formAction.value = { ...formActionDefault }
-  formAction.value.formProcess = true
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' })
-      if (error) {
-        formAction.value.formErrorMessage = error.message
-      }
-      // Supabase will handle the redirect flow for OAuth providers
-    } catch (err) {
-      console.error(err)
-      formAction.value.formErrorMessage = 'Social sign-in failed'
-    } finally {
-      formAction.value.formProcess = false
-    }
+  console.log('Signing in with Google...')
 }
 
 const signInWithFacebook = async () => {
-  formAction.value = { ...formActionDefault }
-  formAction.value.formProcess = true
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'facebook' })
-      if (error) {
-        formAction.value.formErrorMessage = error.message
-      }
-    } catch (err) {
-      console.error(err)
-      formAction.value.formErrorMessage = 'Social sign-in failed'
-    } finally {
-      formAction.value.formProcess = false
-    }
+  console.log('Signing in with Facebook...')
 }
 </script>
 
@@ -174,17 +149,14 @@ const signInWithFacebook = async () => {
     ></v-text-field>
 
     <!-- Password field with enhanced styling -->
-    <div class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center justify-space-between">
+    <div
+      class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center justify-space-between"
+    >
       <div class="d-flex align-center">
         <v-icon size="small" class="mr-2">mdi-lock</v-icon>
         Password
       </div>
-      <v-btn 
-        variant="text" 
-        size="small" 
-        class="text-caption text-primary" 
-        @click="() => {}"
-      >
+      <v-btn variant="text" size="small" class="text-caption text-primary" @click="() => {}">
         Forgot password?
       </v-btn>
     </div>
@@ -298,11 +270,10 @@ const signInWithFacebook = async () => {
   transform: translateY(-2px);
 }
 
-
 .social-icon:hover,
 .social-icon:focus {
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(16,24,40,0.08);
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.08);
 }
 
 .google--text {
