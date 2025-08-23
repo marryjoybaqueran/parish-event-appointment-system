@@ -22,6 +22,7 @@ import Notifications from '@/views/notifications/NotificationsView.vue'
 import Pending from '@/views/PendingView.vue'
 import WeddingContinue from '@/views/contWedding/ContWeddingView.vue'
 import WeddingContinue2 from '@/views/contWedding/CameraWeddingView.vue'
+import FinnishView from '@/views/FinnishView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -79,6 +80,12 @@ const router = createRouter({
       path: '/wedding-mass-continue-2',
       name: '/wedding-mass-continue-2',
       component: WeddingContinue2,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/finnish',
+      name: 'finnish',
+      component: FinnishView,
       meta: { requiresAuth: true },
     },
     {

@@ -103,8 +103,13 @@ const continueToNext = async () => {
 
     console.log('Documents submitted successfully:', result.data)
     
-    // Navigate to next step after successful submission
-    router.push('/wedding-mass-continue-3') // or whatever is next
+    // Log reference number if generated
+    if (result.referenceNumber) {
+      console.log('Reference number generated:', result.referenceNumber)
+    }
+    
+    // Navigate to Finnish page where reference number will be displayed
+    router.push('/finnish')
   } catch (error) {
     console.error('Submission error:', error)
     submissionError.value = 'Failed to submit documents. Please try again.'
@@ -272,7 +277,27 @@ const getDocumentImageCount = (filename) => {
 
               <!-- Status indicator -->
               <div class="text-right">
-               
+                <v-chip
+                  v-if="hasDocumentImages(pdf.filename)"
+                  color="success"
+                  variant="tonal"
+                  size="small"
+                  prepend-icon="mdi-check"
+                  class="mb-1"
+                >
+                  Uploaded
+                </v-chip>
+                <v-chip
+                  v-else
+                  color="grey"
+                  variant="outlined"
+                  size="small"
+                  prepend-icon="mdi-upload"
+                  class="mb-1"
+                >
+                  Pending
+                </v-chip>
+                
                 <div v-if="hasDocumentImages(pdf.filename)" class="text-caption text-medium-emphasis">
                   {{ getDocumentImageCount(pdf.filename) }} image{{ getDocumentImageCount(pdf.filename) !== 1 ? 's' : '' }}
                 </div>

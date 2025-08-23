@@ -1,5 +1,6 @@
 import { supabase } from '@/utils/supabase.js'
 import { useWeddingStore } from '@/stores/weddingBookingData.js'
+import { insertReferenceNumber } from '@/views/contWedding/composables/refInsert'
 
 export function useCameraWeddingUpload() {
   const weddingStore = useWeddingStore()
@@ -176,11 +177,19 @@ export function useCameraWeddingUpload() {
         return { error: error.message }
       }
 
+      // Insert reference number after successful image upload
+      const refResult = await insertReferenceNumber(recentBooking.id, user.id)
+      if (refResult.error) {
+        console.warn('Warning: Failed to generate reference number:', refResult.error)
+        // Continue with success even if reference number failed
+      }
+
       console.log('Successfully uploaded and updated wedding booking with document images')
       return { 
         data: data[0], 
         uploadedUrls,
-        totalUploaded: Object.values(uploadedUrls).flat().length 
+        totalUploaded: Object.values(uploadedUrls).flat().length,
+        referenceNumber: refResult.referenceNumber || null
       }
 
     } catch (err: any) {
