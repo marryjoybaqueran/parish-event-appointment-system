@@ -2,12 +2,16 @@
 import { useAuthUserStore } from '@/stores/authUser'
 import { onMounted, ref, computed, watch } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
+import { supabase, formActionDefault } from '@/utils/supabase.js'
+import { useRouter } from 'vue-router'
 
-
+const router = useRouter()
 const authStore = useAuthUserStore()
 const { mobile, smAndDown } = useDisplay()
 const theme = useTheme()
-
+const formAction = ref({
+  ...formActionDefault,
+})
 const themeMode = ref(localStorage.getItem('theme') ?? 'light')
 const isDark = computed({
   get: () => themeMode.value === 'dark',
@@ -28,8 +32,18 @@ function onClick() {
   localStorage.setItem('theme', themeMode.value)
 }
 
-function onLogout() {
-  authStore.logout()
+const onLogout = async () => {
+  formAction.value = { ...formActionDefault, formProcess: true }
+
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    console.error('Error during logout:', error)
+    formAction.value.formProcess = false
+    return
+  }
+
+  formAction.value.formProcess = false
+  router.replace('/')
 }
 
 onMounted(async () => {
@@ -93,19 +107,27 @@ onMounted(async () => {
           <v-divider class="my-2" />
 
           <v-list-item prepend-icon="mdi-ring">
-            <RouterLink to="/admin-booking-view" class="router-link">Special Wedding Mass</RouterLink>
+            <RouterLink to="/admin-booking-view" class="router-link"
+              >Special Wedding Mass</RouterLink
+            >
           </v-list-item>
 
           <v-list-item prepend-icon="mdi-cross">
-            <RouterLink to="/funeral-mass-form-bookinglist-view" class="router-link">Funeral Mass</RouterLink>
+            <RouterLink to="/funeral-mass-form-bookinglist-view" class="router-link"
+              >Funeral Mass</RouterLink
+            >
           </v-list-item>
 
           <v-list-item prepend-icon="mdi-water">
-            <RouterLink to="/baptism-mass-form-bookinglist-view" class="router-link">Baptism Mass</RouterLink>
+            <RouterLink to="/baptism-mass-form-bookinglist-view" class="router-link"
+              >Baptism Mass</RouterLink
+            >
           </v-list-item>
 
           <v-list-item prepend-icon="mdi-church">
-            <RouterLink to="/thanksgiving-mass-form-bookinglist-view" class="router-link">Thanksgiving Mass</RouterLink>
+            <RouterLink to="/thanksgiving-mass-form-bookinglist-view" class="router-link"
+              >Thanksgiving Mass</RouterLink
+            >
           </v-list-item>
 
           <v-divider class="my-2" />

@@ -1,7 +1,6 @@
 import { /*getUserInformation,*/ supabase, isAuthenticated } from '@/utils/supabase'
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/auth/LoginView.vue'
-import RegisterView from '@/views/auth/RegisterView.vue'
 import HomePage from '@/views/auth/HomePage.vue'
 import BookEvent from '@/views/bookingEvents/BookEvent.vue'
 import WeddingMassForm from '@/views/auth/WeddingMassForm.vue'
@@ -36,11 +35,7 @@ const router = createRouter({
       name: 'login',
       component: LoginView,
     },
-    {
-      path: '/register',
-      name: 'register',
-      component: RegisterView,
-    },
+
     {
       path: '/homepage',
       name: 'homepage',

@@ -36,22 +36,16 @@ const { mobile } = useDisplay()
               >"
             </h2>
           </v-col>
-          <!-- Right Column: Form -->
+          <!-- Right Column: Combined Auth Form -->
           <v-col class="cardy" cols="12" md="6" lg="6" xl="6" sm="12">
             <v-card
-              class="mx-auto pa-12 pb-8"
+              class="mx-auto pa-8 pb-6"
               elevation="8"
               rounded="lg"
-              v-bind:width="mobile ? '110%' : '75%'"
+              v-bind:width="mobile ? '110%' : '80%'"
+              max-width="600px"
             >
               <LoginForm></LoginForm>
-
-              <div class="text-center pt-4">
-                <p>
-                  Don't have an account?
-                  <RouterLink to="/register">Sign up </RouterLink>
-                </p>
-              </div>
             </v-card>
           </v-col>
         </v-row>

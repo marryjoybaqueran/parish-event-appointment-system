@@ -1,8 +1,64 @@
 import { supabase } from '@/utils/supabase'
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import { reactive } from 'vue'
+
+import {
+  eventCategories,
+  getEventColor,
+  getEventGradient,
+  loadPendingBookings,
+  loadEvents,
+  loadStats,
+  loadCalendarEvents,
+  loadRecentActivities,
+  approveBooking,
+  denyBooking,
+  createEvent,
+} from '@/functions/adminDashboard'
 
 export const useAuthUserStore = defineStore('authUser', () => {
+  const notifications = ref([])
+  const pendingBookings = ref([])
+  const events = ref([])
+  const calendarEvents = ref([])
+  const recentActivities = ref([])
+  const stats = reactive({
+    totalBookings: 0,
+    pendingApprovals: 0,
+    approvedBookings: 0,
+    deniedBookings: 0,
+    upcomingEvents: 0,
+    totalEvents: 0,
+    totalMembers: 0,
+  })
+  const previousStats = ref({
+    totalBookings: 0,
+    pendingApprovals: 0,
+    upcomingEvents: 0,
+    totalMembers: 0,
+  })
+  const statsTrends = reactive({
+    totalBookings: 0,
+    pendingApprovals: 0,
+    approvedBookings: 0,
+    deniedBookings: 0,
+    upcomingEvents: 0,
+    totalEvents: 0,
+    totalMembers: 0,
+  })
+
+  const unreadNotificationsCount = computed(() => notifications.value.filter((n) => !n.read).length)
+  // Dashboard Loader
+  async function loadDashboardData() {
+    await Promise.all([
+      loadPendingBookings(pendingBookings, stats),
+      loadEvents(events, stats),
+      loadStats(stats),
+      loadCalendarEvents(calendarEvents),
+      loadRecentActivities(recentActivities),
+    ])
+  }
   // States
   const userData = ref(null)
   const authPages = ref([])
@@ -133,5 +189,24 @@ export const useAuthUserStore = defineStore('authUser', () => {
     getAuthBranchIds,
     updateUserInformation,
     updateUserImage,
+
+    notifications,
+    pendingBookings,
+    events,
+    calendarEvents,
+    recentActivities,
+    stats,
+    previousStats,
+    eventCategories,
+    unreadNotificationsCount,
+    statsTrends,
+    // Dashboard
+    loadDashboardData,
+    approveBooking: (booking) => approveBooking(booking, loadDashboardData),
+    denyBooking: (booking) => denyBooking(booking, loadDashboardData),
+    createEvent: (eventData) => createEvent(eventData, loadDashboardData),
+
+    getEventColor,
+    getEventGradient,
   }
 })

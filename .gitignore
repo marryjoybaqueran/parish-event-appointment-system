@@ -30,3 +30,7 @@ coverage
 *.tsbuildinfo
 
 .env
+
+# History files and folders
+.history/
+*.history
