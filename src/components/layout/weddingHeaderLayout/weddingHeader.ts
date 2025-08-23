@@ -1,4 +1,4 @@
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, watch } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useRouter } from 'vue-router'
 import { useWeddingStore } from '@/stores/weddingBookingData.js'
@@ -20,20 +20,24 @@ export function useWeddingHeader() {
 		})
 	}
 
-	const getStatusColor = (isApprove?: boolean) => {
-		if (isApprove === true) {
+	const getStatusColor = (booking: any) => {
+		if (booking?.ref_number) {
 			return 'success'
-		} else if (isApprove === false) {
+		} else if (booking?.is_approved === true) {
+			return 'success'
+		} else if (booking?.is_approved === false) {
 			return 'warning'
 		} else {
 			return 'info'
 		}
 	}
 
-	const getStatusText = (isApprove?: boolean) => {
-		if (isApprove === true) {
+	const getStatusText = (booking: any) => {
+		if (booking?.ref_number) {
+			return 'Completed'
+		} else if (booking?.is_approved === true) {
 			return 'Approved'
-		} else if (isApprove === false) {
+		} else if (booking?.is_approved === false) {
 			return 'Pending'
 		} else {
 			return 'Unknown'
@@ -41,8 +45,9 @@ export function useWeddingHeader() {
 	}
 
 	const handleBookingClick = (booking: any) => {
-		// Click lang kung approved ang booking - redirect to wedding form para ma-continue
-		if (booking.is_approved === true) {
+		// Click lang kung approved ang booking ug dili pa kompleto (walay ref_number) - redirect to wedding form para ma-continue
+		// Use isClickable so the same rule is applied consistently
+		if (isClickable(booking)) {
 			// store the selected booking id sa store para magamit sa next view
 			weddingStore.selectBooking(booking.id)
 			// log the id for debugging / retrieval verification
@@ -54,8 +59,23 @@ export function useWeddingHeader() {
 	}
 
 	const isClickable = (booking: any) => {
+		// Only clickable when approved and NOT completed (no ref_number)
+		if (!booking) return false
+		if (booking.ref_number) return false
 		return booking.is_approved === true
 	}
+
+	// Watch para sa mga changes sa bookings especially kung naa na'y ref_number
+	watch(
+		() => weddingStore.bookings,
+		(newBookings) => {
+			const completedBookings = newBookings.filter(booking => booking.ref_number)
+			if (completedBookings.length > 0) {
+				console.log('May mga completed bookings na nga naa na\'y ref_number:', completedBookings)
+			}
+		},
+		{ deep: true }
+	)
 
 	onMounted(async () => {
 		await weddingStore.fetchUserWeddingBookings()
