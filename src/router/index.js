@@ -17,7 +17,7 @@ import BFBookingListView from '@/views/admin/BFBookingListView.vue'
 import TGBookingListView from '@/views/admin/TGBookingListView.vue'
 import ForbiddenView from '@/views/error/ForbiddenView.vue'
 import TrialPage from '@/views/error/TrialPage.vue'
-import CameraView from '@/views/camera/CameraView.vue'
+// import CameraView from '@/views/camera/CameraView.vue'
 import Events from '@/views/events/EventsView.vue'
 import Notifications from '@/views/notifications/NotificationsView.vue'
 
@@ -55,12 +55,12 @@ const router = createRouter({
       name: 'book-event',
       component: BookEvent,
     },
-     {
+   /*   {
       path: '/camera',
       name: 'camera',
       component: CameraView,
        meta: { requiresAuth: true },
-    },
+    }, */
     {
       path: '/events',
       name: 'events',

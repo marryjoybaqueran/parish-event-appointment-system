@@ -1,9 +1,11 @@
 <script setup>
-import { getEventItems, cleanEventName } from '../functions/helpers'
+import { getEventItems, cleanEventName, isWeddingEvent } from '../functions/helpers'
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 const items = getEventItems()
 const isVisible = ref(false)
+const router = useRouter()
 
 onMounted(() => {
   // animate in effect para sa more engaging experience
@@ -11,6 +13,22 @@ onMounted(() => {
     isVisible.value = true
   }, 200)
 })
+
+// Handle booking action for each item. If the item is the wedding event,
+// redirect directly to the wedding form route.
+const handleBooking = (item) => {
+  if (!item) return
+
+  if (isWeddingEvent(item)) {
+    // direct navigation to the wedding form
+    router.push('/wedding-mass-form')
+    return
+  }
+
+  // Fallback behavior for other items - open dialog or continue booking flow
+  // For now just log selection; other flows can be implemented later.
+  console.log('Selected booking item:', item)
+}
 </script>
 
 <template>
@@ -81,6 +99,7 @@ onMounted(() => {
               rounded="pill"
               class="book-btn elevation-4"
               prepend-icon="mdi-calendar-plus"
+              @click.prevent="handleBooking(item)"
             >
               Book Now
             </v-btn>
@@ -175,6 +194,8 @@ onMounted(() => {
   transform: scale(1);
   transition: all 0.2s ease;
   font-weight: 600;
+  /* push the button to the bottom of the flex column */
+  margin-top: auto;
 }
 
 .event-card:hover .book-btn {
