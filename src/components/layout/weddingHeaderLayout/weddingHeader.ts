@@ -21,11 +21,20 @@ export function useWeddingHeader() {
 	}
 
 	const getStatusColor = (booking: any) => {
+		// Completed bookings (have ref number) are success
 		if (booking?.ref_number) {
 			return 'success'
-		} else if (booking?.is_approved === true) {
+		} 
+		// Explicit denied state should be shown as error (red)
+		else if (booking?.is_denied === true) {
+			return 'error'
+		} 
+		// Approved but not yet completed
+		else if (booking?.is_approved === true) {
 			return 'success'
-		} else if (booking?.is_approved === false) {
+		} 
+		// Explicit pending/false approval
+		else if (booking?.is_approved === false) {
 			return 'warning'
 		} else {
 			return 'info'
@@ -35,6 +44,8 @@ export function useWeddingHeader() {
 	const getStatusText = (booking: any) => {
 		if (booking?.ref_number) {
 			return 'Completed'
+		} else if (booking?.is_denied === true) {
+			return 'Denied'
 		} else if (booking?.is_approved === true) {
 			return 'Approved'
 		} else if (booking?.is_approved === false) {
@@ -61,7 +72,9 @@ export function useWeddingHeader() {
 	const isClickable = (booking: any) => {
 		// Only clickable when approved and NOT completed (no ref_number)
 		if (!booking) return false
+		// Not clickable if booking already completed or explicitly denied
 		if (booking.ref_number) return false
+		if (booking.is_denied === true) return false
 		return booking.is_approved === true
 	}
 

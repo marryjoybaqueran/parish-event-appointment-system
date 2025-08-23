@@ -56,6 +56,7 @@ const {
               </h4>
               <p class="text-caption text-medium-emphasis ma-0">Wedding Booking</p>
               <p v-if="booking.ref_number" class="text-caption primary--text ma-0">Ref: {{ booking.ref_number }}</p>
+              <p v-if="booking.comments" class="text-caption grey--text ma-0">{{ booking.comments }}</p>
             </div>
             <v-chip
               :color="getStatusColor(booking)"
@@ -106,6 +107,7 @@ const {
                 {{ getStatusText(booking) }}
               </v-chip>
               <div v-if="booking.ref_number" class="text-caption mt-2">Ref: {{ booking.ref_number }}</div>
+              <div v-if="booking.comments" class="text-caption grey--text mt-1">{{ booking.comments }}</div>
             </v-col>
           </v-row>
         </template>
