@@ -1,31 +1,15 @@
 <script setup>
 import { useAuthUserStore } from '@/stores/authUser'
 import { useNotificationStore } from '@/stores/notification'
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref } from 'vue'
 
 // Use Pinia Stores
 const authStore = useAuthUserStore()
 const notificationStore = useNotificationStore()
 
-// Theme management
-const theme = ref(localStorage.getItem('theme') ?? 'light')
-
-const isDark = computed({
-  get: () => theme.value === 'dark',
-  set: (val) => {
-    theme.value = val ? 'dark' : 'light'
-    localStorage.setItem('theme', theme.value)
-  },
-})
-
 // Authentication state
 const isLoggedIn = ref(false)
 
-// Theme toggle function
-function toggleTheme() {
-  isDark.value = !isDark.value
-  localStorage.setItem('theme', theme.value)
-}
 
 // Load functions during component mounting
 onMounted(async () => {
@@ -37,7 +21,7 @@ onMounted(async () => {
 <template>
   <v-bottom-navigation
     v-model="value"
-    :bg-color="theme === 'light' ? 'light-blue-lighten-1' : 'light-blue-accent-4'"
+    bg-color="light-blue-lighten-1"
     class="bottom-nav-bar d-flex d-sm-none"
     height="70"
     elevation="8"
@@ -97,21 +81,7 @@ onMounted(async () => {
     </v-btn>
 
     <!-- THEME TOGGLE -->
-    <v-btn
-      value="theme"
-      class="bottom-nav-btn theme-btn"
-      @click="toggleTheme"
-      size="large"
-    >
-      <v-icon 
-        class="bottom-nav-icon theme-icon" 
-        size="24"
-        :class="isDark ? 'theme-icon-rotate' : 'theme-icon-scale'"
-      >
-        {{ isDark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
-      </v-icon>
-      <span class="bottom-nav-text">{{ isDark ? 'DARK' : 'LIGHT' }}</span>
-    </v-btn>
+  <!-- theme toggle removed -->
   </v-bottom-navigation>
 </template>
 
@@ -238,14 +208,6 @@ onMounted(async () => {
 
 .theme-btn:hover .bottom-nav-icon {
   color: #f57c00;
-}
-
-.theme-icon-scale {
-  animation: sunPulse 2s ease-in-out infinite;
-}
-
-.theme-icon-rotate {
-  animation: moonRotate 2s ease-in-out infinite;
 }
 
 /* ===== NOTIFICATION BADGE ===== */
