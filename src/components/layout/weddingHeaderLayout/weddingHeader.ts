@@ -43,7 +43,13 @@ export function useWeddingHeader() {
 	const handleBookingClick = (booking: any) => {
 		// Click lang kung approved ang booking - redirect to wedding form para ma-continue
 		if (booking.is_approved === true) {
-			router.push('/wedding-mass-continue')
+			// store the selected booking id sa store para magamit sa next view
+			weddingStore.selectBooking(booking.id)
+			// log the id for debugging / retrieval verification
+			/* console.log('Clicked wedding booking id:', booking.id)
+			console.log('Store selectedBookingId (after set):', weddingStore.selectedBookingId) */
+			// navigate and pass booking id as a query param
+			router.push({ path: '/wedding-mass-continue', query: { bookingId: String(booking.id) } })
 		}
 	}
 

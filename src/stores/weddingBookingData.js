@@ -6,6 +6,8 @@ export const useWeddingStore = defineStore('weddingData', {
     bookings: [],
     loading: false,
     error: null,
+  // currently selected booking id (for navigation or further fetch)
+  selectedBookingId: null,
     // Keep formAction in store so components can bind to it
     formAction: { ...formActionDefault },
   }),
@@ -154,6 +156,10 @@ export const useWeddingStore = defineStore('weddingData', {
         this.error = err.message
         return null
       }
+    },
+    // Select a booking id (used when user clicks a booking card)
+    selectBooking(id) {
+      this.selectedBookingId = id
     },
   },
 })
