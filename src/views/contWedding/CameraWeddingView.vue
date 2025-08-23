@@ -5,10 +5,16 @@ import { useTheme } from 'vuetify'
 import FormCamera from '@/components/common/FormCamera.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
 import NavBar2 from '@/components/layout/NavBar2.vue'
-import AppBar from '@/components/layout/AppBar.vue'
+
+import { useCameraWeddingUpload } from '@/views/contWedding/composables/cameraSent.ts'
 
 const theme = useTheme()
 const router = useRouter()
+const { updateWeddingBookingWithImages } = useCameraWeddingUpload()
+
+// Loading state para sa submission
+const isSubmitting = ref(false)
+const submissionError = ref('')
 
 // Wedding PDF documents data na same sa ContWeddingView
 const weddingPDFs = [
@@ -76,12 +82,40 @@ const goBack = () => {
   router.back()
 }
 
-const continueToNext = () => {
-  if (!allDocumentsHaveImages.value) {
+const continueToNext = async () => {
+  if (!allDocumentsHaveImages.value || isSubmitting.value) {
     return
   }
-  // Save images to localStorage or proceed with data
-  router.push('/wedding-mass-continue-3') // or whatever is next
+
+  try {
+    isSubmitting.value = true
+    submissionError.value = ''
+
+    // Submit wedding documents to storage and update database
+    console.log('Submitting wedding documents...', documentImages.value)
+    const result = await updateWeddingBookingWithImages(documentImages.value)
+
+    if (result.error) {
+      submissionError.value = result.error
+      console.error('Document submission error:', result.error)
+      return
+    }
+
+    console.log('Documents submitted successfully:', result.data)
+    
+    // Log reference number if generated
+    if (result.referenceNumber) {
+      console.log('Reference number generated:', result.referenceNumber)
+    }
+    
+    // Navigate to Finnish page where reference number will be displayed
+    router.push('/finnish')
+  } catch (error) {
+    console.error('Submission error:', error)
+    submissionError.value = 'Failed to submit documents. Please try again.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 // Check if specific document has images
@@ -161,6 +195,13 @@ const getDocumentImageCount = (filename) => {
               subtitle="Ensure document is right-side up"
               class="text-caption"
             />
+
+            <v-list-item
+              prepend-icon="mdi-file-image"
+              title="Auto PNG Conversion"
+              subtitle="Images will be automatically converted to PNG format"
+              class="text-caption"
+            />
           </v-list>
         </v-card>
 
@@ -202,7 +243,7 @@ const getDocumentImageCount = (filename) => {
           prepend-icon="mdi-information-outline"
         >
           <v-alert-title class="text-h6 mb-2">Instructions</v-alert-title>
-          Please take clear photos of your completed wedding documents. Each document should be uploaded separately and clearly visible.
+          Please take clear photos of your completed wedding documents. Each document should be uploaded separately and clearly visible. All images will be automatically converted to PNG format for consistent storage.
         </v-alert>
 
         <!-- Document Upload Sections -->
@@ -236,7 +277,27 @@ const getDocumentImageCount = (filename) => {
 
               <!-- Status indicator -->
               <div class="text-right">
-               
+                <v-chip
+                  v-if="hasDocumentImages(pdf.filename)"
+                  color="success"
+                  variant="tonal"
+                  size="small"
+                  prepend-icon="mdi-check"
+                  class="mb-1"
+                >
+                  Uploaded
+                </v-chip>
+                <v-chip
+                  v-else
+                  color="grey"
+                  variant="outlined"
+                  size="small"
+                  prepend-icon="mdi-upload"
+                  class="mb-1"
+                >
+                  Pending
+                </v-chip>
+                
                 <div v-if="hasDocumentImages(pdf.filename)" class="text-caption text-medium-emphasis">
                   {{ getDocumentImageCount(pdf.filename) }} image{{ getDocumentImageCount(pdf.filename) !== 1 ? 's' : '' }}
                 </div>
@@ -256,6 +317,22 @@ const getDocumentImageCount = (filename) => {
             </v-card-text>
           </v-card>
         </div>
+
+        <!-- Submission Error Alert -->
+        <v-expand-transition>
+          <v-alert
+            v-if="submissionError"
+            type="error"
+            variant="tonal"
+            class="mb-6"
+            prepend-icon="mdi-alert-circle-outline"
+            closable
+            @click:close="submissionError = ''"
+          >
+            <v-alert-title class="text-h6 mb-2">Submission Error</v-alert-title>
+            {{ submissionError }}
+          </v-alert>
+        </v-expand-transition>
 
         <!-- Validation Summary -->
         <v-expand-transition>
@@ -312,14 +389,15 @@ const getDocumentImageCount = (filename) => {
               <v-btn
                 color="primary"
                 variant="flat"
-                prepend-icon="mdi-arrow-right-circle"
+                :prepend-icon="isSubmitting ? 'mdi-loading' : 'mdi-arrow-right-circle'"
                 size="large"
-                :disabled="!allDocumentsHaveImages"
+                :disabled="!allDocumentsHaveImages || isSubmitting"
+                :loading="isSubmitting"
                 @click="continueToNext"
               >
-                Continue
+                {{ isSubmitting ? 'Submitting...' : 'Continue' }}
                 <v-tooltip
-                  v-if="!allDocumentsHaveImages"
+                  v-if="!allDocumentsHaveImages && !isSubmitting"
                   activator="parent"
                   location="top"
                 >
@@ -333,7 +411,7 @@ const getDocumentImageCount = (filename) => {
    
       </v-container>
       
-      <AppBar />
+  
     </template>
   </NavBar2>
 </template>

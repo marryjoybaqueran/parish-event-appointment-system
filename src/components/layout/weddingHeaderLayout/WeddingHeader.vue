@@ -55,14 +55,16 @@ const {
                 {{ booking.bride_firstname }} & {{ booking.groom_firstname }}
               </h4>
               <p class="text-caption text-medium-emphasis ma-0">Wedding Booking</p>
+              <p v-if="booking.ref_number" class="text-caption primary--text ma-0">Ref: {{ booking.ref_number }}</p>
+              <p v-if="booking.comments" class="text-caption grey--text ma-0">{{ booking.comments }}</p>
             </div>
             <v-chip
-              :color="getStatusColor(booking.is_approved)"
+              :color="getStatusColor(booking)"
               variant="flat"
               size="small"
               rounded="pill"
             >
-              {{ getStatusText(booking.is_approved) }}
+              {{ getStatusText(booking) }}
             </v-chip>
           </div>
 
@@ -101,9 +103,11 @@ const {
             </v-col>
 
             <v-col cols="3" class="text-right">
-              <v-chip :color="getStatusColor(booking.is_approved)" variant="flat" rounded="pill">
-                {{ getStatusText(booking.is_approved) }}
+              <v-chip :color="getStatusColor(booking)" variant="flat" rounded="pill">
+                {{ getStatusText(booking) }}
               </v-chip>
+              <div v-if="booking.ref_number" class="text-caption mt-2">Ref: {{ booking.ref_number }}</div>
+              <div v-if="booking.comments" class="text-caption grey--text mt-1">{{ booking.comments }}</div>
             </v-col>
           </v-row>
         </template>
