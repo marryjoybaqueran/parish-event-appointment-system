@@ -139,7 +139,7 @@ export const createStepClickHandler = (
     if (!step) return
 
     if (step.id === 2) {
-      // redirect to camera view when Step 3 is clicked
+      console.log('Navigating to camera view')
       router.push('/camera')
       return
     }

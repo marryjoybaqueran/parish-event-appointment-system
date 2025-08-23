@@ -3,6 +3,7 @@
 import { ref, onMounted } from 'vue'
 import { useAnnouncementsStore } from '@/stores/eventStore.js'
 import NavBar2 from '@/components/layout/NavBar2.vue'
+import AppBar from '@/components/layout/AppBar.vue'
 
 const announcementsStore = useAnnouncementsStore()
 const tableFilters = ref({
@@ -128,6 +129,8 @@ onMounted(() => {
           </v-col>
         </v-row>
       </v-container>
+
+      <AppBar />
     </template>
   </NavBar2>
 </template>

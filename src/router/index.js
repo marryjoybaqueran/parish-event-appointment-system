@@ -55,6 +55,24 @@ const router = createRouter({
       name: 'book-event',
       component: BookEvent,
     },
+     {
+      path: '/camera',
+      name: 'camera',
+      component: CameraView,
+       meta: { requiresAuth: true },
+    },
+    {
+      path: '/events',
+      name: 'events',
+      component: Events,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: Notifications,
+      meta: { requiresAuth: true },
+    },
     {
       path: '/wedding-mass-form',
       name: 'wedding-mass-form',
@@ -118,24 +136,7 @@ const router = createRouter({
       component: TGBookingListView,
       meta: { requiresAdmin: true },
     },
-    {
-      path: '/camera',
-      name: 'camera',
-      component: CameraView,
-      meta: { requiresAdmin: true },
-    },
-    {
-      path: '/events',
-      name: 'events',
-      component: Events,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/notifications',
-      name: 'notifications',
-      component: Notifications,
-      meta: { requiresAuth: true },
-    },
+   
     {
       path: '/forbidden',
       name: 'forbidden',

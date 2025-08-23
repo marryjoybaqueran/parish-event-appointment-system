@@ -5,6 +5,7 @@ import NavBar2 from '@/components/layout/NavBar2.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
 import NotificationWidget from './components/NotificationWidget.vue'
 import { mockNotifications } from './data/notificationData.js'
+import AppBar from '@/components/layout/AppBar.vue'
 
 const router = useRouter()
 
@@ -212,6 +213,7 @@ onMounted(() => {
           </v-col>
         </v-row>
       </v-container>
+      <AppBar />
     </template>
   </NavBar2>
 </template>

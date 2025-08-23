@@ -6,13 +6,6 @@ const steps = getBookingSteps()
 const { hoveredStep, setHoveredStep, clearHoveredStep } = useStepHover()
 const { isVisible, showWithDelay } = useVisibility(100)
 
-const emit = defineEmits(['step-click'])
-
-function onStepClick(step) {
-  // emit a click event for parent components to act on (e.g., open dialog)
-  emit('step-click', step)
-}
-
 onMounted(() => {
   showWithDelay()
 })
@@ -31,8 +24,8 @@ onMounted(() => {
       >
         Easy Booking Process
       </v-chip>
-      <h2 class="text-h4 font-weight-bold mb-2 text-gradient">Book Your Event in 3 Simple Steps</h2>
-      <p class="text-body-1 text-medium-emphasis">
+      <h2 class="text-h6 font-weight-bold mb-2 text-gradient">Book Your Event in 3 Simple Steps</h2>
+      <p class="text-body-2 text-medium-emphasis">
         Follow our streamlined process to secure your event booking quickly and easily
       </p>
     </div>
@@ -48,7 +41,7 @@ onMounted(() => {
       <v-col
         v-for="(step, index) in steps"
         :key="step.id"
-        cols="12"
+        cols="4"
         sm="6"
         lg="4"
         class="d-flex step-col"
@@ -66,9 +59,6 @@ onMounted(() => {
           }"
           @mouseenter="setHoveredStep(step.id)"
           @mouseleave="clearHoveredStep"
-          @click.stop="onStepClick(step)"
-          tabindex="0"
-          @keydown.enter.stop="onStepClick(step)"
         >
           <!-- Step Number Badge -->
           <div class="step-number">
@@ -77,41 +67,41 @@ onMounted(() => {
 
           <v-card-text class="text-center pa-6">
             <!-- Icon with Animation -->
-            <div class="icon-container mb-4">
+            <div class="icon-container mb-3">
               <v-avatar
-                size="64"
+                size="32"
                 class="step-icon elevation-4"
                 :style="{ background: step.gradient }"
               >
-                <v-icon :icon="step.icon" size="32" color="white"></v-icon>
+                <v-icon :icon="step.icon" size="16" color="white"></v-icon>
               </v-avatar>
             </div>
 
             <!-- Title -->
-            <h3 class="text-h6 font-weight-bold mb-3 step-title">
+            <h3 class="text-subtitle-2 font-weight-bold mb-2 step-title">
               {{ step.title }}
             </h3>
 
             <!-- Description -->
             <div class="step-descriptions">
-              <p class="text-body-2 text-medium-emphasis mb-2 cebuano-text">
+              <p class="text-caption text-medium-emphasis mb-1 cebuano-text">
                 {{ step.desc }}
               </p>
-              <p class="text-body-2 text-high-emphasis english-text">
+              <p class="text-caption text-high-emphasis english-text">
                 {{ step.englishDesc }}
               </p>
             </div>
 
             <!-- Action Indicator -->
-            <div class="action-indicator mt-4">
+            <div class="action-indicator mt-3">
               <v-btn
                 variant="text"
-                size="small"
+                size="x-small"
                 :color="step.color"
                 class="step-action-btn"
-                @click.stop="onStepClick(step)"
+                disabled
               >
-                <v-icon start>mdi-arrow-right</v-icon>
+                <v-icon start size="small">mdi-arrow-right</v-icon>
                 Step {{ step.id }}
               </v-btn>
             </div>
@@ -186,8 +176,8 @@ onMounted(() => {
   /* Fixed card size for consistent layout on desktop */
   width: 50rem;
   max-width: 60rem;
-  height: 340px;
-  min-height: 340px;
+  height: 280px;
+  min-height: 280px;
   margin: 0 auto;
 }
 
@@ -207,10 +197,10 @@ onMounted(() => {
 /* Step Number Badge */
 .step-number {
   position: absolute;
-  top: -12px;
-  right: 16px;
-  width: 28px;
-  height: 28px;
+  top: -10px;
+  right: 12px;
+  width: 22px;
+  height: 22px;
   background: var(--step-gradient);
   border-radius: 50%;
   display: flex;
@@ -218,7 +208,7 @@ onMounted(() => {
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 13px;
+  font-size: 11px;
   z-index: 2;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -258,7 +248,7 @@ onMounted(() => {
 /* Typography */
 .step-title {
   transition: color 0.3s ease;
-  font-size: 1.05rem;
+  font-size: 0.9rem;
   line-height: 1.2;
 }
 
@@ -267,18 +257,19 @@ onMounted(() => {
 }
 
 .step-descriptions {
-  min-height: 80px;
+  min-height: 60px;
+  font-size: 2px;
 }
 
 .cebuano-text {
   font-style: italic;
   opacity: 0.85;
-  font-size: 0.95rem;
+  font-size: 0.1rem;
 }
 
 .english-text {
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.5rem;
 }
 
 /* Action Button */
@@ -294,7 +285,7 @@ onMounted(() => {
 }
 
 .step-action-btn {
-  font-size: 13px;
+  font-size: 10px;
   text-transform: none;
 }
 
@@ -304,19 +295,50 @@ onMounted(() => {
     display: none;
   }
 
-  /* mobile: make cards full width and stacked */
+  /* mobile: make cards smaller and fit 3 in a row */
   .step-card {
     width: 100%;
     max-width: 100%;
     height: auto;
-    min-height: 220px;
+    min-height: 150px;
     margin: 0;
   }
 
   .step-number {
-    top: 16px;
-    right: 16px;
-    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    font-size: 9px;
+  }
+
+  .step-icon {
+    size: 36px;
+  }
+
+  .step-title {
+    font-size: 0.8rem;
+  }
+
+  .step-descriptions {
+    min-height: 45px;
+  }
+
+  .cebuano-text,
+  .english-text {
+    font-size: 0.45rem;
+  }
+
+  .cebuano-text {
+    display: none;
+  }
+
+  .step-card .v-card-text {
+    padding: 12px !important;
+  }
+
+  .step-action-btn {
+    font-size: 8px;
   }
 }
 

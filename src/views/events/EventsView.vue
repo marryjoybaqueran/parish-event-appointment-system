@@ -4,7 +4,7 @@ import NavBar2 from '@/components/layout/NavBar2.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
 import Calendar from './components/CalendarWidget.vue'
 import calendarEvents from './data/calendarData'
-
+import AppBar from '@/components/layout/AppBar.vue'
 // Use the shared calendar data (exported array)
 const events = ref(calendarEvents)
 
@@ -145,6 +145,7 @@ onMounted(() => {
           </v-col>
         </v-row>
       </v-container>
+      <AppBar />
     </template>
   </NavBar2>
 </template>
