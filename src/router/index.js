@@ -1,9 +1,8 @@
 import { /*getUserInformation,*/ supabase, isAuthenticated } from '@/utils/supabase'
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/auth/LoginView.vue'
-import RegisterView from '@/views/auth/RegisterView.vue'
 import HomePage from '@/views/auth/HomePage.vue'
-import BookEvent from '@/views/auth/BookEvent.vue'
+import BookEvent from '@/views/bookingEvents/BookEvent.vue'
 import WeddingMassForm from '@/views/auth/WeddingMassForm.vue'
 import BaptismMass from '@/views/auth/BaptismMass.vue'
 import FuneralMass from '@/views/auth/FuneralMass.vue'
@@ -17,6 +16,10 @@ import BFBookingListView from '@/views/admin/BFBookingListView.vue'
 import TGBookingListView from '@/views/admin/TGBookingListView.vue'
 import ForbiddenView from '@/views/error/ForbiddenView.vue'
 import TrialPage from '@/views/error/TrialPage.vue'
+// import CameraView from '@/views/camera/CameraView.vue'
+import Events from '@/views/events/EventsView.vue'
+import Notifications from '@/views/notifications/NotificationsView.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -36,11 +39,7 @@ const router = createRouter({
       name: 'login',
       component: LoginView,
     },
-    {
-      path: '/register',
-      name: 'register',
-      component: RegisterView,
-    },
+
     {
       path: '/homepage',
       name: 'homepage',
@@ -50,6 +49,24 @@ const router = createRouter({
       path: '/book-event',
       name: 'book-event',
       component: BookEvent,
+    },
+   /*   {
+      path: '/camera',
+      name: 'camera',
+      component: CameraView,
+       meta: { requiresAuth: true },
+    }, */
+    {
+      path: '/events',
+      name: 'events',
+      component: Events,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: Notifications,
+      meta: { requiresAuth: true },
     },
     {
       path: '/wedding-mass-form',
@@ -97,11 +114,6 @@ const router = createRouter({
       component: NotFoundView,
     },
     {
-      path: '/forbidden',
-      name: 'forbidden',
-      component: ForbiddenView,
-    },
-    {
       path: '/funeral-mass-form-bookinglist-view',
       name: 'funeral-mass-form-bookinglist-view',
       component: FFBookingListView,
@@ -118,6 +130,12 @@ const router = createRouter({
       name: 'thanksgiving-mass-form-bookinglist-view',
       component: TGBookingListView,
       meta: { requiresAdmin: true },
+    },
+   
+    {
+      path: '/forbidden',
+      name: 'forbidden',
+      component: ForbiddenView,
     },
   ],
 })
@@ -152,7 +170,17 @@ router.beforeEach(async (to) => {
     return { name: 'homepage' }
   }
 
-  const isAdmin = user?.user_metadata?.is_admin
+  let userRole = null
+  if (user) {
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single()
+    userRole = roleData?.role
+  }
+
+  const isAdmin = userRole === 'admin'
 
   if (to.meta.requiresAdmin) {
     if (!isLoggedIn || !isAdmin) {

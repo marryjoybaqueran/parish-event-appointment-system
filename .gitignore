@@ -26,7 +26,12 @@ coverage
 *.njsproj
 *.sln
 *.sw?
-
+# .github
 *.tsbuildinfo
-
+.history
+.github
 .env
+
+# History files and folders
+.history/
+*.history

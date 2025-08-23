@@ -1,18 +1,18 @@
 <script setup>
 import { useAuthUserStore } from '@/stores/authUser'
 import { onMounted, ref, computed, watch } from 'vue'
-
-// Store and display breakpoint
-const authStore = useAuthUserStore()
-
-//display for desktop & mobile
 import { useDisplay, useTheme } from 'vuetify'
+import { supabase, formActionDefault } from '@/utils/supabase.js'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const authStore = useAuthUserStore()
 const { mobile, smAndDown } = useDisplay()
 const theme = useTheme()
-
-// Theme Mode (localStorage)
+const formAction = ref({
+  ...formActionDefault,
+})
 const themeMode = ref(localStorage.getItem('theme') ?? 'light')
-
 const isDark = computed({
   get: () => themeMode.value === 'dark',
   set: (val) => {
@@ -21,7 +21,6 @@ const isDark = computed({
   },
 })
 
-// Sync Vuetify theme dynamically
 watch(themeMode, (val) => {
   theme.global.name.value = val
 })
@@ -33,117 +32,122 @@ function onClick() {
   localStorage.setItem('theme', themeMode.value)
 }
 
+const onLogout = async () => {
+  formAction.value = { ...formActionDefault, formProcess: true }
+
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    console.error('Error during logout:', error)
+    formAction.value.formProcess = false
+    return
+  }
+
+  formAction.value.formProcess = false
+  router.replace('/')
+}
+
 onMounted(async () => {
   isLoggedIn.value = await authStore.isAuthenticated()
-  theme.global.name.value = themeMode.value // Set on mount
+  theme.global.name.value = themeMode.value
 })
 </script>
 
 <template>
-  <v-responsive class="border rounded">
+  <v-responsive>
     <v-app :theme="theme">
-      <!-- Inside v-app-bar -->
-
-      <!--Toggle-->
+      <!-- Elegant App Bar -->
       <v-app-bar
-        class="px-6"
+        class="px-4 app-bar-elegant"
         :color="themeMode === 'light' ? 'light-blue-lighten-1' : 'light-blue-accent-4'"
-        border
+        elevate-on-scroll
+        flat
       >
-        <!--Header Title-->
+        <!-- Logo + Title -->
         <div class="d-flex align-center">
-          <v-img src="logo.png" :width="mobile ? '40px' : '45px'" class="me-2" cover />
-          <h2 :class="smAndDown ? 'small-header' : 'large-header'" class="ma-0 header">
-            SAN ISIDRO LABRADOR PARISH
-          </h2>
+          <v-img src="logo.png" :width="mobile ? '36px' : '50px'" class="me-2" cover />
+          <div>
+            <h2 :class="smAndDown ? 'header-title-sm' : 'header-title-lg'">
+              SAN ISIDRO LABRADOR PARISH
+            </h2>
+            <p v-if="!mobile" class="header-sub">Parish Information Management System</p>
+          </div>
         </div>
 
         <v-spacer></v-spacer>
 
-        <!-- Only show toggle on desktop -->
-        <div v-if="!mobile" class="d-flex align-center">
-          <v-switch
-            v-model="isDark"
-            color="primary"
-            hide-details
-            class="theme-switch pl-7"
-            @change="onClick"
-            style="transform: scale(1.5); transform-origin: right center"
-          >
-            <template #thumb>
-              <v-icon size="20">
-                {{ isDark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
-              </v-icon>
-            </template>
-          </v-switch>
-        </div>
+        <!-- Theme Toggle (desktop only) -->
+        <v-switch
+          v-if="!mobile"
+          v-model="isDark"
+          inset
+          hide-details
+          class="theme-switch"
+          @change="onClick"
+        >
+          <template #thumb>
+            <v-icon size="20">
+              {{ isDark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
+            </v-icon>
+          </template>
+        </v-switch>
 
-        <!-- Hamburger -->
-        <v-btn icon @click="drawer = !drawer">
-          <v-icon>mdi-menu</v-icon>
+        <!-- Menu Button -->
+        <v-btn icon rounded @click="drawer = !drawer">
+          <v-icon size="28">mdi-menu</v-icon>
         </v-btn>
       </v-app-bar>
 
-      <!-- DRAWER MENU -->
-      <v-navigation-drawer v-model="drawer" temporary location="right">
-        <v-list>
-          <!--Toggle in drawer for mobile -->
-          <v-list-item>
-            <RouterLink to="/admin-dashboard" class="router-link">
-              <span class>Dashboard</span>
-            </RouterLink>
-          </v-list-item>
-          <v-divider></v-divider>
-
-          <!--Wedding Mass -->
-          <v-list-item>
-            <RouterLink to="/admin-booking-view" class="router-link">
-              <span class>Special Wedding Mass</span>
-            </RouterLink>
+      <!-- Navigation Drawer -->
+      <v-navigation-drawer v-model="drawer" temporary location="right" :width="mobile ? 240 : 280">
+        <v-list density="comfortable">
+          <v-list-item prepend-icon="mdi-view-dashboard">
+            <RouterLink to="/admin-dashboard" class="router-link">Dashboard</RouterLink>
           </v-list-item>
 
-          <v-divider></v-divider>
+          <v-divider class="my-2" />
 
-          <!--Funeral Mass-->
-          <v-list-item>
-            <RouterLink to="/funeral-mass-form-bookinglist-view" class="router-link">
-              <span>Funeral Mass</span>
-            </RouterLink>
+          <v-list-item prepend-icon="mdi-ring">
+            <RouterLink to="/admin-booking-view" class="router-link"
+              >Special Wedding Mass</RouterLink
+            >
           </v-list-item>
 
-          <v-divider></v-divider>
+          <v-list-item prepend-icon="mdi-cross">
+            <RouterLink to="/funeral-mass-form-bookinglist-view" class="router-link"
+              >Funeral Mass</RouterLink
+            >
+          </v-list-item>
 
-          <!--Batism Mass-->
-          <RouterLink to="/baptism-mass-form-bookinglist-view" class="router-link">
-            <v-list-item><span>Baptism Mass</span></v-list-item>
-          </RouterLink>
+          <v-list-item prepend-icon="mdi-water">
+            <RouterLink to="/baptism-mass-form-bookinglist-view" class="router-link"
+              >Baptism Mass</RouterLink
+            >
+          </v-list-item>
 
-          <v-divider></v-divider>
+          <v-list-item prepend-icon="mdi-church">
+            <RouterLink to="/thanksgiving-mass-form-bookinglist-view" class="router-link"
+              >Thanksgiving Mass</RouterLink
+            >
+          </v-list-item>
 
-          <!--Thanks Giving Mass-->
-          <RouterLink to="/thanksgiving-mass-form-bookinglist-view" class="router-link">
-            <v-list-item><span>Thanks Giving Mass</span></v-list-item>
-          </RouterLink>
-          <v-divider></v-divider>
+          <v-divider class="my-2" />
 
-          <!--Toggle-->
+          <!-- Mobile Theme Toggle -->
           <v-list-item v-if="mobile" @click="isDark = !isDark">
-            <v-icon class="me-2">
-              {{ isDark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
-            </v-icon>
+            <v-icon class="me-2">{{ isDark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}</v-icon>
             <span>{{ isDark ? 'Dark Mode' : 'Light Mode' }}</span>
           </v-list-item>
 
-          <!--Log out-->
-          <v-list-item>
-            <v-btn flat @click="onLogout">Log Out</v-btn>
+          <!-- Logout -->
+          <v-list-item @click="onLogout" prepend-icon="mdi-logout">
+            <v-btn variant="text" color="error" block>Log Out</v-btn>
           </v-list-item>
         </v-list>
       </v-navigation-drawer>
 
-      <!-- MAIN CONTENT -->
+      <!-- Main -->
       <v-main>
-        <v-container>
+        <v-container fluid>
           <slot name="content"></slot>
         </v-container>
       </v-main>
@@ -152,30 +156,62 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.header {
-  font-family: 'Jomolhari', serif;
-  font-weight: 500;
-  color: black;
+.app-bar-elegant {
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.large-header {
+.header-title-lg {
+  font-family: 'Jomolhari', serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  margin: 0;
+  color: #fff;
+}
+
+.header-title-sm {
+  font-family: 'Jomolhari', serif;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 1px;
+  margin: 0;
+  color: #fff;
 }
 
-.small-header {
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+.header-sub {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.theme-switch {
+  transform: scale(1.2);
+  margin-right: 12px;
 }
 
 .router-link {
   text-decoration: none;
   color: inherit;
 }
-
 .router-link:hover {
-  text-decoration: none;
+  text-decoration: underline;
+}
+
+/* Custom styles for the navigation drawer */
+.v-navigation-drawer {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.v-list-item {
+  transition: background 0.3s ease;
+}
+
+.v-list-item:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 </style>
