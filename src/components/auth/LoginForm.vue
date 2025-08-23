@@ -168,6 +168,15 @@ const onFormSubmit = () => {
     }
   })
 }
+
+// Social sign-in handlers (use Supabase OAuth)
+const signInWithGoogle = async () => {
+  console.log('Signing in with Google...')
+}
+
+const signInWithFacebook = async () => {
+  console.log('Signing in with Facebook...')
+}
 </script>
 
 <template>
@@ -177,491 +186,201 @@ const onFormSubmit = () => {
       :form-error-message="formAction.formErrorMessage"
     />
 
-    <v-form class="modern-form" ref="refVform" @submit.prevent="onFormSubmit">
-      <div class="form-header">
-        <h2 class="welcome-title">{{ isLoginMode ? 'Sign In' : 'Create Account' }}</h2>
+  <v-form class="mt-5" ref="refVform" @submit.prevent="onFormSubmit">
+    <!-- Welcome header with animation -->
+    <div class="text-center mb-6">
+      <v-avatar size="64" class="mb-4 welcome-avatar">
+        <v-icon size="40" color="primary">mdi-church</v-icon>
+      </v-avatar>
+      <h2 class="text-h4 text-primary mb-2 welcome-text">Welcome Back!</h2>
+      <p class="text-body-2 text-medium-emphasis">Sign in to continue your spiritual journey</p>
+    </div>
+
+    <!-- Email field with enhanced styling -->
+    <div class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center">
+      <v-icon size="small" class="mr-2">mdi-email</v-icon>
+      Email Address
+    </div>
+
+    <v-text-field
+      v-model="formData.email"
+      density="comfortable"
+      placeholder="Enter your email address"
+      prepend-inner-icon="mdi-email-outline"
+      :rules="[requiredValidator, emailValidator]"
+      :counter="50"
+      variant="outlined"
+      color="primary"
+      class="mb-3 animated-field"
+      hide-details="auto"
+    ></v-text-field>
+
+    <!-- Password field with enhanced styling -->
+    <div
+      class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center justify-space-between"
+    >
+      <div class="d-flex align-center">
+        <v-icon size="small" class="mr-2">mdi-lock</v-icon>
+        Password
       </div>
+      <v-btn variant="text" size="small" class="text-caption text-primary" @click="() => {}">
+        Forgot password?
+      </v-btn>
+    </div>
 
-      <div v-if="isLoginMode" class="auth-form-content">
-        <div class="user-type-section">
-          <v-select
-            v-model="loginData.userType"
-            :items="userTypeOptions"
-            item-title="title"
-            item-value="value"
-            density="compact"
-            variant="outlined"
-            rounded="lg"
-            prepend-inner-icon="mdi-account-switch"
-            label="Login as"
-            class="user-type-select"
-            hide-details
-          >
-            <template #selection="{ item }">
-              <div class="d-flex align-center">
-                <v-icon :icon="item.raw.icon" size="18" class="mr-2"></v-icon>
-                {{ item.raw.title }}
-              </div>
-            </template>
-            <template #item="{ props, item }">
-              <v-list-item v-bind="props" :prepend-icon="item.raw.icon">
-                <v-list-item-subtitle>{{ item.raw.description }}</v-list-item-subtitle>
-              </v-list-item>
-            </template>
-          </v-select>
-        </div>
+    <v-text-field
+      v-model="formData.password"
+      density="comfortable"
+      :rules="[requiredValidator]"
+      counter="20"
+      placeholder="Enter your password"
+      prepend-inner-icon="mdi-lock-outline"
+      variant="outlined"
+      color="primary"
+      :append-inner-icon="isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
+      :type="isPasswordVisible ? 'text' : 'password'"
+      @click:append-inner="isPasswordVisible = !isPasswordVisible"
+      class="mb-4 animated-field"
+      hide-details="auto"
+    ></v-text-field>
 
-        <div class="field-section">
-          <v-text-field
-            v-model="loginData.email"
-            density="compact"
-            placeholder="Email address"
-            prepend-inner-icon="mdi-email-outline"
-            :rules="[requiredValidator, emailValidator]"
-            variant="outlined"
-            class="field-input"
-            hide-details="auto"
-          />
-        </div>
+    <!-- Enhanced login button with ripple effect -->
+    <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
+      <v-btn
+        v-bind="props"
+        :elevation="isHovering ? 8 : 2"
+        size="large"
+        variant="elevated"
+        color="primary"
+        type="submit"
+        :disabled="formAction.formProcess"
+        :loading="formAction.formProcess"
+        block
+        class="login-btn mb-4"
+        rounded="lg"
+      >
+        <v-icon left class="mr-2">mdi-login</v-icon>
+        <span class="text-h6">Sign In</span>
+      </v-btn>
+    </v-hover>
 
-        <div class="field-section">
-          <v-text-field
-            v-model="loginData.password"
-            density="compact"
-            :rules="[requiredValidator]"
-            placeholder="Password"
-            prepend-inner-icon="mdi-lock-outline"
-            variant="outlined"
-            :append-inner-icon="isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="isPasswordVisible ? 'text' : 'password'"
-            @click:append-inner="isPasswordVisible = !isPasswordVisible"
-            class="field-input"
-            hide-details="auto"
-          />
-        </div>
+    <!-- Social login divider -->
+    <v-divider class="my-4">
+      <span class="text-caption text-medium-emphasis px-3">Or continue with</span>
+    </v-divider>
 
-        <div class="forgot-password-section">
-          <a class="forgot-password-link" href="#" target="_blank"> Forgot password? </a>
-        </div>
-
-        <v-btn
-          class="submit-btn login-btn"
-          size="large"
-          variant="flat"
-          type="submit"
-          :disabled="formAction.formProcess"
-          :loading="formAction.formProcess"
-          block
+    <!-- Social login icons (replacing buttons) -->
+    <v-row class="ma-0 justify-center">
+      <v-col cols="6" class="pa-1 d-flex justify-center">
+        <v-icon
+          size="36"
+          class="social-icon google--text"
+          role="button"
+          tabindex="0"
+          @click="signInWithGoogle"
+          @keyup.enter="signInWithGoogle"
+          title="Sign in with Google"
         >
-          <v-icon :icon="selectedUserType.icon" class="mr-2"></v-icon>
-          Sign In
-        </v-btn>
-
-        <div class="toggle-links">
-          <span>
-            Don't have an account?
-            <a @click="switchMode('register')" class="toggle-link">Sign up</a>
-          </span>
-        </div>
-      </div>
-
-      <div v-else class="auth-form-content register-content">
-        <div class="field-row">
-          <v-row no-gutters>
-            <v-col cols="12" sm="6" class="field-col">
-              <v-text-field
-                v-model="registerData.fname"
-                :rules="[requiredValidator]"
-                label="First Name"
-                density="compact"
-                variant="outlined"
-                prepend-inner-icon="mdi-account"
-                class="field-input"
-                hide-details="auto"
-                required
-              />
-            </v-col>
-            <v-col cols="12" sm="6" class="field-col">
-              <v-text-field
-                v-model="registerData.lname"
-                :rules="[requiredValidator]"
-                label="Last Name"
-                density="compact"
-                variant="outlined"
-                prepend-inner-icon="mdi-account"
-                class="field-input"
-                hide-details="auto"
-                required
-              />
-            </v-col>
-          </v-row>
-        </div>
-
-        <div class="field-row">
-          <v-row no-gutters>
-            <v-col cols="12" sm="8" class="field-col">
-              <v-text-field
-                v-model="registerData.address"
-                :rules="[requiredValidator]"
-                label="Address"
-                density="compact"
-                variant="outlined"
-                prepend-inner-icon="mdi-map-marker-outline"
-                class="field-input"
-                hide-details="auto"
-                required
-              />
-            </v-col>
-            <v-col cols="12" sm="4" class="field-col">
-              <v-select
-                v-model="registerData.gender"
-                :items="['Male', 'Female']"
-                label="Gender"
-                :rules="[requiredValidator]"
-                density="compact"
-                variant="outlined"
-                prepend-inner-icon="mdi-gender-male-female"
-                class="field-input"
-                hide-details="auto"
-              />
-            </v-col>
-          </v-row>
-        </div>
-
-        <div class="field-row">
-          <v-row no-gutters>
-            <v-col cols="12" sm="6" class="field-col">
-              <v-text-field
-                v-model="registerData.number"
-                :rules="[requiredValidator]"
-                label="Phone Number"
-                density="compact"
-                variant="outlined"
-                prepend-inner-icon="mdi-phone-outline"
-                class="field-input"
-                hide-details="auto"
-              />
-            </v-col>
-            <v-col cols="12" sm="6" class="field-col">
-              <v-text-field
-                v-model="registerData.email"
-                :rules="[requiredValidator, emailValidator]"
-                label="Email address"
-                density="compact"
-                variant="outlined"
-                prepend-inner-icon="mdi-email-outline"
-                class="field-input"
-                hide-details="auto"
-              />
-            </v-col>
-          </v-row>
-        </div>
-
-        <div class="field-row">
-          <v-row no-gutters>
-            <v-col cols="12" sm="6" class="field-col">
-              <v-text-field
-                v-model="registerData.password"
-                label="Password"
-                :rules="[requiredValidator, passwordValidator]"
-                :append-inner-icon="isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
-                :type="isPasswordVisible ? 'text' : 'password'"
-                @click:append-inner="isPasswordVisible = !isPasswordVisible"
-                prepend-inner-icon="mdi-lock-outline"
-                density="compact"
-                variant="outlined"
-                class="field-input"
-                hide-details="auto"
-              />
-            </v-col>
-            <v-col cols="12" sm="6" class="field-col">
-              <v-text-field
-                v-model="registerData.password_confirmation"
-                :rules="[
-                  requiredValidator,
-                  confirmedValidator(registerData.password_confirmation, registerData.password),
-                ]"
-                label="Confirm Password"
-                :append-inner-icon="isPasswordConfirmationVisible ? 'mdi-eye' : 'mdi-eye-off'"
-                :type="isPasswordConfirmationVisible ? 'text' : 'password'"
-                @click:append-inner="isPasswordConfirmationVisible = !isPasswordConfirmationVisible"
-                prepend-inner-icon="mdi-lock-outline"
-                density="compact"
-                variant="outlined"
-                class="field-input"
-                hide-details="auto"
-              />
-            </v-col>
-          </v-row>
-        </div>
-
-        <v-btn
-          class="submit-btn register-btn"
-          size="large"
-          variant="flat"
-          type="submit"
-          block
-          :disabled="formAction.formProcess"
-          :loading="formAction.formProcess"
+          mdi-google
+        </v-icon>
+      </v-col>
+      <v-col cols="6" class="pa-1 d-flex justify-center">
+        <v-icon
+          size="36"
+          class="social-icon facebook--text"
+          role="button"
+          tabindex="0"
+          @click="signInWithFacebook"
+          @keyup.enter="signInWithFacebook"
+          title="Sign in with Facebook"
         >
-          Sign Up
-        </v-btn>
-
-        <div class="toggle-links">
-          <span>
-            Already have an account?
-            <a @click="switchMode('login')" class="toggle-link">Sign in</a>
-          </span>
-        </div>
-      </div>
-    </v-form>
-  </div>
+          mdi-facebook
+        </v-icon>
+      </v-col>
+    </v-row>
+  </v-form>
 </template>
 
 <style scoped>
-.login-container {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 1.5rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-}
-
-.modern-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  max-width: 600px;
-  width: 100%;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  background-color: white !important;
-}
-
-.form-header {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.welcome-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  margin: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1.2;
-}
-
-.auth-form-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.register-content {
-  gap: 0.75rem;
-}
-
-.user-type-section {
-  margin-bottom: 0.5rem;
-}
-
-.user-type-select :deep(.v-field) {
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+.welcome-avatar {
+  animation: pulse 2s infinite;
   transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.95);
 }
 
-.user-type-select :deep(.v-field:hover) {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+.welcome-text {
+  animation: slideInDown 0.8s ease-out;
 }
 
-.user-type-select :deep(.v-field--focused) {
-  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
-}
-
-.field-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.field-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.7);
-  margin-bottom: 0.25rem;
-}
-
-.forgot-password-section {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.5rem;
-}
-
-.forgot-password-link {
-  font-size: 0.75rem;
-  color: #1976d2;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.forgot-password-link:hover {
-  color: #1565c0;
-  text-decoration: underline;
-}
-
-.field-row {
-  margin-bottom: 0.75rem;
-}
-
-.field-col {
-  padding: 0 0.5rem;
-}
-
-.field-col:first-child {
-  padding-left: 0;
-}
-
-.field-col:last-child {
-  padding-right: 0;
-}
-
-.field-input :deep(.v-field) {
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+.animated-field {
   transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.95);
 }
 
-.field-input :deep(.v-field:hover) {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.field-input :deep(.v-field--focused) {
-  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
-}
-
-.field-input :deep(.v-field__prepend-inner) {
-  color: #667eea;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
-}
-
-.field-input :deep(.v-field--focused .v-field__prepend-inner) {
-  opacity: 1;
-}
-
-.submit-btn {
-  margin-top: 1rem;
-  border-radius: 12px;
-  font-weight: 600;
-  text-transform: none;
-  font-size: 1rem;
-  height: 48px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-  color: white !important;
-}
-
-.login-btn.on-hover {
-  background: linear-gradient(135deg, #637be9 0%, #667de0 100%) !important;
+.animated-field:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(129, 123, 209, 0.3) !important;
 }
 
-.register-btn.on-hover-register {
-  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%) !important;
+.login-btn {
+  transition: all 0.3s ease;
+  background: linear-gradient(45deg, #1976d2, #42a5f5) !important;
+}
+
+.login-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(25, 118, 210, 0.3) !important;
+}
+
+.social-btn {
+  transition: all 0.3s ease;
+}
+
+.social-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3) !important;
 }
 
-.toggle-links {
-  text-align: center;
-  margin-top: 1.25rem;
-  font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.7);
+.social-icon:hover,
+.social-icon:focus {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.08);
 }
 
-.toggle-link {
-  color: #1976d2;
-  cursor: pointer;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s ease;
+.google--text {
+  color: #db4437; /* Google red */
 }
 
-.toggle-link:hover {
-  color: #1565c0;
-  text-decoration: underline;
+.facebook--text {
+  color: #1877f2; /* Facebook blue */
 }
 
-.field-row :deep(.v-row) {
-  margin: 0 -0.5rem;
-}
-
-@media (max-width: 768px) {
-  .login-container {
-    padding: 1rem;
+@keyframes pulse {
+  0% {
+    transform: scale(1);
   }
-
-  .modern-form {
-    padding: 1.5rem;
+  50% {
+    transform: scale(1.05);
   }
-
-  .welcome-title {
-    font-size: 1.5rem;
-  }
-
-  .auth-form-content {
-    gap: 0.75rem;
-  }
-
-  .register-content {
-    gap: 0.5rem;
-  }
-
-  .field-col {
-    padding: 0 0.25rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .field-row :deep(.v-row) {
-    margin: 0 -0.25rem;
-  }
-
-  .submit-btn {
-    height: 44px;
-    font-size: 0.9rem;
-  }
-
-  .toggle-links {
-    margin-top: 1rem;
+  100% {
+    transform: scale(1);
   }
 }
 
-@media (max-width: 480px) {
-  .modern-form {
-    padding: 1rem;
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-  .field-col {
-    padding: 0;
-    margin-bottom: 0.75rem;
-  }
+/* Enhanced focus states */
+.v-field--focused {
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2) !important;
+}
 
-  .field-row :deep(.v-row) {
-    margin: 0;
-  }
-
-  .welcome-title {
-    font-size: 1.25rem;
-  }
+/* Loading spinner enhancement */
+.v-btn--loading .v-btn__content {
+  opacity: 0.6;
 }
 </style>
