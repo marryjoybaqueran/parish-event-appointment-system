@@ -35,7 +35,6 @@ const { smAndDown } = useDisplay()
             San Isidro Labrador Parish
           </h2>
         </div>
-
         <v-spacer></v-spacer>
         <!--Toggle Switch-->
         <v-switch

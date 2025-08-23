@@ -39,10 +39,11 @@ const { mobile } = useDisplay()
           <!-- Right Column: Combined Auth Form -->
           <v-col class="cardy" cols="12" md="6" lg="6" xl="6" sm="12">
             <v-card
-              rounded="xl"
-              class="mx-auto pa-12 pb-8"
+              class="mx-auto pa-8 pb-6"
               elevation="8"
-              v-bind:width="mobile ? '110%' : '75%'"
+              rounded="lg"
+              v-bind:width="mobile ? '110%' : '80%'"
+              max-width="600px"
             >
               <LoginForm></LoginForm>
             </v-card>
@@ -115,7 +116,13 @@ const { mobile } = useDisplay()
     2px 0 2px black,
     0 -2px 2px;
 }
-
+.header {
+  font-family:
+    Bookman,
+    URW Bookman L,
+    serifAmerican Typewriter,
+    serif;
+}
 .text-span {
   color: #fcb454;
 }
@@ -134,7 +141,6 @@ const { mobile } = useDisplay()
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   animation: bounce 4s infinite ease-in-out;
 }
-
 @keyframes bounce {
   0%,
   100% {
@@ -143,29 +149,5 @@ const { mobile } = useDisplay()
   50% {
     transform: translateY(-15px);
   }
-}
-
-.v-card {
-  background: none !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  padding: 0 !important;
-}
-
-.v-card .modern-form {
-  background: none !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  padding: 0 !important;
-}
-
-.v-card .auth-form-content {
-  background: transparent !important;
-}
-
-.v-card {
-  padding: 8px 8px 6px !important;
 }
 </style>
