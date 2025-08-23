@@ -1,44 +1,21 @@
 <script setup>
 import NavBar2 from '@/components/layout/NavBar2.vue'
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
-import EventGuide from './widgets/EventGuideWidget.vue'
+import EventGuide from './widgets/EventGuideSteperWidget.vue'
 import BookingWidget from './widgets/BookingWidget.vue'
+import AppBar from '@/components/layout/AppBar.vue'
+import {
+  getBackgroundImages,
+  useLoadingState
+} from './functions/helpers'
 
-const images = [
-  '/wedding mass background image.jpg',
-  'thanksgiving mass background image.png',
-  '/funeral mass background image.jpg',
-  '/baptism mass background image.jpg',
-]
+const images = getBackgroundImages()
+const { triggerLoading } = useLoadingState(500)
 
-const isLoaded = ref(false)
-
-
-
-const selectedItem = ref(null)
-
-
-// dialog state for booking widget
-const dialog = ref(false)
-
-function onStepClick(step) {
-  // open booking dialog when Step 1 or Step 2 is clicked
-  if (step && (step.id === 1 || step.id === 2)) {
-    dialog.value = true
-  }
-}
-
-function onBookingSelected(item) {
-  selectedItem.value = item
-  dialog.value = false
-}
 
 onMounted(() => {
-  // trigger Vuetify transition reveal
-  setTimeout(() => {
-    isLoaded.value = true
-  }, 500)
+  triggerLoading()
 })
 </script>
 
@@ -54,41 +31,38 @@ onMounted(() => {
           hide-delimiters
           :show-arrows="false"
           height="100vh"
-          class="position-fixed top-0 left-0 w-100"
+          class="position-fixed top-0 left-0 w-100 bg-wrapper"
         >
           <v-carousel-item v-for="(image, index) in images" :key="index">
             <v-img
               :src="image"
-              class="fill-height"
-              gradient="to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.4)"
+              class="fill-height carousel-image"
+              gradient="to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.6)"
               cover
             />
           </v-carousel-item>
         </v-carousel>
 
         <!-- Content -->
-        <v-container class="py-12 position-relative">
+  <v-container class="content-wrapper">
           <v-row>
             <v-col cols="12">
-              <EventGuide @step-click="onStepClick" />
+              <EventGuide />
             </v-col>
           </v-row>
 
-          <!-- Booking dialog triggered from Step 1 -->
-          <v-dialog v-model="dialog" width="1200" max-width="95vw">
-            <v-card>
-              <v-card-text>
-                <BookingWidget @selected="onBookingSelected" />
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer />
-                <v-btn text color="primary" @click="dialog = false">Close</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
+          <!-- Booking Widget Section -->
+          <v-row class="my-1">
+            <v-col cols="12">
+              <BookingWidget />
+            </v-col>
+          </v-row>
 
         </v-container>
       </v-container>
+      
+      <!-- Bottom Navigation -->
+      <AppBar />
     </template>
   </NavBar2>
 </template>
@@ -102,6 +76,22 @@ onMounted(() => {
   height: 100%;
   z-index: 0;
   overflow: hidden;
+  pointer-events: none;
+}
+
+.carousel-image {
+  filter: blur(2px) brightness(0.5);
+}
+
+.carousel-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
 }
 
 .carousel {
@@ -168,15 +158,6 @@ onMounted(() => {
     transform: translateY(-100vh) scale(1);
     opacity: 0;
   }
-}
-
-.content-wrapper {
-  position: relative;
-  z-index: 2;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  padding-top: 80px;
 }
 
 .main-content {
@@ -305,7 +286,7 @@ onMounted(() => {
 /* Mobile responsiveness */
 @media (max-width: 600px) {
   .content-wrapper {
-    padding-top: 60px;
+    padding-top: 20px;
   }
 
   .card-grid {
