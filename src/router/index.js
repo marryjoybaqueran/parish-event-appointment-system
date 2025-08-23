@@ -20,6 +20,7 @@ import TrialPage from '@/views/error/TrialPage.vue'
 import Events from '@/views/events/EventsView.vue'
 import Notifications from '@/views/notifications/NotificationsView.vue'
 import Pending from '@/views/PendingView.vue'
+import WeddingContinue from '@/views/contWedding/ContWeddingView.vue'
 
 
 const router = createRouter({
@@ -66,6 +67,12 @@ const router = createRouter({
       path: '/events',
       name: 'events',
       component: Events,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/wedding-mass-continue',
+      name: '/wedding-mass-continue',
+      component: WeddingContinue,
       meta: { requiresAuth: true },
     },
     {

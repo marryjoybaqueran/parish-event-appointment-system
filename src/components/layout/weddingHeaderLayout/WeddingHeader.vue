@@ -1,3 +1,18 @@
+<script setup lang="ts">
+import { useWeddingHeader } from './weddingHeader'
+
+const { 
+  weddingStore, 
+  mobile, 
+  userBookings, 
+  formatDate, 
+  getStatusColor, 
+  getStatusText,
+  handleBookingClick,
+  isClickable 
+} = useWeddingHeader()
+</script>
+
 <template>
   <v-container :class="mobile ? 'pa-2' : 'pa-4'" fluid>
     <div class="text-center">
@@ -96,21 +111,6 @@
     </div>
   </v-container>
 </template>
-
-<script setup lang="ts">
-import { useWeddingHeader } from './weddingHeader'
-
-const { 
-  weddingStore, 
-  mobile, 
-  userBookings, 
-  formatDate, 
-  getStatusColor, 
-  getStatusText,
-  handleBookingClick,
-  isClickable 
-} = useWeddingHeader()
-</script>
 
 <style scoped>
 /* minimal styling; rely on Vuetify utilities */
