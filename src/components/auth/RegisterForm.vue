@@ -80,112 +80,322 @@ const onFormSubmit = () => {
     :form-error-message="formAction.formErrorMessage"
   ></AlertNotification>
 
-  <v-form class="mt-5" ref="refVform" @submit.prevent="onFormSubmit">
+  <v-form class="mt-2" ref="refVform" @submit.prevent="onFormSubmit">
+    <!-- Personal Insformation Section -->
+    <div class="mb-4">
+      <v-chip color="primary" variant="tonal" class="mb-3">
+        <v-icon left size="small">mdi-account</v-icon>
+        Personal Information
+      </v-chip>
+    </div>
+
     <v-row>
-      <v-col cols="12" md="6" lg="6" xl="6" sm="12">
+      <v-col cols="12" md="6" lg="12">
         <v-text-field
           v-model="formData.fname"
-          :error-messages="errorMessages"
           :rules="[requiredValidator]"
           label="First Name"
+          variant="outlined"
+          color="primary"
+          density="comfortable"
+          prepend-inner-icon="mdi-account"
+          class="form-field"
+          hide-details="auto"
           required
         ></v-text-field>
       </v-col>
-      <v-col cols="12" md="6" lg="6" xl="6" sm="12">
+      <v-col cols="12" md="6">
         <v-text-field
           v-model="formData.lname"
-          :error-messages="errorMessages"
           :rules="[requiredValidator]"
           label="Last Name"
-          required
-        ></v-text-field> </v-col
-    ></v-row>
-    <v-row>
-      <v-col cols="12" md="8" lg="8" xl="8" sm="12">
-        <v-text-field
-          v-model="formData.address"
-          :rules="[requiredValidator]"
-          counter="25"
-          label=" Complete Address"
+          variant="outlined"
+          color="primary"
+          density="comfortable"
+          prepend-inner-icon="mdi-account"
+          class="form-field"
+          hide-details="auto"
           required
         ></v-text-field>
-      </v-col>
-      <v-col cols="12" md="4" lg="4" xl="4" sm="12">
-        <v-select
-          v-model="formData.gender"
-          :items="['Male', 'Female']"
-          label="Gender"
-          :rules="[requiredValidator]"
-        />
       </v-col>
     </v-row>
 
     <v-row>
-      <v-col cols="12" md="6" lg="6" xl="6" sm="12">
+      <v-col cols="12" md="8">
+        <v-text-field
+          v-model="formData.address"
+          :rules="[requiredValidator]"
+          counter="25"
+          label="Complete Address"
+          variant="outlined"
+          color="primary"
+          density="comfortable"
+          prepend-inner-icon="mdi-map-marker"
+          class="form-field"
+          hide-details="auto"
+          required
+        ></v-text-field>
+      </v-col>
+      <v-col cols="12" md="4">
+        <v-select
+          v-model="formData.gender"
+          :items="['Male', 'Female']"
+          label="Gender"
+          variant="outlined"
+          color="primary"
+          density="comfortable"
+          prepend-inner-icon="mdi-gender-male-female"
+          :rules="[requiredValidator]"
+          class="form-field"
+          hide-details="auto"
+        />
+      </v-col>
+    </v-row>
+
+    <!-- Contact Information Section -->
+    <div class="mb-4 mt-6">
+      <v-chip color="primary" variant="tonal" class="mb-3">
+        <v-icon left size="small">mdi-phone</v-icon>
+        Contact Information
+      </v-chip>
+    </div>
+
+    <v-row>
+      <v-col cols="12" md="6">
         <v-text-field
           v-model="formData.number"
           :rules="[requiredValidator]"
           label="Phone Number"
+          variant="outlined"
+          color="primary"
+          density="comfortable"
+          prepend-inner-icon="mdi-phone"
+          class="form-field"
+          hide-details="auto"
+          type="tel"
         ></v-text-field>
       </v-col>
-      <v-col cols="12" md="6" lg="6" xl="6" sm="12">
+      <v-col cols="12" md="6">
         <v-text-field
           v-model="formData.email"
           :rules="[requiredValidator, emailValidator]"
           placeholder="example@gmail.com"
-          label="E-mail address"
-        ></v-text-field
-      ></v-col>
-    </v-row>
-    <v-row>
-      <v-col cols="12" md="6" lg="6" xl="6" sm="12">
-        <v-text-field
-          v-model="formData.password"
-          label="Create your password"
-          :rules="[requiredValidator, passwordValidator]"
-          :append-inner-icon="visible ? 'mdi-eye' : 'mdi-eye-off'"
-          :type="isPasswordVisible ? 'text' : 'password'"
-          @click:append-inner="isPasswordVisible = !isPasswordVisible"
+          label="Email Address"
+          variant="outlined"
+          color="primary"
+          density="comfortable"
+          prepend-inner-icon="mdi-email"
+          class="form-field"
+          hide-details="auto"
+          type="email"
         ></v-text-field>
       </v-col>
-      <v-col md="6" lg="6" xl="6" sm="12">
+    </v-row>
+
+    <!-- Account Security Section -->
+    <div class="mb-4 mt-6">
+      <v-chip color="primary" variant="tonal" class="mb-3">
+        <v-icon left size="small">mdi-shield-lock</v-icon>
+        Account Security
+      </v-chip>
+    </div>
+
+    <v-row>
+      <v-col cols="12" md="6">
+        <v-text-field
+          v-model="formData.password"
+          label="Create Password"
+          :rules="[requiredValidator, passwordValidator]"
+          variant="outlined"
+          color="primary"
+          density="comfortable"
+          prepend-inner-icon="mdi-lock"
+          :append-inner-icon="isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
+          :type="isPasswordVisible ? 'text' : 'password'"
+          @click:append-inner="isPasswordVisible = !isPasswordVisible"
+          class="form-field"
+          hide-details="auto"
+        ></v-text-field>
+      </v-col>
+      <v-col cols="12" md="6">
         <v-text-field
           v-model="formData.password_confirmation"
           :rules="[
             requiredValidator,
             confirmedValidator(formData.password_confirmation, formData.password),
           ]"
-          label="Confirm your password"
-          :append-inner-icon="visible ? 'mdi-eye' : 'mdi-eye-off'"
+          label="Confirm Password"
+          variant="outlined"
+          color="primary"
+          density="comfortable"
+          prepend-inner-icon="mdi-lock-check"
+          :append-inner-icon="isPasswordConfirmationVisible ? 'mdi-eye' : 'mdi-eye-off'"
           :type="isPasswordConfirmationVisible ? 'text' : 'password'"
           @click:append-inner="isPasswordConfirmationVisible = !isPasswordConfirmationVisible"
-        ></v-text-field
-      ></v-col>
+          class="form-field"
+          hide-details="auto"
+        ></v-text-field>
+      </v-col>
     </v-row>
-    <br />
 
+    <!-- Terms and Conditions -->
+    <v-card class="mt-6 mb-4" variant="tonal" color="primary">
+      <v-card-text class="text-center pa-4">
+        <v-icon size="24" color="primary" class="mb-2">mdi-information</v-icon>
+        <p class="text-body-2 mb-0">
+          By creating an account, you agree to our 
+          <a href="#" class="text-primary">Terms of Service</a> and 
+          <a href="#" class="text-primary">Privacy Policy</a>
+        </p>
+      </v-card-text>
+    </v-card>
+
+    <!-- Enhanced Submit Button -->
     <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
       <v-btn
-        class="bg-primary pt-0 mt-0"
-        :class="{ 'on-hover': isHovering }"
         v-bind="props"
-        :elevation="isHovering ? 16 : 2"
-        size="large"
-        variant="tonal"
+        :elevation="isHovering ? 12 : 4"
+        size="x-large"
+        variant="elevated"
+        color="primary"
         type="submit"
         block
         :disabled="formAction.formProcess"
         :loading="formAction.formProcess"
+        class="register-btn mt-4"
+        rounded="lg"
       >
-        <span> Sign Up</span>
+        <v-icon left class="mr-2">mdi-account-plus</v-icon>
+        <span class="text-h6">Create My Account</span>
       </v-btn>
-    </v-hover></v-form
-  >
+    </v-hover>
+
+    <!-- Registration Help -->
+    <v-row class="mt-4" no-gutters>
+      <v-col cols="12" class="text-center">
+        <v-btn
+          variant="text"
+          size="small"
+          color="primary"
+          prepend-icon="mdi-help-circle"
+          @click="() => {}"
+        >
+          Need help with registration?
+        </v-btn>
+      </v-col>
+    </v-row>
+  </v-form>
 </template>
 
-<style setup>
-.v-btn.on-hover {
-  background-color: green !important;
-  color: white !important ;
+<style scoped>
+.form-field {
+  transition: all 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+
+.form-field:hover {
+  transform: translateY(-2px);
+}
+
+.form-field .v-field--focused {
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.register-btn {
+  transition: all 0.3s ease;
+  background: linear-gradient(45deg, #1976d2, #42a5f5) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.register-btn:hover::before {
+  left: 100%;
+}
+
+.register-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(25, 118, 210, 0.4) !important;
+}
+
+.v-chip {
+  transition: all 0.3s ease;
+}
+
+.v-chip:hover {
+  transform: scale(1.05);
+}
+
+/* Enhanced loading state */
+.register-btn.v-btn--loading {
+  background: linear-gradient(45deg, #1976d2, #42a5f5) !important;
+}
+
+.register-btn.v-btn--loading .v-btn__content {
+  opacity: 0.7;
+}
+
+/* Form section animations */
+.form-field {
+  animation: slideInLeft 0.6s ease-out;
+}
+
+.form-field:nth-child(even) {
+  animation: slideInRight 0.6s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Enhanced focus states for better accessibility */
+.v-text-field .v-field--focused .v-field__outline {
+  border-color: #1976d2 !important;
+  border-width: 2px !important;
+}
+
+.v-select .v-field--focused .v-field__outline {
+  border-color: #1976d2 !important;
+  border-width: 2px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .form-field {
+    margin-bottom: 0.25rem;
+  }
+  
+  .register-btn {
+    font-size: 1rem !important;
+    padding: 12px !important;
+  }
 }
 </style>

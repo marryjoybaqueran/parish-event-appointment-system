@@ -102,6 +102,15 @@ const onFormSubmit = () => {
     if (valid) onSubmit()
   })
 }
+
+// Social sign-in handlers (use Supabase OAuth)
+const signInWithGoogle = async () => {
+  console.log('Signing in with Google...')
+}
+
+const signInWithFacebook = async () => {
+  console.log('Signing in with Facebook...')
+}
 </script>
 
 <template>
@@ -111,62 +120,200 @@ const onFormSubmit = () => {
   ></AlertNotification>
 
   <v-form class="mt-5" ref="refVform" @submit.prevent="onFormSubmit">
-    <div><h2 class="text-center">Welcome!</h2></div>
+    <!-- Welcome header with animation -->
+    <div class="text-center mb-6">
+      <v-avatar size="64" class="mb-4 welcome-avatar">
+        <v-icon size="40" color="primary">mdi-church</v-icon>
+      </v-avatar>
+      <h2 class="text-h4 text-primary mb-2 welcome-text">Welcome Back!</h2>
+      <p class="text-body-2 text-medium-emphasis">Sign in to continue your spiritual journey</p>
+    </div>
 
-    <div class="text-subtitle-1 text-medium-emphasis">Username</div>
+    <!-- Email field with enhanced styling -->
+    <div class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center">
+      <v-icon size="small" class="mr-2">mdi-email</v-icon>
+      Email Address
+    </div>
 
     <v-text-field
       v-model="formData.email"
-      density="compact"
-      placeholder="Email address"
+      density="comfortable"
+      placeholder="Enter your email address"
       prepend-inner-icon="mdi-email-outline"
       :rules="[requiredValidator, emailValidator]"
       :counter="50"
       variant="outlined"
+      color="primary"
+      class="mb-3 animated-field"
+      hide-details="auto"
     ></v-text-field>
 
-    <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">
-      Password
+    <!-- Password field with enhanced styling -->
+    <div
+      class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center justify-space-between"
+    >
+      <div class="d-flex align-center">
+        <v-icon size="small" class="mr-2">mdi-lock</v-icon>
+        Password
+      </div>
+      <v-btn variant="text" size="small" class="text-caption text-primary" @click="() => {}">
+        Forgot password?
+      </v-btn>
     </div>
 
     <v-text-field
       v-model="formData.password"
-      density="compact"
+      density="comfortable"
       :rules="[requiredValidator]"
       counter="20"
       placeholder="Enter your password"
       prepend-inner-icon="mdi-lock-outline"
       variant="outlined"
-      :append-inner-icon="visible ? 'mdi-eye' : 'mdi-eye-off'"
+      color="primary"
+      :append-inner-icon="isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
       :type="isPasswordVisible ? 'text' : 'password'"
       @click:append-inner="isPasswordVisible = !isPasswordVisible"
+      class="mb-4 animated-field"
+      hide-details="auto"
     ></v-text-field>
-    <a class="text-caption text-decoration-none text-blue" href="#" target="_blank">
-      Forgot password?</a
-    >
 
+    <!-- Enhanced login button with ripple effect -->
     <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
       <v-btn
-        class="bg-primary pt-0 mt-0"
-        :class="{ 'on-hover': isHovering }"
         v-bind="props"
-        :elevation="isHovering ? 16 : 2"
+        :elevation="isHovering ? 8 : 2"
         size="large"
-        variant="tonal"
+        variant="elevated"
+        color="primary"
         type="submit"
         :disabled="formAction.formProcess"
         :loading="formAction.formProcess"
         block
+        class="login-btn mb-4"
+        rounded="lg"
       >
-        <span class="login">Log In</span>
+        <v-icon left class="mr-2">mdi-login</v-icon>
+        <span class="text-h6">Sign In</span>
       </v-btn>
     </v-hover>
+
+    <!-- Social login divider -->
+    <v-divider class="my-4">
+      <span class="text-caption text-medium-emphasis px-3">Or continue with</span>
+    </v-divider>
+
+    <!-- Social login icons (replacing buttons) -->
+    <v-row class="ma-0 justify-center">
+      <v-col cols="6" class="pa-1 d-flex justify-center">
+        <v-icon
+          size="36"
+          class="social-icon google--text"
+          role="button"
+          tabindex="0"
+          @click="signInWithGoogle"
+          @keyup.enter="signInWithGoogle"
+          title="Sign in with Google"
+        >
+          mdi-google
+        </v-icon>
+      </v-col>
+      <v-col cols="6" class="pa-1 d-flex justify-center">
+        <v-icon
+          size="36"
+          class="social-icon facebook--text"
+          role="button"
+          tabindex="0"
+          @click="signInWithFacebook"
+          @keyup.enter="signInWithFacebook"
+          title="Sign in with Facebook"
+        >
+          mdi-facebook
+        </v-icon>
+      </v-col>
+    </v-row>
   </v-form>
 </template>
 
-<style setup>
-.v-btn.on-hover {
-  background-color: red !important;
-  color: white !important ;
+<style scoped>
+.welcome-avatar {
+  animation: pulse 2s infinite;
+  transition: all 0.3s ease;
+}
+
+.welcome-text {
+  animation: slideInDown 0.8s ease-out;
+}
+
+.animated-field {
+  transition: all 0.3s ease;
+}
+
+.animated-field:hover {
+  transform: translateY(-2px);
+}
+
+.login-btn {
+  transition: all 0.3s ease;
+  background: linear-gradient(45deg, #1976d2, #42a5f5) !important;
+}
+
+.login-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(25, 118, 210, 0.3) !important;
+}
+
+.social-btn {
+  transition: all 0.3s ease;
+}
+
+.social-btn:hover {
+  transform: translateY(-2px);
+}
+
+.social-icon:hover,
+.social-icon:focus {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.08);
+}
+
+.google--text {
+  color: #db4437; /* Google red */
+}
+
+.facebook--text {
+  color: #1877f2; /* Facebook blue */
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced focus states */
+.v-field--focused {
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2) !important;
+}
+
+/* Loading spinner enhancement */
+.v-btn--loading .v-btn__content {
+  opacity: 0.6;
 }
 </style>

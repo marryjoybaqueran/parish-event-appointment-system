@@ -66,3 +66,28 @@ export const fetchBookings = async () => {
 export const tableSearch = (search) => {
   return (search ||= '')
 }
+
+// Sign out helper that also handles form action state and optional redirect
+export const signOutAndRedirect = async (router, formActionRef) => {
+  // Set form processing state if formActionRef is provided
+  if (formActionRef && typeof formActionRef === 'object' && 'value' in formActionRef) {
+    formActionRef.value = { ...formActionDefault, formProcess: true }
+  }
+
+  const { error } = await supabase.auth.signOut()
+
+  if (error) {
+    console.error('Error during logout:', error)
+    if (formActionRef && 'value' in formActionRef) formActionRef.value.formProcess = false
+    return { error }
+  }
+
+  if (formActionRef && 'value' in formActionRef) formActionRef.value.formProcess = false
+
+  // Redirect if router is provided
+  if (router && typeof router.replace === 'function') {
+    router.replace('/')
+  }
+
+  return { error: null }
+}
