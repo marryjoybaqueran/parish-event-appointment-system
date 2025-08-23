@@ -2,13 +2,15 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from 'vuetify'
-import PreloaderView from '@/components/layout/PreloaderView.vue'
+
 import NavBar2 from '@/components/layout/NavBar2.vue'
 import AppBar from '@/components/layout/AppBar.vue'
 
 const theme = useTheme()
 const router = useRouter()
-
+const goBack = () => {
+  router.push('/book-event')
+}
 function continueToNext() {
   // try named route first, fallback to path
 
@@ -92,7 +94,7 @@ const headerGradient = computed(() =>
 </script>
 
 <template>
-  <PreloaderView />
+  
   
   <NavBar2>
     <template #content>
@@ -241,16 +243,36 @@ const headerGradient = computed(() =>
         <!-- Additional Help Section -->
         <v-card variant="outlined" class="mt-6">
           <v-card-text class="text-center pa-6">
-           
-            <v-btn
+              <div class="d-flex flex-grid flex-sm-row gap-3 justify-center align-center">
+              <v-btn
+                color="grey"
+                variant="outlined"
+                prepend-icon="mdi-arrow-left"
+                size="large"
+                @click="goBack"
+                class="mx-2"
+              >
+                Back
+              </v-btn>
+              
+              <v-btn
                 color="primary"
-              variant="tonal"
-              prepend-icon="mdi-arrow-right-circle"
-              size="large"
-              @click="continueToNext"
-            >
-              Continue
-            </v-btn>
+                variant="flat"
+                prepend-icon="mdi-arrow-right-circle"
+                size="large"
+               
+                @click="continueToNext"
+              >
+                Continue
+                <v-tooltip
+                
+                  activator="parent"
+                  location="top"
+                >
+                  Upload all document images to continue
+                </v-tooltip>
+              </v-btn>
+            </div>
           </v-card-text>
         </v-card>
       </v-container>

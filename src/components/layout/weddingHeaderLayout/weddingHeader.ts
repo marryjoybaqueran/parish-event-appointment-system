@@ -42,13 +42,13 @@ export function useWeddingHeader() {
 
 	const handleBookingClick = (booking: any) => {
 		// Click lang kung approved ang booking - redirect to wedding form para ma-continue
-		if (booking.is_approve === true) {
+		if (booking.is_approved === true) {
 			router.push('/wedding-mass-continue')
 		}
 	}
 
 	const isClickable = (booking: any) => {
-		return booking.is_approve === true
+		return booking.is_approved === true
 	}
 
 	onMounted(async () => {

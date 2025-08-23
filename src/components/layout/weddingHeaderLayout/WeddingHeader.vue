@@ -57,12 +57,12 @@ const {
               <p class="text-caption text-medium-emphasis ma-0">Wedding Booking</p>
             </div>
             <v-chip
-              :color="getStatusColor(booking.is_approve)"
+              :color="getStatusColor(booking.is_approved)"
               variant="flat"
               size="small"
               rounded="pill"
             >
-              {{ getStatusText(booking.is_approve) }}
+              {{ getStatusText(booking.is_approved) }}
             </v-chip>
           </div>
 
@@ -101,8 +101,8 @@ const {
             </v-col>
 
             <v-col cols="3" class="text-right">
-              <v-chip :color="getStatusColor(booking.is_approve)" variant="flat" rounded="pill">
-                {{ getStatusText(booking.is_approve) }}
+              <v-chip :color="getStatusColor(booking.is_approved)" variant="flat" rounded="pill">
+                {{ getStatusText(booking.is_approved) }}
               </v-chip>
             </v-col>
           </v-row>
