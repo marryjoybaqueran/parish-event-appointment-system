@@ -4,8 +4,6 @@ import { supabase, formActionDefault } from '@/utils/supabase.js'
 import {
   requiredValidator,
   emailValidator,
-  passwordValidator,
-  confirmedValidator,
 } from '@/utils/validators'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -31,22 +29,22 @@ const registerDataDefault = {
   password_confirmation: '',
 }
 
-const userTypeOptions = [
-  {
-    value: 'user',
-    title: 'User',
-    icon: 'mdi-account',
-    description: 'Access member portal',
-    color: 'primary',
-  },
-  {
-    value: 'admin',
-    title: 'Admin',
-    icon: 'mdi-shield-account',
-    description: 'Administrative access',
-    color: 'warning',
-  },
-]
+// const userTypeOptions = [
+//   {
+//     value: 'user',
+//     title: 'User',
+//     icon: 'mdi-account',
+//     description: 'Access member portal',
+//     color: 'primary',
+//   },
+//   {
+//     value: 'admin',
+//     title: 'Admin',
+//     icon: 'mdi-shield-account',
+//     description: 'Administrative access',
+//     color: 'warning',
+//   },
+// ]
 
 const loginData = ref({ ...loginDataDefault })
 const registerData = ref({ ...registerDataDefault })
@@ -54,14 +52,14 @@ const registerData = ref({ ...registerDataDefault })
 const formAction = ref({ ...formActionDefault })
 
 const isPasswordVisible = ref(false)
-const isPasswordConfirmationVisible = ref(false)
+
 const refVform = ref()
 
-const selectedUserType = computed(() =>
-  userTypeOptions.find((option) => option.value === loginData.value.userType),
-)
 
 const isLoginMode = computed(() => formMode.value === 'login')
+
+// Computed proxy that points to loginData or registerData depending on mode
+const formData = computed(() => (isLoginMode.value ? loginData.value : registerData.value))
 
 const switchMode = (mode) => {
   formMode.value = mode
@@ -243,7 +241,9 @@ const signInWithFacebook = async () => {
       class="mb-4 animated-field"
       hide-details="auto"
     ></v-text-field>
+  <!--   <v-select>
 
+    </v-select> -->
     <!-- Enhanced login button with ripple effect -->
     <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
       <v-btn
@@ -299,6 +299,7 @@ const signInWithFacebook = async () => {
       </v-col>
     </v-row>
   </v-form>
+  </div>
 </template>
 
 <style scoped>
