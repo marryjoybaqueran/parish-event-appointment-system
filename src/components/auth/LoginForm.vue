@@ -427,7 +427,6 @@ const onFormSubmit = () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
 }
 
 .modern-form {
@@ -436,10 +435,10 @@ const onFormSubmit = () => {
   gap: 0;
   max-width: 600px;
   width: 100%;
-  background: white;
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background-color: white !important;
 }
 
 .form-header {
@@ -476,7 +475,7 @@ const onFormSubmit = () => {
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  background: #f9fafb;
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .user-type-select :deep(.v-field:hover) {
@@ -538,7 +537,7 @@ const onFormSubmit = () => {
   border-radius: 10px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
-  background: #f9fafb;
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .field-input :deep(.v-field:hover) {
