@@ -19,6 +19,7 @@ import TrialPage from '@/views/error/TrialPage.vue'
 // import CameraView from '@/views/camera/CameraView.vue'
 import Events from '@/views/events/EventsView.vue'
 import Notifications from '@/views/notifications/NotificationsView.vue'
+import Pending from '@/views/PendingView.vue'
 
 
 const router = createRouter({
@@ -49,6 +50,11 @@ const router = createRouter({
       path: '/book-event',
       name: 'book-event',
       component: BookEvent,
+    },
+    {
+      path: '/pending',
+      name: 'pending',
+      component: Pending,
     },
    /*   {
       path: '/camera',
