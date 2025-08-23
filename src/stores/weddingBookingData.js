@@ -80,6 +80,44 @@ export const useWeddingStore = defineStore('weddingData', {
       return true
     },
 
+    // Fetch wedding bookings filtered by current user's ID  
+    async fetchUserWeddingBookings() {
+      this.loading = true
+      this.error = null
+      
+      const user = await this.getUser()
+      if (!user) {
+        this.error = 'User not authenticated'
+        this.loading = false
+        return []
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('wedding_bookings')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          this.error = error.message
+          this.loading = false
+          return []
+        }
+
+        // Update bookings array with user-specific data
+        this.bookings = data || []
+        console.log(`Naka-fetch na ang ${this.bookings.length} wedding bookings para sa user`)
+        
+        this.loading = false
+        return this.bookings
+      } catch (err) {
+        this.error = err.message
+        this.loading = false
+        return []
+      }
+    },
+
     // Fetch the most recent wedding booking for current user (second fetch)
     async fetchRecentWeddingBooking() {
       const user = await this.getUser()

@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useWeddingStore } from '@/stores/weddingData.js'
+import { useWeddingStore } from '@/stores/weddingBookingData.js'
 
 export function useWeddingForm() {
   // Router for navigation
