@@ -4,6 +4,8 @@ import { supabase, formActionDefault } from '@/utils/supabase.js'
 import {
   requiredValidator,
   emailValidator,
+  passwordValidator,
+  confirmedValidator,
 } from '@/utils/validators'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -36,24 +38,31 @@ const registerDataDefault = {
   password_confirmation: '',
 }
 
-// const userTypeOptions = [
-//   {
-//     value: 'user',
-//     title: 'User',
-//     icon: 'mdi-account',
-//     description: 'Access member portal',
-//     color: 'primary',
-//   },
-//   {
-//     value: 'admin',
-//     title: 'Admin',
-//     icon: 'mdi-shield-account',
-//     description: 'Administrative access',
-//     color: 'warning',
-//   },
-// ]
+const userTypeOptions = [
+  {
+    value: 'user',
+    title: 'User',
+    icon: 'mdi-account',
+    description: 'Access member portal',
+    color: 'primary',
+  },
+  {
+    value: 'admin',
+    title: 'Admin',
+    icon: 'mdi-shield-account',
+    description: 'Administrative access',
+    color: 'warning',
+  },
+]
 
 const loginData = ref({ ...loginDataDefault })
+// computed selected user type and safe icon (avoid undefined access in template)
+const selectedUserType = computed(() => {
+  const val = loginData.value?.userType
+  return userTypeOptions.find((o) => o.value === val) ?? userTypeOptions[0]
+})
+
+const selectedUserIcon = computed(() => selectedUserType.value?.icon ?? 'mdi-account')
 const registerData = ref({ ...registerDataDefault })
 
 const formAction = ref({ ...formActionDefault })
@@ -66,7 +75,7 @@ const refVform = ref()
 const isLoginMode = computed(() => formMode.value === 'login')
 
 // Computed proxy that points to loginData or registerData depending on mode
-const formData = computed(() => (isLoginMode.value ? loginData.value : registerData.value))
+//const formData = computed(() => (isLoginMode.value ? loginData.value : registerData.value))
 
 const switchMode = (mode) => {
   formMode.value = mode
@@ -308,7 +317,7 @@ const onFormSubmit = () => {
             class="login-btn mb-3"
             rounded="lg"
           >
-            <v-icon :icon="selectedUserType.icon" class="mr-2"></v-icon>
+            <v-icon :icon="selectedUserIcon" class="mr-2"></v-icon>
 
             <span class="text-h6">Sign In</span>
           </v-btn>
