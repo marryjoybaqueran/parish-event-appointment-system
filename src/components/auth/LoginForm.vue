@@ -1,86 +1,111 @@
 <script setup>
 import AlertNotification from '@/components/common/AlertNotification.vue'
 import { supabase, formActionDefault } from '@/utils/supabase.js'
-import { requiredValidator, emailValidator } from '@/utils/validators'
-import { ref } from 'vue'
+import {
+  requiredValidator,
+  emailValidator,
+  passwordValidator,
+  confirmedValidator,
+} from '@/utils/validators'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Utilize pre-defined vue functions
 const router = useRouter()
 
-const formDataDefault = {
+const formMode = ref('login')
+
+const loginDataDefault = {
   email: '',
   password: '',
+  userType: 'user',
 }
 
-const formData = ref({
-  ...formDataDefault,
-})
+const registerDataDefault = {
+  fname: '',
+  lname: '',
+  email: '',
+  gender: '',
+  address: '',
+  number: '',
+  password: '',
+  password_confirmation: '',
+}
 
-const formAction = ref({
-  ...formActionDefault,
-})
+const userTypeOptions = [
+  {
+    value: 'user',
+    title: 'User',
+    icon: 'mdi-account',
+    description: 'Access member portal',
+    color: 'primary',
+  },
+  {
+    value: 'admin',
+    title: 'Admin',
+    icon: 'mdi-shield-account',
+    description: 'Administrative access',
+    color: 'warning',
+  },
+]
+
+const loginData = ref({ ...loginDataDefault })
+const registerData = ref({ ...registerDataDefault })
+
+const formAction = ref({ ...formActionDefault })
 
 const isPasswordVisible = ref(false)
+const isPasswordConfirmationVisible = ref(false)
 const refVform = ref()
-/*
-const onSubmit = async () => {
+
+const selectedUserType = computed(() =>
+  userTypeOptions.find((option) => option.value === loginData.value.userType),
+)
+
+const isLoginMode = computed(() => formMode.value === 'login')
+
+const switchMode = (mode) => {
+  formMode.value = mode
   formAction.value = { ...formActionDefault }
-  formAction.value.formProcess = true
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: formData.value.email,
-    password: formData.value.password,
-  })
+  refVform.value?.resetValidation()
+}
 
-  if (error) {
-    console.log(error)
-    formAction.value.formErrorMessage = error.message
-    formAction.value.formStatus = error.status
-  } else if (data) {
-    console.log(data)
-    formAction.value.formSuccessMessage = 'Successfully Logged Account!'
-    router.replace('/homepage')
-  }
-
-  refVform.value?.reset()
-  formAction.value.formProcess = false
-}*/
-
-const onSubmit = async () => {
-  // Reset form state
+const onLoginSubmit = async () => {
   formAction.value = { ...formActionDefault }
   formAction.value.formProcess = true
 
   try {
-    // Authenticate user
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: formData.value.email,
-      password: formData.value.password,
+      email: loginData.value.email,
+      password: loginData.value.password,
     })
 
     if (error) {
-      // Handle authentication error
       formAction.value.formErrorMessage = error.message
       formAction.value.formStatus = error.status
       return
     }
 
-    // Fetch user role more efficiently
     const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
       check_user_id: data.user.id,
     })
+
     if (roleError) {
       console.error('Role fetch error:', roleError)
-      // Fallback to default user role if fetch fails
       formAction.value.formErrorMessage = 'Could not determine user role'
       return
     }
 
-    // Determine routing based on role
-    const userRole = roleData?.trim().toLowerCase()
+    const actualUserRole = roleData?.trim().toLowerCase()
+    const selectedUserType = loginData.value.userType
+
+    if (selectedUserType === 'admin' && actualUserRole !== 'admin') {
+      formAction.value.formErrorMessage = 'Access denied: You do not have admin privileges'
+      return
+    }
+
     formAction.value.formSuccessMessage = 'Successfully Logged in!'
 
-    switch (userRole) {
+    switch (selectedUserType) {
       case 'admin':
         router.replace('/admin-dashboard')
         break
@@ -91,15 +116,56 @@ const onSubmit = async () => {
     console.error('Unexpected error:', err)
     formAction.value.formErrorMessage = 'An unexpected error occurred'
   } finally {
-    // Always reset form and stop processing
     refVform.value?.reset()
+    loginData.value = { ...loginDataDefault }
     formAction.value.formProcess = false
   }
 }
 
+const onRegisterSubmit = async () => {
+  formAction.value = { ...formActionDefault }
+  formAction.value.formProcess = true
+
+  const { data, error } = await supabase.auth.signUp({
+    email: registerData.value.email,
+    password: registerData.value.password,
+    options: {
+      data: {
+        fname: registerData.value.fname,
+        lname: registerData.value.lname,
+        gender: registerData.value.gender,
+        address: registerData.value.address,
+        number: registerData.value.number,
+      },
+    },
+  })
+
+  if (error) {
+    console.log(error)
+    formAction.value.formErrorMessage = error.message
+    formAction.value.formStatus = error.status
+  } else if (data) {
+    console.log(data)
+    formAction.value.formSuccessMessage = 'Successfully Registered Account!'
+    setTimeout(() => {
+      switchMode('login')
+      loginData.value.email = registerData.value.email
+    }, 2000)
+  }
+
+  refVform.value?.reset()
+  formAction.value.formProcess = false
+}
+
 const onFormSubmit = () => {
   refVform.value?.validate().then(({ valid }) => {
-    if (valid) onSubmit()
+    if (valid) {
+      if (isLoginMode.value) {
+        onLoginSubmit()
+      } else {
+        onRegisterSubmit()
+      }
+    }
   })
 }
 
@@ -114,10 +180,11 @@ const signInWithFacebook = async () => {
 </script>
 
 <template>
-  <AlertNotification
-    :form-success-message="formAction.formSuccessMessage"
-    :form-error-message="formAction.formErrorMessage"
-  ></AlertNotification>
+  <div class="login-container">
+    <AlertNotification
+      :form-success-message="formAction.formSuccessMessage"
+      :form-error-message="formAction.formErrorMessage"
+    />
 
   <v-form class="mt-5" ref="refVform" @submit.prevent="onFormSubmit">
     <!-- Welcome header with animation -->

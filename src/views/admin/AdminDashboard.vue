@@ -1,318 +1,1221 @@
 <script setup>
-import DashboardHeader from '@/components/layout/DashboardHeader.vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { supabase } from '@/utils/supabase.js'
+import AdminHeader from '@/components/layout/AdminHeader.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
-const surfaceColor = '#fff'
-const curve = 40
+import { useTheme } from 'vuetify'
+import { useAuthUserStore } from '@/stores/authUser.js'
 
-const cards = [
-  {
-    image: 'Thanksgiving+Day+Mass.jpg',
-    thumb:
-      'https://static.vecteezy.com/system/resources/previews/024/277/794/non_2x/illustration-of-blessing-icon-in-flat-style-vector.jpg',
-    title: 'Thanks Giving Mass Form List',
-    link: '/thanksgiving-mass-form-bookinglist-view',
-  },
-  {
-    image: 'weddingMass .png',
-    thumb:
-      'https://t4.ftcdn.net/jpg/10/70/41/13/360_F_1070411364_v5jwNkhBhfF96lMWYpsEL2n6HDMW5Eiv.jpg',
-    title: 'Special Wedding Mass Form List',
-    link: '/admin-booking-view',
-  },
-  {
-    image: 'Baptism Mass.png',
-    thumb: 'https://cdn.iconscout.com/icon/premium/png-256-thumb/baptism-2647061-2195867.png',
-    title: 'Baptism Mass Form List',
-    link: '/baptism-mass-form-bookinglist-view',
-  },
-  {
-    image: 'Funeral Mass.png',
-    thumb:
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0xNJsvUup5o5clS1lEOBViRkQ0ITR-VQ8NA&s',
-    title: 'Funeral Mass Form List',
-    link: '/funeral-mass-form-bookinglist-view',
-  },
-]
+const authUser = useAuthUserStore()
+const theme = useTheme()
+
+const loading = ref(true)
+const errorMessage = ref(null)
+
+const isDark = computed(() => theme.global.current.value.dark)
+const notificationDialog = ref(false)
+const selectedDate = ref(new Date())
+const currentView = ref('overview')
+const eventDialog = ref(false)
+const bookingDialog = ref(false)
+const selectedBooking = ref(null)
+const selectedDateEvents = ref([])
+
+// Computed store-driven data
+const stats = computed(() => authUser.stats)
+const statsTrends = computed(() => authUser.statsTrends)
+const recentActivities = computed(() => authUser.recentActivities)
+const eventCategories = computed(() => authUser.eventCategories)
+const calendarEvents = computed(() => authUser.calendarEvents)
+const pendingBookings = computed(() => authUser.pendingBookings)
+const notifications = computed(() => authUser.notifications)
+const unreadCount = computed(() => authUser.unreadNotificationsCount)
+
+// Store functions
+const hasEvent = authUser.hasEvent
+const hasMultipleEvents = authUser.hasMultipleEvents
+const getSelectedDateEvents = authUser.getSelectedDateEvents
+const formatBookingDetails = authUser.formatBookingDetails
+const getEventColor = authUser.getEventColor
+const eventDates = authUser.eventDates // This is the getter function for date => color|false
+
+const newEvent = ref({
+  title: '',
+  description: '',
+  date: '',
+  time: '',
+  type: 'announcement',
+})
+
+const quickActions = ref([
+  { icon: 'mdi-plus', label: 'Add Event', click: () => (eventDialog.value = true) },
+  { icon: 'mdi-file-document', label: 'Reports', click: () => console.log('Reports clicked') },
+  { icon: 'mdi-email', label: 'Messages', click: () => console.log('Messages clicked') },
+  { icon: 'mdi-cog', label: 'Settings', click: () => console.log('Settings clicked') },
+])
+
+let subscriptions = []
+
+const updateSelectedDateEvents = () => {
+  selectedDateEvents.value = getSelectedDateEvents(selectedDate.value)
+}
+
+const showNotifications = () => {
+  notificationDialog.value = true
+}
+
+const handleNotificationClick = (notificationId) => {
+  authUser.markNotificationAsRead(notificationId)
+}
+
+const subscribeToBookingUpdates = () => {
+  const tables = [
+    'wedding_bookings',
+    'baptism_bookings',
+    'funeral_bookings',
+    'thanksgiving_bookings',
+  ]
+  const newSubscriptions = []
+
+  tables.forEach((tableName) => {
+    const subscription = supabase
+      .channel(`public:${tableName}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: tableName,
+        },
+        async (payload) => {
+          const newBooking = payload.new
+
+          authUser.addNotification({
+            message: `New ${tableName.replace('_bookings', '')} booking from ${newBooking.first_name || newBooking.bride_firstname || 'a parishioner'}`,
+            type: 'booking',
+            data: newBooking,
+          })
+
+          await Promise.all([authUser.loadPendingBookings(), authUser.loadStats()])
+
+          if (Notification.permission === 'granted') {
+            new Notification('New Booking Received', {
+              body: `New ${tableName.replace('_bookings', '')} booking submitted`,
+              icon: '/logo.png',
+            })
+          }
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIPTION_ERROR') {
+          console.error(`Failed to subscribe to ${tableName}`)
+          // Optionally set errorMessage.value = 'Subscription failed'
+        }
+      })
+
+    newSubscriptions.push(subscription)
+  })
+
+  return newSubscriptions
+}
+
+const requestNotificationPermission = async () => {
+  if ('Notification' in window) {
+    const permission = await Notification.requestPermission()
+    console.log('Notification permission:', permission)
+  }
+}
+
+const createEvent = async () => {
+  const result = await authUser.createEvent(newEvent.value)
+
+  if (result.success) {
+    eventDialog.value = false
+    resetEventForm()
+    // TODO: Add success feedback, e.g., snackbar
+  } else {
+    console.error('Error creating event:', result.error)
+    // TODO: Add error feedback, e.g., snackbar
+  }
+}
+
+const resetEventForm = () => {
+  newEvent.value = {
+    title: '',
+    description: '',
+    date: '',
+    time: '',
+    type: 'announcement',
+  }
+}
+
+const openBookingDetails = (booking) => {
+  selectedBooking.value = booking
+  bookingDialog.value = true
+}
+
+const approveBooking = async (booking) => {
+  const result = await authUser.approveBooking(booking)
+
+  if (result.success) {
+    bookingDialog.value = false
+    // TODO: Add success feedback
+  } else {
+    console.error('Error approving booking:', result.error)
+    // TODO: Add error feedback
+  }
+}
+
+const denyBooking = async (booking) => {
+  const result = await authUser.denyBooking(booking)
+
+  if (result.success) {
+    bookingDialog.value = false
+    // TODO: Add success feedback
+  } else {
+    console.error('Error denying booking:', result.error)
+    // TODO: Add error feedback
+  }
+}
+
+onMounted(async () => {
+  loading.value = true
+  errorMessage.value = null
+  try {
+    await authUser.getUserInformation()
+    await authUser.loadRecentActivities()
+    await authUser.loadDashboardData()
+    requestNotificationPermission()
+    subscriptions = subscribeToBookingUpdates()
+    updateSelectedDateEvents()
+  } catch (error) {
+    console.error('Error loading dashboard:', error)
+    errorMessage.value = 'Failed to load dashboard data. Please try refreshing the page.'
+  } finally {
+    loading.value = false
+  }
+})
+
+onUnmounted(() => {
+  subscriptions.forEach((sub) => {
+    supabase.removeChannel(sub)
+  })
+})
 </script>
 
 <template>
-  <PreloaderView></PreloaderView>
-  <DashboardHeader>
+  <PreloaderView v-if="loading" />
+  <AdminHeader v-else :theme="isDark ? 'dark' : 'light'">
     <template #content>
-      <v-container fluid>
-        <div class="bg-wrapper">
-          <!-- Video background -->
-          <v-responsive aspect-ratio="16/9">
-            <video
-              autoplay
-              muted
-              loop
-              playsinline
-              style="width: 100%; height: 100%; object-fit: cover"
-            >
-              <source src="/silp bg gif.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </v-responsive>
+      <!-- Animated Background -->
+      <div :class="['animated-bg', { 'dark-mode': isDark }]"></div>
+      <div :class="['floating-shape shape-1', { 'dark-mode': isDark }]"></div>
+      <div :class="['floating-shape shape-2', { 'dark-mode': isDark }]"></div>
+      <div :class="['floating-shape shape-3', { 'dark-mode': isDark }]"></div>
 
-          <!-- Black overlay -->
-          <div class="bg-overlay"></div>
+      <v-container fluid class="pa-4 pa-md-8" :class="{ 'dark-mode': isDark }">
+        <div v-if="errorMessage" class="error-message mb-4">
+          {{ errorMessage }}
         </div>
 
-        <div
-          class="card-container"
-          :style="{ '--surface-color': surfaceColor, '--curve': curve + 'px' }"
-        >
-          <row>
-            <ul class="card-list">
-              <li v-for="(card, index) in cards" :key="index">
-                <a href="#" class="card">
-                  <img :src="card.image" class="card__image" alt="" />
-                  <div class="card__overlay">
-                    <div class="card__header">
-                      <svg class="card__arc" xmlns="http://www.w3.org/2000/svg">
-                        <path />
-                      </svg>
-                      <img :src="card.thumb" class="card__thumb" alt="" />
-                      <div class="card__header-text">
-                        <h3 class="card__title">{{ card.title }}</h3>
-                        <span v-if="card.tagline" class="card__tagline">{{ card.tagline }}</span>
-                        <span class="card__status">{{ card.status }}</span>
+        <!-- Header Section -->
+        <div class="glass-card pa-6 mb-8">
+          <div
+            class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-6"
+          >
+            <div>
+              <h1 class="header-gradient mb-2">Admin Dashboard</h1>
+              <p class="text-grey-darken-1 text-h6">Parish Information Management System</p>
+            </div>
+
+            <div class="d-flex gap-3 flex-wrap">
+              <!-- Notification Button -->
+              <v-btn
+                color="secondary"
+                variant="outlined"
+                @click="showNotifications"
+                size="large"
+                class="position-relative"
+              >
+                <v-icon class="me-2">mdi-bell</v-icon>
+                Notifications
+                <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
+              </v-btn>
+
+              <!-- Create Event Button -->
+              <v-btn color="primary" @click="eventDialog = true" size="large">
+                <v-icon class="me-2">mdi-calendar-plus</v-icon>
+                Create Event
+              </v-btn>
+            </div>
+          </div>
+
+          <!-- Navigation Tabs -->
+          <div class="d-flex gap-2 mt-8 overflow-x-auto">
+            <v-btn
+              :class="['nav-tab', currentView === 'overview' ? 'active' : '']"
+              @click="currentView = 'overview'"
+              variant="text"
+            >
+              <v-icon class="me-2">mdi-view-dashboard</v-icon>
+              Overview
+            </v-btn>
+            <v-btn
+              :class="['nav-tab', currentView === 'calendar' ? 'active' : '']"
+              @click="currentView = 'calendar'"
+              variant="text"
+            >
+              <v-icon class="me-2">mdi-calendar</v-icon>
+              Calendar
+            </v-btn>
+            <v-btn
+              :class="['nav-tab', currentView === 'bookings' ? 'active' : '']"
+              @click="currentView = 'bookings'"
+              variant="text"
+            >
+              <v-icon class="me-2">mdi-book-multiple</v-icon>
+              Bookings
+            </v-btn>
+          </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <v-row class="mb-8">
+          <v-col cols="12" md="3">
+            <v-card
+              class="stat-card"
+              :style="{ '--gradient-start': '#667eea', '--gradient-end': '#764ba2' }"
+            >
+              <v-card-text class="text-center">
+                <div class="stat-icon">
+                  <v-icon color="white">mdi-book-multiple</v-icon>
+                </div>
+                <h2 class="stat-value">{{ stats.totalBookings }}</h2>
+                <p class="text-grey-darken-1">Total Bookings</p>
+                <div class="text-caption text-grey-darken-2 mt-2">
+                  <span class="text-green">↑ {{ statsTrends.totalBookings }}%</span> from last month
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12" md="3">
+            <v-card
+              class="stat-card"
+              :style="{ '--gradient-start': '#f093fb', '--gradient-end': '#f5576c' }"
+            >
+              <v-card-text class="text-center">
+                <div class="stat-icon">
+                  <v-icon color="white">mdi-clock-alert</v-icon>
+                </div>
+                <h2 class="stat-value">{{ stats.pendingApprovals }}</h2>
+                <p class="text-grey-darken-1">Pending Approvals</p>
+                <div class="text-caption text-grey-darken-2 mt-2">
+                  <span class="text-orange"
+                    >● {{ statsTrends.pendingApprovals.urgent }} urgent</span
+                  >
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12" md="3">
+            <v-card
+              class="stat-card"
+              :style="{ '--gradient-start': '#4facfe', '--gradient-end': '#00f2fe' }"
+            >
+              <v-card-text class="text-center">
+                <div class="stat-icon">
+                  <v-icon color="white">mdi-calendar-check</v-icon>
+                </div>
+                <h2 class="stat-value">{{ stats.upcomingEvents }}</h2>
+                <p class="text-grey-darken-1">Upcoming Events</p>
+                <div class="text-caption text-grey-darken-2 mt-2">
+                  Next: {{ statsTrends.upcomingEvents.next }}
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12" md="3">
+            <v-card
+              class="stat-card"
+              :style="{ '--gradient-start': '#43e97b', '--gradient-end': '#38f9d7' }"
+            >
+              <v-card-text class="text-center">
+                <div class="stat-icon">
+                  <v-icon color="white">mdi-account-group</v-icon>
+                </div>
+                <h2 class="stat-value">{{ stats.totalMembers }}</h2>
+                <p class="text-grey-darken-1">Parish Members</p>
+                <div class="text-caption text-grey-darken-2 mt-2">
+                  <span class="text-green">↑ {{ statsTrends.totalMembers.value }}</span> new this
+                  month
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Main Content Area -->
+        <div v-if="currentView === 'overview'">
+          <v-row>
+            <!-- Calendar Section -->
+            <v-col cols="12" lg="8">
+              <v-card elevation="3" class="mb-4">
+                <v-card-title class="d-flex align-center">
+                  <v-icon class="me-2">mdi-calendar</v-icon>
+                  Schedule Calendar
+                </v-card-title>
+                <v-card-text>
+                  <v-date-picker
+                    v-model="selectedDate"
+                    @update:model-value="updateSelectedDateEvents"
+                    show-adjacent-months
+                    :events="hasEvent"
+                    :event-color="eventDates"
+                    class="calendar-picker"
+                  >
+                    <template #day="{ date }">
+                      <div
+                        class="v-date-picker-month__day"
+                        :class="{
+                          'has-event': hasEvent(date),
+                          'multiple-events': hasMultipleEvents(date),
+                        }"
+                      >
+                        <div class="v-date-picker-month__day-date">
+                          {{ new Date(date).getDate() }}
+                        </div>
+                      </div>
+                    </template>
+                  </v-date-picker>
+                </v-card-text>
+              </v-card>
+
+              <!-- Quick Actions -->
+              <v-row class="mt-4">
+                <v-col cols="6" md="3" v-for="action in quickActions" :key="action.label">
+                  <v-card class="quick-action" @click="action.click">
+                    <v-card-text class="text-center">
+                      <div class="quick-action-icon">
+                        <v-icon>{{ action.icon }}</v-icon>
+                      </div>
+                      <div class="font-weight-semibold">{{ action.label }}</div>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-col>
+
+            <!-- Sidebar -->
+            <v-col cols="12" lg="4">
+              <!-- Today's Schedule -->
+              <v-card class="glass-card mb-4">
+                <v-card-title class="d-flex align-center">
+                  <v-icon class="me-2 text-purple">mdi-calendar-today</v-icon>
+                  Today's Schedule
+                </v-card-title>
+                <v-card-text>
+                  <div
+                    v-if="selectedDateEvents.length === 0"
+                    class="text-center text-grey-darken-1 py-8"
+                  >
+                    <v-icon size="64" color="grey-lighten-2">mdi-calendar-blank</v-icon>
+                    <p class="mt-3">No events scheduled</p>
+                  </div>
+                  <div v-else class="space-y-3">
+                    <div
+                      v-for="(event, index) in selectedDateEvents"
+                      :key="index"
+                      class="event-item"
+                      :style="{ borderLeftColor: event.color }"
+                    >
+                      <div class="d-flex justify-space-between align-start">
+                        <div>
+                          <div class="font-weight-semibold">{{ event.title }}</div>
+                          <div class="text-caption text-grey-darken-2">{{ event.location }}</div>
+                        </div>
+                        <div class="text-caption text-grey-darken-2">{{ event.time }}</div>
                       </div>
                     </div>
-                    <!-- Router Button (visible on hover) -->
-                    <router-link :to="card.link" class="card__button"> View List </router-link>
                   </div>
-                </a>
-              </li>
-            </ul>
-          </row>
+                </v-card-text>
+              </v-card>
+
+              <!-- Pending Approvals -->
+              <v-card class="glass-card mb-4">
+                <v-card-title class="d-flex align-center justify-space-between">
+                  <div class="d-flex align-center">
+                    <v-icon class="me-2 text-orange">mdi-clipboard-list</v-icon>
+                    Pending Approvals
+                  </div>
+                  <v-chip color="orange" variant="outlined" size="small">
+                    {{ pendingBookings.length }} pending
+                  </v-chip>
+                </v-card-title>
+                <v-card-text>
+                  <div
+                    v-if="pendingBookings.length === 0"
+                    class="text-center text-grey-darken-1 py-8"
+                  >
+                    <v-icon size="64" color="grey-lighten-2">mdi-check-all</v-icon>
+                    <p class="mt-3">No pending approvals</p>
+                  </div>
+                  <div v-else class="space-y-3">
+                    <div
+                      v-for="(booking, index) in pendingBookings.slice(0, 3)"
+                      :key="index"
+                      class="booking-card"
+                      :style="{ '--booking-color': getEventColor(booking.type) }"
+                      @click="openBookingDetails(booking)"
+                    >
+                      <div class="d-flex justify-space-between align-center">
+                        <div>
+                          <div class="font-weight-semibold">
+                            {{ formatBookingDetails(booking).title }}
+                          </div>
+                          <div class="text-caption text-grey-darken-2">
+                            {{ formatBookingDetails(booking).subtitle }}
+                          </div>
+                          <div class="text-caption text-grey-darken-3 mt-1">
+                            {{ formatBookingDetails(booking).date }}
+                          </div>
+                        </div>
+                        <v-icon>mdi-chevron-right</v-icon>
+                      </div>
+                    </div>
+
+                    <v-btn
+                      variant="text"
+                      color="purple"
+                      class="w-100 text-center"
+                      @click="currentView = 'bookings'"
+                    >
+                      View All Approvals →
+                    </v-btn>
+                  </div>
+                </v-card-text>
+              </v-card>
+
+              <!-- Recent Activities Section -->
+              <v-card class="glass-card mb-4">
+                <v-card-title class="d-flex align-center">
+                  <v-icon class="me-2 text-green">mdi-history</v-icon>
+                  Recent Activity
+                </v-card-title>
+                <v-card-text>
+                  <div class="space-y-3">
+                    <div
+                      v-for="(activity, index) in recentActivities"
+                      :key="index"
+                      class="d-flex gap-3"
+                    >
+                      <div class="activity-icon" :class="`bg-${activity.color}-lighten-4`">
+                        <v-icon :color="activity.color">{{ activity.icon }}</v-icon>
+                      </div>
+                      <div class="flex-1">
+                        <div class="text-caption">{{ activity.action }}</div>
+                        <div class="text-caption text-grey-darken-2">
+                          {{ new Date(activity.changed_at).toLocaleString() }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+        </div>
+
+        <!-- Calendar View -->
+        <div v-if="currentView === 'calendar'">
+          <v-card class="glass-card">
+            <v-card-title>Full Calendar View</v-card-title>
+            <v-card-text>
+              <v-row>
+                <v-col cols="12" md="8">
+                  <v-date-picker
+                    v-model="selectedDate"
+                    @update:model-value="updateSelectedDateEvents"
+                    show-adjacent-months
+                    :events="hasEvent"
+                    :event-color="eventDates"
+                    class="w-100"
+                  >
+                    <template #day="{ date }">
+                      <div
+                        class="v-date-picker-month__day"
+                        :class="{
+                          'has-event': hasEvent(date),
+                          'multiple-events': hasMultipleEvents(date),
+                        }"
+                      >
+                        <div class="v-date-picker-month__day-date">
+                          {{ new Date(date).getDate() }}
+                        </div>
+                      </div>
+                    </template>
+                  </v-date-picker>
+                </v-col>
+                <v-col cols="12" md="4">
+                  <h3 class="mb-4">All Events</h3>
+                  <v-list>
+                    <v-list-item
+                      v-for="(event, index) in calendarEvents.slice(0, 10)"
+                      :key="index"
+                      class="mb-2"
+                    >
+                      <template #prepend>
+                        <v-chip :color="event.color" size="small" class="me-3">
+                          {{ event.type }}
+                        </v-chip>
+                      </template>
+                      <v-list-item-title>{{ event.title }}</v-list-item-title>
+                      <v-list-item-subtitle
+                        >{{ event.date }} - {{ event.time }}</v-list-item-subtitle
+                      >
+                    </v-list-item>
+                  </v-list>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </div>
+
+        <!-- Bookings Management View -->
+        <div v-if="currentView === 'bookings'">
+          <v-card class="glass-card">
+            <v-card-title>Booking Management</v-card-title>
+            <v-card-text>
+              <v-data-table
+                :items="pendingBookings"
+                :headers="[
+                  { title: 'Type', key: 'type' },
+                  { title: 'Details', key: 'details' },
+                  { title: 'Date', key: 'date' },
+                  { title: 'Time', key: 'time' },
+                  { title: 'Actions', key: 'actions', sortable: false },
+                ]"
+                class="booking-table"
+              >
+                <template #[`item.type`]="{ item }">
+                  <v-chip :color="getEventColor(item.type)" size="small">
+                    {{ item.type }}
+                  </v-chip>
+                </template>
+                <template #[`item.details`]="{ item }">
+                  {{ formatBookingDetails(item).subtitle }}
+                </template>
+                <template #[`item.date`]="{ item }">
+                  {{ formatBookingDetails(item).date }}
+                </template>
+                <template #[`item.time`]="{ item }">
+                  {{ formatBookingDetails(item).time }}
+                </template>
+                <template #[`item.actions`]="{ item }">
+                  <v-btn
+                    color="green"
+                    size="small"
+                    variant="outlined"
+                    class="me-2"
+                    @click="approveBooking(item)"
+                  >
+                    Approve
+                  </v-btn>
+                  <v-btn color="red" size="small" variant="outlined" @click="denyBooking(item)">
+                    Deny
+                  </v-btn>
+                </template>
+              </v-data-table>
+            </v-card-text>
+          </v-card>
         </div>
       </v-container>
+
+      <!-- Notifications Dialog -->
+      <v-dialog v-model="notificationDialog" max-width="600">
+        <v-card class="glass-card">
+          <v-card-title class="d-flex align-center">
+            <v-icon class="me-2">mdi-bell</v-icon>
+            Notifications
+            <v-spacer />
+            <v-chip color="red" size="small" v-if="unreadCount > 0">
+              {{ unreadCount }} unread
+            </v-chip>
+          </v-card-title>
+          <v-card-text class="pa-0">
+            <v-list v-if="notifications.length > 0">
+              <v-list-item
+                v-for="notification in notifications"
+                :key="notification.id"
+                @click="handleNotificationClick(notification.id)"
+                :class="{ 'notification-unread': !notification.read }"
+                class="notification-item"
+              >
+                <template #prepend>
+                  <v-icon :color="notification.read ? 'grey' : 'primary'" size="small" class="me-3">
+                    {{ notification.type === 'booking' ? 'mdi-calendar-plus' : 'mdi-information' }}
+                  </v-icon>
+                </template>
+                <v-list-item-title>{{ notification.message }}</v-list-item-title>
+                <v-list-item-subtitle>
+                  {{ new Date(notification.timestamp).toLocaleString() }}
+                </v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
+            <div v-else class="text-center py-8 text-grey-darken-1">
+              <v-icon size="64" color="grey-lighten-2">mdi-bell-outline</v-icon>
+              <p class="mt-3">No notifications yet</p>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn @click="notificationDialog = false">Close</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- Event Creation Dialog -->
+      <v-dialog v-model="eventDialog" max-width="600">
+        <v-card class="glass-card">
+          <v-card-title class="d-flex align-center">
+            <v-icon class="me-2">mdi-calendar-plus</v-icon>
+            Create New Event
+          </v-card-title>
+          <v-card-text>
+            <v-form>
+              <v-text-field
+                v-model="newEvent.title"
+                label="Event Title"
+                prepend-icon="mdi-format-title"
+                required
+              />
+              <v-textarea
+                v-model="newEvent.description"
+                label="Description"
+                prepend-icon="mdi-text"
+                rows="3"
+              />
+              <v-text-field
+                v-model="newEvent.date"
+                label="Date"
+                type="date"
+                prepend-icon="mdi-calendar"
+                required
+              />
+              <v-text-field
+                v-model="newEvent.time"
+                label="Time"
+                type="time"
+                prepend-icon="mdi-clock"
+                required
+              />
+              <v-select
+                v-model="newEvent.type"
+                :items="eventCategories.map((cat) => ({ value: cat.name, title: cat.label }))"
+                label="Event Type"
+                prepend-icon="mdi-tag"
+                item-title="title"
+                item-value="value"
+              />
+            </v-form>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn @click="eventDialog = false">Cancel</v-btn>
+            <v-btn color="primary" @click="createEvent">Create Event</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- Booking Details Dialog -->
+      <v-dialog v-model="bookingDialog" max-width="600">
+        <v-card class="glass-card" v-if="selectedBooking">
+          <v-card-title class="d-flex align-center">
+            <v-chip :color="getEventColor(selectedBooking.type)" class="me-3">
+              {{ selectedBooking.type }}
+            </v-chip>
+            {{ formatBookingDetails(selectedBooking).title }}
+          </v-card-title>
+          <v-card-text>
+            <v-list>
+              <v-list-item
+                v-for="detail in formatBookingDetails(selectedBooking).details"
+                :key="detail.label"
+              >
+                <v-list-item-title>{{ detail.label }}:</v-list-item-title>
+                <v-list-item-subtitle>{{ detail.value }}</v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn @click="bookingDialog = false">Close</v-btn>
+            <v-btn color="red" @click="denyBooking(selectedBooking)">Deny</v-btn>
+            <v-btn color="green" @click="approveBooking(selectedBooking)">Approve</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </template>
-  </DashboardHeader>
+  </AdminHeader>
 </template>
 
 <style scoped>
-@keyframes float {
+/* Animated Background */
+.animated-bg {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.animated-bg::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: moveGrid 20s linear infinite;
+}
+
+@keyframes moveGrid {
   0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
+    transform: translate(0, 0);
   }
   100% {
+    transform: translate(50px, 50px);
+  }
+}
+
+/* Floating Shapes */
+.floating-shape {
+  position: fixed;
+  opacity: 0.1;
+  animation: float 20s infinite ease-in-out;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.shape-1 {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.shape-2 {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+  top: 60%;
+  right: 10%;
+  animation-delay: 5s;
+}
+
+.shape-3 {
+  width: 250px;
+  height: 250px;
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  border-radius: 31% 69% 23% 77% / 67% 31% 69% 33%;
+  bottom: 10%;
+  left: 30%;
+  animation-delay: 10s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(30px, -30px) rotate(90deg);
+  }
+  50% {
+    transform: translate(-20px, 20px) rotate(180deg);
+  }
+  75% {
+    transform: translate(-30px, -20px) rotate(270deg);
+  }
+}
+
+/* Glass Morphism Cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25) !important;
+}
+
+/* Header Styles */
+.header-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  font-size: 2.5rem;
+  letter-spacing: -0.02em;
+}
+
+/* Navigation Tabs */
+.nav-tab {
+  position: relative;
+  padding: 12px 24px !important;
+  border-radius: 12px !important;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  background: transparent !important;
+  color: #6b7280 !important;
+  text-transform: none !important;
+}
+
+.nav-tab:hover {
+  background: rgba(103, 126, 234, 0.1) !important;
+  color: #667eea !important;
+}
+
+.nav-tab.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 15px rgba(103, 126, 234, 0.3) !important;
+}
+
+/* Stat Cards */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  padding: 30px;
+  background: white !important;
+  border-radius: 20px !important;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none !important;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+}
+
+.stat-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 16px auto;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: white;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+/* Calendar Styles */
+.calendar-container {
+  padding: 24px;
+  background: white !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+.calendar-picker {
+  width: 100%;
+  max-width: none;
+}
+
+/* Event List */
+.event-item {
+  padding: 16px;
+  border-radius: 12px;
+  background: #f9fafb;
+  margin-bottom: 12px;
+  border-left: 4px solid;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.event-item:hover {
+  transform: translateX(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Notification Badge */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #f93b3b 0%, #ff6b6b 100%);
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(249, 59, 59, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Quick Actions */
+.quick-action {
+  background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%) !important;
+  border-radius: 16px !important;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent !important;
+}
+
+.quick-action:hover {
+  background: white !important;
+  border-color: #667eea !important;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+.quick-action-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+}
+
+/* Booking Card */
+.booking-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.booking-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--booking-color);
+}
+
+.booking-card:hover {
+  transform: translateX(8px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Activity Icon */
+.activity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Text Colors */
+.text-green {
+  color: #10b981;
+}
+.text-orange {
+  color: #f59e0b;
+}
+.text-purple {
+  color: #8b5cf6;
+}
+
+/* Animation for stat cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
     transform: translateY(0);
   }
 }
 
-.cards {
-  padding-top: 70px;
-}
-.float-card {
-  animation: float 3s ease-in-out infinite;
-}
-.bg-wrapper {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  overflow: hidden;
-}
-.center {
-  max-width: auto;
-  width: 100%;
-  height: 100%;
-}
-.bg-wrapper > .v-responsive {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+.stat-card {
+  animation: fadeInUp 0.6s ease forwards;
 }
 
-.bg-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 1;
+.stat-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.stat-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.stat-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.stat-card:nth-child(4) {
+  animation-delay: 0.4s;
 }
 
-.content-wrapper {
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .header-gradient {
+    font-size: 2rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+  }
+
+  .stat-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .header-gradient {
+    font-size: 1.75rem;
+  }
+
+  .nav-tab {
+    padding: 8px 16px !important;
+    font-size: 0.875rem;
+  }
+
+  .stat-card {
+    padding: 20px;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Space utilities */
+.space-y-3 > * + * {
+  margin-top: 12px;
+}
+
+.gap-3 {
+  gap: 12px;
+}
+
+.position-relative {
   position: relative;
-  z-index: 2;
 }
 
-.card-shadow {
-  box-shadow:
-    -4px 0px 12px rgba(0, 0, 0, 0.1),
-    4px 0px 12px rgba(0, 0, 0, 0.1),
-    0px 4px 12px rgba(0, 0, 0, 0.1);
-}
-.router-link {
-  text-decoration: none;
-  color: inherit;
+.flex-1 {
+  flex: 1;
 }
 
-.router-link:hover {
-  text-decoration: none;
-  background-color: skyblue;
-}
-
-.card-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin: 2rem 1rem;
-  padding: 0;
-  list-style-type: none;
-}
-
-.card {
+:deep(.v-date-picker-month__day--event) {
   position: relative;
-  display: block;
-  height: 100%;
-  border-radius: var(--curve);
-  overflow: hidden;
-  text-decoration: none;
-  background-color: white;
 }
 
-.card__image {
-  width: 100%;
-  height: auto;
-}
-
-.card__overlay {
+:deep(.v-date-picker-month__day--event.multiple-events::after) {
+  content: '';
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1;
-  border-radius: var(--curve);
-  background-color: var(--surface-color);
-  transform: translateY(100%);
-  transition: 0.2s ease-in-out;
-}
-
-.card:hover .card__overlay {
-  transform: translateY(0);
-}
-
-.card__header {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 2em;
-  padding: 1.5em;
-  border-radius: var(--curve) 0 0 0;
-  background-color: var(--surface-color);
-  transform: translateY(-100%);
-  transition: 0.2s ease-in-out;
-}
-
-.card:hover .card__header {
-  transform: translateY(0);
-}
-
-.card__arc {
-  width: 80px;
-  height: 80px;
-  position: absolute;
-  bottom: 100%;
-  right: 0;
-  z-index: 1;
-}
-
-.card__arc path {
-  fill: var(--surface-color);
-  d: path('M 40 80 c 22 0 40 -22 40 -40 v 40 Z');
-}
-
-.card__thumb {
-  flex-shrink: 0;
-  width: 50px;
-  height: 50px;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
+  background: #9c27b0;
+  box-shadow: 0 0 0 2px white;
 }
 
-.card__title {
-  font-size: 1em;
-  margin: 0 0 0.3em;
-  color: #6a515e;
-}
-
-.card__tagline {
-  display: block;
-  margin: 1em 0;
-  font-size: 0.8em;
-  color: #d7bdca;
-}
-
-.card__status {
-  font-size: 0.8em;
-  color: #d7bdca;
-}
-
-/*Button*/
-.card__button {
-  align-items: center;
-  appearance: none;
-  background-image: radial-gradient(100% 100% at 100% 0, #5adaff 0, #5468ff 100%);
-  border: 0;
-  border-radius: 6px;
-  box-shadow:
-    rgba(45, 35, 66, 0.4) 0 2px 4px,
-    rgba(45, 35, 66, 0.3) 0 7px 13px -3px,
-    rgba(58, 65, 111, 0.5) 0 -3px 0 inset;
-  box-sizing: border-box;
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  font-family: 'Jomolhari', serif;
-  height: 48px;
-  justify-content: center;
-  line-height: 1;
-  overflow: hidden;
-  padding-left: 16px;
-  padding-right: 16px;
-  position: relative;
-  text-align: center;
-  text-decoration: none;
-  transition:
-    box-shadow 0.15s,
-    transform 0.15s;
-  user-select: none;
-  touch-action: manipulation;
-  white-space: nowrap;
-  will-change: box-shadow, transform;
-  font-size: 18px;
-}
-
-.button:focus {
-  box-shadow:
-    #3c4fe0 0 0 0 1.5px inset,
-    rgba(45, 35, 66, 0.4) 0 2px 4px,
-    rgba(45, 35, 66, 0.3) 0 7px 13px -3px,
-    #3c4fe0 0 -3px 0 inset;
-}
-
-.button:hover {
-  box-shadow:
-    rgba(45, 35, 66, 0.4) 0 4px 8px,
-    rgba(45, 35, 66, 0.3) 0 7px 13px -3px,
-    #3c4fe0 0 -3px 0 inset;
-  transform: translateY(-2px);
-}
-
-.button:active {
-  box-shadow: #3c4fe0 0 3px 7px inset;
-  transform: translateY(2px);
+:deep(.v-date-picker-month__day--event:not(.multiple-events)::after) {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
 </style>

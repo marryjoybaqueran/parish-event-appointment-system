@@ -31,3 +31,7 @@ coverage
 .history
 .github
 .env
+
+# History files and folders
+.history/
+*.history
