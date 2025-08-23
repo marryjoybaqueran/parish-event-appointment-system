@@ -4,8 +4,6 @@ import { supabase, formActionDefault } from '@/utils/supabase.js'
 import {
   requiredValidator,
   emailValidator,
-  passwordValidator,
-  confirmedValidator,
 } from '@/utils/validators'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -38,22 +36,22 @@ const registerDataDefault = {
   password_confirmation: '',
 }
 
-const userTypeOptions = [
-  {
-    value: 'user',
-    title: 'User',
-    icon: 'mdi-account',
-    description: 'Access member portal',
-    color: 'primary',
-  },
-  {
-    value: 'admin',
-    title: 'Admin',
-    icon: 'mdi-shield-account',
-    description: 'Administrative access',
-    color: 'warning',
-  },
-]
+// const userTypeOptions = [
+//   {
+//     value: 'user',
+//     title: 'User',
+//     icon: 'mdi-account',
+//     description: 'Access member portal',
+//     color: 'primary',
+//   },
+//   {
+//     value: 'admin',
+//     title: 'Admin',
+//     icon: 'mdi-shield-account',
+//     description: 'Administrative access',
+//     color: 'warning',
+//   },
+// ]
 
 const loginData = ref({ ...loginDataDefault })
 const registerData = ref({ ...registerDataDefault })
@@ -61,14 +59,14 @@ const registerData = ref({ ...registerDataDefault })
 const formAction = ref({ ...formActionDefault })
 
 const isPasswordVisible = ref(false)
-const isPasswordConfirmationVisible = ref(false)
+
 const refVform = ref()
 
-const selectedUserType = computed(() =>
-  userTypeOptions.find((option) => option.value === loginData.value.userType),
-)
 
 const isLoginMode = computed(() => formMode.value === 'login')
+
+// Computed proxy that points to loginData or registerData depending on mode
+const formData = computed(() => (isLoginMode.value ? loginData.value : registerData.value))
 
 const switchMode = (mode) => {
   formMode.value = mode
@@ -215,6 +213,7 @@ const onFormSubmit = () => {
         <p class="text-body-2 text-medium-emphasis">Sign in to continue your spiritual journey</p>
       </div>
 
+
       <div v-if="isLoginMode" class="auth-form-content">
         <!-- Email field with enhanced styling -->
         <div class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center">
@@ -239,6 +238,7 @@ const onFormSubmit = () => {
         <!-- Password field with enhanced styling -->
         <div
           class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center justify-space-between"
+
         >
           <div class="d-flex align-center">
             <v-icon size="small" class="mr-2">mdi-lock</v-icon>
@@ -561,6 +561,7 @@ const onFormSubmit = () => {
     <TermsDialog v-model:isOpen="termsDialog.isOpen" />
     <PrivacyDialog v-model:isOpen="privacyDialog.isOpen" />
     <HelpDialog v-model:isOpen="helpDialog.isOpen" />
+
   </div>
 </template>
 
