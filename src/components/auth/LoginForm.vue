@@ -7,10 +7,17 @@ import {
 } from '@/utils/validators'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import TermsDialog from '@/components/auth/dialogs/TermsDialog.vue'
+import PrivacyDialog from '@/components/auth/dialogs/PrivacyDialog.vue'
+import HelpDialog from '@/components/auth/dialogs/HelpDialog.vue'
 
 const router = useRouter()
 
 const formMode = ref('login')
+
+const termsDialog = ref(false)
+const privacyDialog = ref(false)
+const helpDialog = ref(false)
 
 const loginDataDefault = {
   email: '',
@@ -155,6 +162,27 @@ const onRegisterSubmit = async () => {
   formAction.value.formProcess = false
 }
 
+// Social sign-in handlers (use Supabase OAuth)
+const signInWithGoogle = async () => {
+  console.log('Signing in with Google...')
+}
+
+const signInWithFacebook = async () => {
+  console.log('Signing in with Facebook...')
+}
+
+const openTermsDialog = () => {
+  termsDialog.value = { isOpen: true, contentType: 'terms' }
+}
+
+const openPrivacyDialog = () => {
+  privacyDialog.value = { isOpen: true, contentType: 'privacy' }
+}
+
+const openHelpDialog = () => {
+  helpDialog.value = { isOpen: true, contentType: 'help' }
+}
+
 const onFormSubmit = () => {
   refVform.value?.validate().then(({ valid }) => {
     if (valid) {
@@ -166,15 +194,6 @@ const onFormSubmit = () => {
     }
   })
 }
-
-// Social sign-in handlers (use Supabase OAuth)
-const signInWithGoogle = async () => {
-  console.log('Signing in with Google...')
-}
-
-const signInWithFacebook = async () => {
-  console.log('Signing in with Facebook...')
-}
 </script>
 
 <template>
@@ -184,121 +203,365 @@ const signInWithFacebook = async () => {
       :form-error-message="formAction.formErrorMessage"
     />
 
-  <v-form class="mt-5" ref="refVform" @submit.prevent="onFormSubmit">
-    <!-- Welcome header with animation -->
-    <div class="text-center mb-6">
-      <v-avatar size="64" class="mb-4 welcome-avatar">
-        <v-icon size="40" color="primary">mdi-church</v-icon>
-      </v-avatar>
-      <h2 class="text-h4 text-primary mb-2 welcome-text">Welcome Back!</h2>
-      <p class="text-body-2 text-medium-emphasis">Sign in to continue your spiritual journey</p>
-    </div>
-
-    <!-- Email field with enhanced styling -->
-    <div class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center">
-      <v-icon size="small" class="mr-2">mdi-email</v-icon>
-      Email Address
-    </div>
-
-    <v-text-field
-      v-model="formData.email"
-      density="comfortable"
-      placeholder="Enter your email address"
-      prepend-inner-icon="mdi-email-outline"
-      :rules="[requiredValidator, emailValidator]"
-      :counter="50"
-      variant="outlined"
-      color="primary"
-      class="mb-3 animated-field"
-      hide-details="auto"
-    ></v-text-field>
-
-    <!-- Password field with enhanced styling -->
-    <div
-      class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center justify-space-between"
-    >
-      <div class="d-flex align-center">
-        <v-icon size="small" class="mr-2">mdi-lock</v-icon>
-        Password
+    <v-form class="mt-1" ref="refVform" @submit.prevent="onFormSubmit">
+      <!-- Welcome header with animation -->
+      <div class="text-center mb-3">
+        <v-avatar size="64" class="welcome-avatar">
+          <v-icon size="60" color="primary">mdi-church</v-icon>
+        </v-avatar>
+        <h2 class="text-h4 text-primary mb-2 welcome-text">Welcome Back!</h2>
+        <p class="text-body-2 text-medium-emphasis">Sign in to continue your spiritual journey</p>
       </div>
-      <v-btn variant="text" size="small" class="text-caption text-primary" @click="() => {}">
-        Forgot password?
-      </v-btn>
-    </div>
 
-    <v-text-field
-      v-model="formData.password"
-      density="comfortable"
-      :rules="[requiredValidator]"
-      counter="20"
-      placeholder="Enter your password"
-      prepend-inner-icon="mdi-lock-outline"
-      variant="outlined"
-      color="primary"
-      :append-inner-icon="isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
-      :type="isPasswordVisible ? 'text' : 'password'"
-      @click:append-inner="isPasswordVisible = !isPasswordVisible"
-      class="mb-4 animated-field"
-      hide-details="auto"
-    ></v-text-field>
-  <!--   <v-select>
 
-    </v-select> -->
-    <!-- Enhanced login button with ripple effect -->
-    <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
-      <v-btn
-        v-bind="props"
-        :elevation="isHovering ? 8 : 2"
-        size="large"
-        variant="elevated"
-        color="primary"
-        type="submit"
-        :disabled="formAction.formProcess"
-        :loading="formAction.formProcess"
-        block
-        class="login-btn mb-4"
-        rounded="lg"
-      >
-        <v-icon left class="mr-2">mdi-login</v-icon>
-        <span class="text-h6">Sign In</span>
-      </v-btn>
-    </v-hover>
+      <div v-if="isLoginMode" class="auth-form-content">
+        <!-- Email field with enhanced styling -->
+        <div class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center">
+          <v-icon size="small" class="mr-2">mdi-email</v-icon>
+          Email Address
+        </div>
 
-    <!-- Social login divider -->
-    <v-divider class="my-4">
-      <span class="text-caption text-medium-emphasis px-3">Or continue with</span>
-    </v-divider>
+        <v-text-field
+          v-model="loginData.email"
+          density="comfortable"
+          placeholder="Enter your email address"
+          prepend-inner-icon="mdi-email-outline"
+          :rules="[requiredValidator, emailValidator]"
+          :counter="50"
+          variant="outlined"
+          color="primary"
+          rounded="lg"
+          class="animated-field"
+          hide-details="auto"
+        ></v-text-field>
 
-    <!-- Social login icons (replacing buttons) -->
-    <v-row class="ma-0 justify-center">
-      <v-col cols="6" class="pa-1 d-flex justify-center">
-        <v-icon
-          size="36"
-          class="social-icon google--text"
-          role="button"
-          tabindex="0"
-          @click="signInWithGoogle"
-          @keyup.enter="signInWithGoogle"
-          title="Sign in with Google"
+        <!-- Password field with enhanced styling -->
+        <div
+          class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center justify-space-between"
+
         >
-          mdi-google
-        </v-icon>
-      </v-col>
-      <v-col cols="6" class="pa-1 d-flex justify-center">
-        <v-icon
-          size="36"
-          class="social-icon facebook--text"
-          role="button"
-          tabindex="0"
-          @click="signInWithFacebook"
-          @keyup.enter="signInWithFacebook"
-          title="Sign in with Facebook"
+          <div class="d-flex align-center">
+            <v-icon size="small" class="mr-2">mdi-lock</v-icon>
+            Password
+          </div>
+          <v-btn variant="text" size="small" class="text-caption text-primary" @click="() => {}">
+            Forgot password?
+          </v-btn>
+        </div>
+
+        <v-text-field
+          v-model="loginData.password"
+          density="comfortable"
+          :rules="[requiredValidator]"
+          counter="20"
+          placeholder="Enter your password"
+          prepend-inner-icon="mdi-lock-outline"
+          variant="outlined"
+          color="primary"
+          rounded="lg"
+          :append-inner-icon="isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
+          :type="isPasswordVisible ? 'text' : 'password'"
+          @click:append-inner="isPasswordVisible = !isPasswordVisible"
+          class="mb-4 animated-field"
+          hide-details="auto"
+        ></v-text-field>
+
+        <v-select
+          v-model="loginData.userType"
+          :items="userTypeOptions"
+          item-title="title"
+          item-value="value"
+          color="primary"
+          density="comfortable"
+          variant="outlined"
+          rounded="lg"
+          prepend-inner-icon="mdi-account-switch"
+          label="Login as"
+          class="my-4 animated-field"
+          hide-details
         >
-          mdi-facebook
-        </v-icon>
-      </v-col>
-    </v-row>
-  </v-form>
+          <template #selection="{ item }">
+            <div class="d-flex align-center">
+              <v-icon :icon="item.raw.icon" size="18" class="mr-2"></v-icon>
+              {{ item.raw.title }}
+            </div>
+          </template>
+          <template #item="{ props, item }">
+            <v-list-item v-bind="props" :prepend-icon="item.raw.icon">
+              <v-list-item-subtitle>{{ item.raw.description }}</v-list-item-subtitle>
+            </v-list-item>
+          </template>
+        </v-select>
+
+        <!-- Enhanced login button with ripple effect -->
+        <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
+          <v-btn
+            v-bind="props"
+            :elevation="isHovering ? 8 : 2"
+            size="large"
+            variant="elevated"
+            color="primary"
+            type="submit"
+            :disabled="formAction.formProcess"
+            :loading="formAction.formProcess"
+            block
+            class="login-btn mb-3"
+            rounded="lg"
+          >
+            <v-icon :icon="selectedUserType.icon" class="mr-2"></v-icon>
+
+            <span class="text-h6">Sign In</span>
+          </v-btn>
+        </v-hover>
+        <div class="toggle-links">
+          <span>
+            Don't have an account?
+            <a @click="switchMode('register')" class="toggle-link">Sign up</a>
+          </span>
+        </div>
+        <!-- Social login divider -->
+        <v-divider class="my-4">
+          <span class="text-caption text-medium-emphasis px-3">Or continue with</span>
+        </v-divider>
+
+        <!-- Social login icons (replacing buttons) -->
+        <v-row class="ma-0 justify-center">
+          <v-col cols="6" class="pa-1 d-flex justify-center">
+            <v-icon
+              size="36"
+              class="social-icon google--text"
+              role="button"
+              tabindex="0"
+              @click="signInWithGoogle"
+              @keyup.enter="signInWithGoogle"
+              title="Sign in with Google"
+            >
+              mdi-google
+            </v-icon>
+          </v-col>
+          <v-col cols="6" class="pa-1 d-flex justify-center">
+            <v-icon
+              size="36"
+              class="social-icon facebook--text"
+              role="button"
+              tabindex="0"
+              @click="signInWithFacebook"
+              @keyup.enter="signInWithFacebook"
+              title="Sign in with Facebook"
+            >
+              mdi-facebook
+            </v-icon>
+          </v-col>
+        </v-row>
+      </div>
+
+      <div v-else class="auth-form-content register-content">
+        <div class="mb-1">
+          <v-chip color="primary" variant="tonal" class="mb-3">
+            <v-icon left size="small">mdi-account</v-icon>
+            Personal Information
+          </v-chip>
+        </div>
+
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="registerData.fname"
+              :rules="[requiredValidator]"
+              label="First Name"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-account"
+              class="form-field"
+              hide-details="auto"
+              required
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="registerData.lname"
+              :rules="[requiredValidator]"
+              label="Last Name"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-account"
+              class="form-field"
+              hide-details="auto"
+              required
+            ></v-text-field>
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="registerData.number"
+              :rules="[requiredValidator]"
+              label="Phone Number"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-phone"
+              class="form-field"
+              hide-details="auto"
+              type="tel"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="registerData.email"
+              :rules="[requiredValidator, emailValidator]"
+              placeholder="example@gmail.com"
+              label="Email Address"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-email"
+              class="form-field"
+              hide-details="auto"
+              type="email"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="registerData.password"
+              label="Create Password"
+              :rules="[requiredValidator, passwordValidator]"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-lock"
+              :append-inner-icon="isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
+              :type="isPasswordVisible ? 'text' : 'password'"
+              @click:append-inner="isPasswordVisible = !isPasswordVisible"
+              class="form-field"
+              hide-details="auto"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="registerData.password_confirmation"
+              :rules="[
+                requiredValidator,
+                confirmedValidator(registerData.password_confirmation, registerData.password),
+              ]"
+              label="Confirm Password"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-lock-check"
+              :append-inner-icon="isPasswordConfirmationVisible ? 'mdi-eye' : 'mdi-eye-off'"
+              :type="isPasswordConfirmationVisible ? 'text' : 'password'"
+              @click:append-inner="isPasswordConfirmationVisible = !isPasswordConfirmationVisible"
+              class="form-field"
+              hide-details="auto"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="registerData.address"
+              :rules="[requiredValidator]"
+              counter="25"
+              label="Complete Address"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-map-marker"
+              class="form-field"
+              hide-details="auto"
+              required
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-select
+              v-model="registerData.gender"
+              :items="['Male', 'Female']"
+              label="Gender"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-gender-male-female"
+              :rules="[requiredValidator]"
+              class="form-field"
+              hide-details="auto"
+            />
+          </v-col>
+        </v-row>
+
+        <!-- Terms and Conditions -->
+        <v-card class="mt-2 mb-4" variant="tonal" color="primary">
+          <v-card-text class="text-center pa-4">
+            <v-icon size="24" color="primary" class="mb-2">mdi-information</v-icon>
+            <p class="text-body-2 mb-0">
+              By creating an account, you agree to our
+              <a @click="openTermsDialog(termsDialog)" class="text-primary cursor-pointer"
+                >Terms of Service</a
+              >
+              and
+              <a @click="openPrivacyDialog(privacyDialog)" class="text-primary cursor-pointer"
+                >Privacy Policy</a
+              >
+            </p>
+          </v-card-text>
+        </v-card>
+
+        <!-- Enhanced Submit Button -->
+        <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
+          <v-btn
+            v-bind="props"
+            :elevation="isHovering ? 12 : 4"
+            size="x-large"
+            variant="elevated"
+            color="primary"
+            type="submit"
+            block
+            :disabled="formAction.formProcess"
+            :loading="formAction.formProcess"
+            class="register-btn mt-4"
+            rounded="lg"
+          >
+            <v-icon left class="mr-2">mdi-account-plus</v-icon>
+            <span class="text-h6">Create My Account</span>
+          </v-btn>
+        </v-hover>
+
+        <div class="toggle-links mt-3">
+          <span>
+            Already have an account?
+            <a @click="switchMode('login')" class="toggle-link">Sign in</a>
+          </span>
+        </div>
+
+        <!-- Registration Help -->
+        <v-row class="mt-2" no-gutters>
+          <v-col cols="12" class="text-center">
+            <v-btn
+              variant="text"
+              size="small"
+              color="primary"
+              prepend-icon="mdi-help-circle"
+              @click="openHelpDialog(helpDialog)"
+            >
+              Need help with registration?
+            </v-btn>
+          </v-col>
+        </v-row>
+      </div>
+    </v-form>
+
+    <!-- Dialogs -->
+    <TermsDialog v-model:isOpen="termsDialog.isOpen" />
+    <PrivacyDialog v-model:isOpen="privacyDialog.isOpen" />
+    <HelpDialog v-model:isOpen="helpDialog.isOpen" />
+
   </div>
 </template>
 
@@ -383,5 +646,14 @@ const signInWithFacebook = async () => {
 /* Loading spinner enhancement */
 .v-btn--loading .v-btn__content {
   opacity: 0.6;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.cursor-pointer:hover {
+  text-decoration: none;
 }
 </style>

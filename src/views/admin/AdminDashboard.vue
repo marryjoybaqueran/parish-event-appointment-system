@@ -3,16 +3,13 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
-import { useTheme } from 'vuetify'
 import { useAuthUserStore } from '@/stores/authUser.js'
 
 const authUser = useAuthUserStore()
-const theme = useTheme()
 
 const loading = ref(true)
 const errorMessage = ref(null)
 
-const isDark = computed(() => theme.global.current.value.dark)
 const notificationDialog = ref(false)
 const selectedDate = ref(new Date())
 const currentView = ref('overview')
@@ -20,12 +17,15 @@ const eventDialog = ref(false)
 const bookingDialog = ref(false)
 const selectedBooking = ref(null)
 const selectedDateEvents = ref([])
+const bookingActionLoading = ref(false)
+const bookingConflicts = ref([])
+const conflictDialog = ref(false)
+const pendingApprovalBooking = ref(null)
 
 // Computed store-driven data
 const stats = computed(() => authUser.stats)
 const statsTrends = computed(() => authUser.statsTrends)
 const recentActivities = computed(() => authUser.recentActivities)
-const eventCategories = computed(() => authUser.eventCategories)
 const calendarEvents = computed(() => authUser.calendarEvents)
 const pendingBookings = computed(() => authUser.pendingBookings)
 const notifications = computed(() => authUser.notifications)
@@ -66,6 +66,163 @@ const showNotifications = () => {
 
 const handleNotificationClick = (notificationId) => {
   authUser.markNotificationAsRead(notificationId)
+}
+
+const closeBookingDialog = () => {
+  bookingDialog.value = false
+  selectedBooking.value = null
+  bookingConflicts.value = []
+}
+
+const openBookingDetails = async (booking) => {
+  selectedBooking.value = booking
+  bookingDialog.value = true
+
+  // Check for conflicts when opening booking details
+  let bookingDate, bookingTime
+
+  switch (booking.type) {
+    case 'wedding':
+      bookingDate = booking.wedding_date
+      bookingTime = '10:00'
+      break
+    case 'baptism':
+      bookingDate = booking.baptism_date
+      bookingTime = '14:00'
+      break
+    case 'funeral':
+      bookingDate = booking.funeral_date
+      bookingTime = booking.funeral_time || '09:00'
+      break
+    case 'thanksgiving':
+      bookingDate = booking.thanksgiving_date
+      bookingTime = '16:00'
+      break
+  }
+
+  if (bookingDate && bookingTime) {
+    bookingConflicts.value = await authUser.checkConflicts(bookingDate, bookingTime)
+  }
+}
+const cancelConflictDialog = () => {
+  conflictDialog.value = false
+  pendingApprovalBooking.value = null
+  bookingConflicts.value = []
+}
+
+const handleApproveBooking = async () => {
+  if (!selectedBooking.value) return
+
+  bookingActionLoading.value = true
+
+  try {
+    const result = await authUser.approveBooking(selectedBooking.value)
+
+    if (result.success) {
+      // Show success notification
+      authUser.addNotification({
+        message: `${selectedBooking.value.type} booking approved successfully`,
+        type: 'success',
+      })
+
+      closeBookingDialog()
+
+      // Add success snackbar or toast here if you have one
+      console.log('Booking approved successfully!')
+    } else if (result.conflicts) {
+      // Show conflict dialog
+      bookingConflicts.value = result.conflicts
+      pendingApprovalBooking.value = selectedBooking.value
+      conflictDialog.value = true
+      closeBookingDialog()
+    } else {
+      console.error('Error approving booking:', result.error)
+      // Show error notification
+      authUser.addNotification({
+        message: `Failed to approve booking: ${result.error?.message || 'Unknown error'}`,
+        type: 'error',
+      })
+    }
+  } catch (error) {
+    console.error('Error in approval process:', error)
+    authUser.addNotification({
+      message: 'An error occurred while approving the booking',
+      type: 'error',
+    })
+  } finally {
+    bookingActionLoading.value = false
+  }
+}
+
+const handleDenyBooking = async () => {
+  if (!selectedBooking.value) return
+
+  bookingActionLoading.value = true
+
+  try {
+    const result = await authUser.denyBooking(selectedBooking.value)
+
+    if (result.success) {
+      authUser.addNotification({
+        message: `${selectedBooking.value.type} booking denied`,
+        type: 'info',
+      })
+
+      closeBookingDialog()
+      console.log('Booking denied successfully!')
+    } else {
+      console.error('Error denying booking:', result.error)
+      authUser.addNotification({
+        message: `Failed to deny booking: ${result.error?.message || 'Unknown error'}`,
+        type: 'error',
+      })
+    }
+  } catch (error) {
+    console.error('Error in denial process:', error)
+    authUser.addNotification({
+      message: 'An error occurred while denying the booking',
+      type: 'error',
+    })
+  } finally {
+    bookingActionLoading.value = false
+  }
+}
+
+const forceApproveBooking = async () => {
+  if (!pendingApprovalBooking.value) return
+
+  bookingActionLoading.value = true
+
+  try {
+    // Use the force approve method to bypass conflict check
+    const result = await authUser.forceApproveBooking(pendingApprovalBooking.value)
+
+    if (result.success) {
+      authUser.addNotification({
+        message: `${pendingApprovalBooking.value.type} booking approved despite conflicts`,
+        type: 'warning',
+      })
+
+      conflictDialog.value = false
+      pendingApprovalBooking.value = null
+      bookingConflicts.value = []
+      console.log('Booking force approved successfully!')
+    } else {
+      console.error('Error force approving booking:', result.error)
+      authUser.addNotification({
+        message: 'Failed to force approve booking',
+        type: 'error',
+      })
+    }
+  } catch (error) {
+    console.error('Error force approving:', error)
+    authUser.addNotification({
+      message: 'An error occurred while force approving the booking',
+      type: 'error',
+    })
+  } finally {
+    bookingActionLoading.value = false
+  }
 }
 
 const subscribeToBookingUpdates = () => {
@@ -149,11 +306,6 @@ const resetEventForm = () => {
   }
 }
 
-const openBookingDetails = (booking) => {
-  selectedBooking.value = booking
-  bookingDialog.value = true
-}
-
 const approveBooking = async (booking) => {
   const result = await authUser.approveBooking(booking)
 
@@ -205,152 +357,156 @@ onUnmounted(() => {
 
 <template>
   <PreloaderView v-if="loading" />
-  <AdminHeader v-else :theme="isDark ? 'dark' : 'light'">
+  <AdminHeader v-else>
     <template #content>
       <!-- Animated Background -->
-      <div :class="['animated-bg', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-1', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-2', { 'dark-mode': isDark }]"></div>
-      <div :class="['floating-shape shape-3', { 'dark-mode': isDark }]"></div>
+      <div class="animated-bg"></div>
+      <div class="floating-shape shape-1"></div>
+      <div class="floating-shape shape-2"></div>
+      <div class="floating-shape shape-3"></div>
 
-      <v-container fluid class="pa-4 pa-md-8" :class="{ 'dark-mode': isDark }">
+      <v-container fluid class="pa-4 pa-md-8">
         <div v-if="errorMessage" class="error-message mb-4">
-          {{ errorMessage }}
+          <v-alert type="error" variant="tonal">
+            {{ errorMessage }}
+          </v-alert>
         </div>
 
-        <!-- Header Section -->
-        <div class="glass-card pa-6 mb-8">
+        <div class="glass-card pa-4 pa-md-6 mb-6 mb-md-8">
           <div
-            class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-6"
+            class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center ga-4 ga-md-6"
           >
             <div>
-              <h1 class="header-gradient mb-2">Admin Dashboard</h1>
-              <p class="text-grey-darken-1 text-h6">Parish Information Management System</p>
+              <h1 class="header-gradient mb-2 text-h4 text-md-h3 text-lg-h2">Admin Dashboard</h1>
+              <p class="text-subtitle-1 text-md-h6 text-grey">
+                Parish Information Management System
+              </p>
             </div>
 
-            <div class="d-flex gap-3 flex-wrap">
+            <div class="d-flex ga-2 ga-md-3 flex-wrap">
               <!-- Notification Button -->
               <v-btn
                 color="secondary"
                 variant="outlined"
                 @click="showNotifications"
-                size="large"
+                :size="$vuetify.display.mobile ? 'default' : 'large'"
                 class="position-relative"
               >
-                <v-icon class="me-2">mdi-bell</v-icon>
-                Notifications
+                <v-icon class="me-1 me-md-2">mdi-bell</v-icon>
+                <span class="d-none d-sm-inline">Notifications</span>
                 <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
               </v-btn>
 
               <!-- Create Event Button -->
-              <v-btn color="primary" @click="eventDialog = true" size="large">
-                <v-icon class="me-2">mdi-calendar-plus</v-icon>
-                Create Event
+              <v-btn
+                color="primary"
+                @click="eventDialog = true"
+                :size="$vuetify.display.mobile ? 'default' : 'large'"
+              >
+                <v-icon class="me-1 me-md-2">mdi-calendar-plus</v-icon>
+                <span class="d-none d-sm-inline">Create Event</span>
+                <span class="d-sm-none">Event</span>
               </v-btn>
             </div>
           </div>
 
           <!-- Navigation Tabs -->
-          <div class="d-flex gap-2 mt-8 overflow-x-auto">
+          <div class="d-flex ga-1 ga-md-2 mt-6 mt-md-8 overflow-x-auto">
             <v-btn
               :class="['nav-tab', currentView === 'overview' ? 'active' : '']"
               @click="currentView = 'overview'"
               variant="text"
+              :size="$vuetify.display.mobile ? 'small' : 'default'"
             >
-              <v-icon class="me-2">mdi-view-dashboard</v-icon>
-              Overview
+              <v-icon class="me-1 me-md-2">mdi-view-dashboard</v-icon>
+              <span class="d-none d-sm-inline">Overview</span>
             </v-btn>
             <v-btn
               :class="['nav-tab', currentView === 'calendar' ? 'active' : '']"
               @click="currentView = 'calendar'"
               variant="text"
+              :size="$vuetify.display.mobile ? 'small' : 'default'"
             >
-              <v-icon class="me-2">mdi-calendar</v-icon>
-              Calendar
+              <v-icon class="me-1 me-md-2">mdi-calendar</v-icon>
+              <span class="d-none d-sm-inline">Calendar</span>
             </v-btn>
             <v-btn
               :class="['nav-tab', currentView === 'bookings' ? 'active' : '']"
               @click="currentView = 'bookings'"
               variant="text"
+              :size="$vuetify.display.mobile ? 'small' : 'default'"
             >
-              <v-icon class="me-2">mdi-book-multiple</v-icon>
-              Bookings
+              <v-icon class="me-1 me-md-2">mdi-book-multiple</v-icon>
+              <span class="d-none d-sm-inline">Bookings</span>
             </v-btn>
           </div>
         </div>
 
         <!-- Stats Grid -->
-        <v-row class="mb-8">
-          <v-col cols="12" md="3">
+        <v-row class="mb-6 mb-md-8">
+          <v-col
+            cols="6"
+            sm="6"
+            md="3"
+            v-for="(stat, index) in [
+              {
+                value: stats.totalBookings,
+                label: 'Total Bookings',
+                icon: 'mdi-book-multiple',
+                trend: statsTrends.totalBookings,
+                gradient: { start: '#667eea', end: '#764ba2' },
+              },
+              {
+                value: stats.pendingApprovals,
+                label: 'Pending Approvals',
+                icon: 'mdi-clock-alert',
+                trend: statsTrends.pendingApprovals,
+                gradient: { start: '#f093fb', end: '#f5576c' },
+              },
+              {
+                value: stats.upcomingEvents,
+                label: 'Upcoming Events',
+                icon: 'mdi-calendar-check',
+                trend: statsTrends.upcomingEvents,
+                gradient: { start: '#4facfe', end: '#00f2fe' },
+              },
+              {
+                value: stats.totalMembers,
+                label: 'Parish Members',
+                icon: 'mdi-account-group',
+                trend: statsTrends.totalMembers,
+                gradient: { start: '#43e97b', end: '#38f9d7' },
+              },
+            ]"
+            :key="index"
+          >
             <v-card
               class="stat-card"
-              :style="{ '--gradient-start': '#667eea', '--gradient-end': '#764ba2' }"
+              :style="{
+                '--gradient-start': stat.gradient.start,
+                '--gradient-end': stat.gradient.end,
+              }"
             >
-              <v-card-text class="text-center">
-                <div class="stat-icon">
-                  <v-icon color="white">mdi-book-multiple</v-icon>
+              <v-card-text class="text-center pa-3 pa-md-4">
+                <div class="stat-icon mb-2">
+                  <v-icon color="white" :size="$vuetify.display.mobile ? 24 : 32">{{
+                    stat.icon
+                  }}</v-icon>
                 </div>
-                <h2 class="stat-value">{{ stats.totalBookings }}</h2>
-                <p class="text-grey-darken-1">Total Bookings</p>
-                <div class="text-caption text-grey-darken-2 mt-2">
-                  <span class="text-green">↑ {{ statsTrends.totalBookings }}%</span> from last month
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" md="3">
-            <v-card
-              class="stat-card"
-              :style="{ '--gradient-start': '#f093fb', '--gradient-end': '#f5576c' }"
-            >
-              <v-card-text class="text-center">
-                <div class="stat-icon">
-                  <v-icon color="white">mdi-clock-alert</v-icon>
-                </div>
-                <h2 class="stat-value">{{ stats.pendingApprovals }}</h2>
-                <p class="text-grey-darken-1">Pending Approvals</p>
-                <div class="text-caption text-grey-darken-2 mt-2">
-                  <span class="text-orange"
-                    >● {{ statsTrends.pendingApprovals.urgent }} urgent</span
+                <h2 class="stat-value text-h5 text-md-h4 text-lg-h3 mb-1">{{ stat.value }}</h2>
+                <p class="text-caption text-sm-body-2 text-grey-darken-1 mb-2">{{ stat.label }}</p>
+                <div class="text-caption text-grey-darken-2">
+                  <span v-if="typeof stat.trend === 'number'" class="text-green"
+                    >↑ {{ stat.trend }}%</span
                   >
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" md="3">
-            <v-card
-              class="stat-card"
-              :style="{ '--gradient-start': '#4facfe', '--gradient-end': '#00f2fe' }"
-            >
-              <v-card-text class="text-center">
-                <div class="stat-icon">
-                  <v-icon color="white">mdi-calendar-check</v-icon>
-                </div>
-                <h2 class="stat-value">{{ stats.upcomingEvents }}</h2>
-                <p class="text-grey-darken-1">Upcoming Events</p>
-                <div class="text-caption text-grey-darken-2 mt-2">
-                  Next: {{ statsTrends.upcomingEvents.next }}
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" md="3">
-            <v-card
-              class="stat-card"
-              :style="{ '--gradient-start': '#43e97b', '--gradient-end': '#38f9d7' }"
-            >
-              <v-card-text class="text-center">
-                <div class="stat-icon">
-                  <v-icon color="white">mdi-account-group</v-icon>
-                </div>
-                <h2 class="stat-value">{{ stats.totalMembers }}</h2>
-                <p class="text-grey-darken-1">Parish Members</p>
-                <div class="text-caption text-grey-darken-2 mt-2">
-                  <span class="text-green">↑ {{ statsTrends.totalMembers.value }}</span> new this
-                  month
+                  <span v-else-if="stat.trend?.urgent" class="text-orange"
+                    >● {{ stat.trend.urgent }} urgent</span
+                  >
+                  <span v-else-if="stat.trend?.next">Next: {{ stat.trend.next }}</span>
+                  <span v-else-if="stat.trend?.value" class="text-green"
+                    >↑ {{ stat.trend.value }} new</span
+                  >
+                  <span v-else>from last month</span>
                 </div>
               </v-card-text>
             </v-card>
@@ -363,18 +519,19 @@ onUnmounted(() => {
             <!-- Calendar Section -->
             <v-col cols="12" lg="8">
               <v-card elevation="3" class="mb-4">
-                <v-card-title class="d-flex align-center">
+                <v-card-title class="d-flex align-center pa-4 pa-md-6">
                   <v-icon class="me-2">mdi-calendar</v-icon>
-                  Schedule Calendar
+                  <span class="text-h6 text-md-h5">Schedule Calendar</span>
                 </v-card-title>
-                <v-card-text>
+                <v-card-text class="pa-2 pa-md-4">
                   <v-date-picker
                     v-model="selectedDate"
                     @update:model-value="updateSelectedDateEvents"
                     show-adjacent-months
                     :events="hasEvent"
                     :event-color="eventDates"
-                    class="calendar-picker"
+                    class="calendar-picker w-100"
+                    :width="$vuetify.display.mobile ? '100%' : 'auto'"
                   >
                     <template #day="{ date }">
                       <div
@@ -393,15 +550,17 @@ onUnmounted(() => {
                 </v-card-text>
               </v-card>
 
-              <!-- Quick Actions -->
+              <!-- Quick Actions with responsive grid -->
               <v-row class="mt-4">
-                <v-col cols="6" md="3" v-for="action in quickActions" :key="action.label">
+                <v-col cols="6" sm="6" md="3" v-for="action in quickActions" :key="action.label">
                   <v-card class="quick-action" @click="action.click">
-                    <v-card-text class="text-center">
-                      <div class="quick-action-icon">
-                        <v-icon>{{ action.icon }}</v-icon>
+                    <v-card-text class="text-center pa-3 pa-md-4">
+                      <div class="quick-action-icon mb-2">
+                        <v-icon :size="$vuetify.display.mobile ? 24 : 32">{{ action.icon }}</v-icon>
                       </div>
-                      <div class="font-weight-semibold">{{ action.label }}</div>
+                      <div class="font-weight-semibold text-caption text-sm-body-2">
+                        {{ action.label }}
+                      </div>
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -412,23 +571,25 @@ onUnmounted(() => {
             <v-col cols="12" lg="4">
               <!-- Today's Schedule -->
               <v-card class="glass-card mb-4">
-                <v-card-title class="d-flex align-center">
+                <v-card-title class="d-flex align-center pa-4 pa-md-6">
                   <v-icon class="me-2 text-purple">mdi-calendar-today</v-icon>
-                  Today's Schedule
+                  <span class="text-h6 text-md-h5">Today's Schedule</span>
                 </v-card-title>
-                <v-card-text>
+                <v-card-text class="pa-4 pa-md-6">
                   <div
                     v-if="selectedDateEvents.length === 0"
-                    class="text-center text-grey-darken-1 py-8"
+                    class="text-center text-grey-darken-1 py-6 py-md-8"
                   >
-                    <v-icon size="64" color="grey-lighten-2">mdi-calendar-blank</v-icon>
-                    <p class="mt-3">No events scheduled</p>
+                    <v-icon :size="$vuetify.display.mobile ? 48 : 64" color="grey-lighten-2"
+                      >mdi-calendar-blank</v-icon
+                    >
+                    <p class="mt-3 text-body-2 text-md-body-1">No events scheduled</p>
                   </div>
                   <div v-else class="space-y-3">
                     <div
                       v-for="(event, index) in selectedDateEvents"
                       :key="index"
-                      class="event-item"
+                      class="event-item pa-3"
                       :style="{ borderLeftColor: event.color }"
                     >
                       <div class="d-flex justify-space-between align-start">
@@ -514,7 +675,7 @@ onUnmounted(() => {
                       <div class="activity-icon" :class="`bg-${activity.color}-lighten-4`">
                         <v-icon :color="activity.color">{{ activity.icon }}</v-icon>
                       </div>
-                      <div class="flex-1">
+                      <div class="flex-1 mx-2">
                         <div class="text-caption">{{ activity.action }}</div>
                         <div class="text-caption text-grey-darken-2">
                           {{ new Date(activity.changed_at).toLocaleString() }}
@@ -677,47 +838,50 @@ onUnmounted(() => {
       </v-dialog>
 
       <!-- Event Creation Dialog -->
-      <v-dialog v-model="eventDialog" max-width="600">
+      <v-dialog v-model="eventDialog" max-width="500">
         <v-card class="glass-card">
           <v-card-title class="d-flex align-center">
             <v-icon class="me-2">mdi-calendar-plus</v-icon>
             Create New Event
           </v-card-title>
           <v-card-text>
-            <v-form>
+            <v-form @submit.prevent="createEvent">
               <v-text-field
                 v-model="newEvent.title"
                 label="Event Title"
-                prepend-icon="mdi-format-title"
+                variant="outlined"
+                class="mb-3"
                 required
               />
               <v-textarea
                 v-model="newEvent.description"
                 label="Description"
-                prepend-icon="mdi-text"
+                variant="outlined"
                 rows="3"
+                class="mb-3"
               />
               <v-text-field
                 v-model="newEvent.date"
                 label="Date"
                 type="date"
-                prepend-icon="mdi-calendar"
+                variant="outlined"
+                class="mb-3"
                 required
               />
               <v-text-field
                 v-model="newEvent.time"
                 label="Time"
                 type="time"
-                prepend-icon="mdi-clock"
+                variant="outlined"
+                class="mb-3"
                 required
               />
               <v-select
                 v-model="newEvent.type"
-                :items="eventCategories.map((cat) => ({ value: cat.name, title: cat.label }))"
+                :items="['announcement', 'mass', 'meeting', 'celebration']"
                 label="Event Type"
-                prepend-icon="mdi-tag"
-                item-title="title"
-                item-value="value"
+                variant="outlined"
+                class="mb-3"
               />
             </v-form>
           </v-card-text>
@@ -730,30 +894,325 @@ onUnmounted(() => {
       </v-dialog>
 
       <!-- Booking Details Dialog -->
-      <v-dialog v-model="bookingDialog" max-width="600">
-        <v-card class="glass-card" v-if="selectedBooking">
-          <v-card-title class="d-flex align-center">
-            <v-chip :color="getEventColor(selectedBooking.type)" class="me-3">
-              {{ selectedBooking.type }}
-            </v-chip>
-            {{ formatBookingDetails(selectedBooking).title }}
+      <v-dialog v-model="bookingDialog" max-width="800" persistent>
+        <v-card v-if="selectedBooking" class="glass-card">
+          <v-card-title class="d-flex align-center justify-space-between pa-6">
+            <div class="d-flex align-center">
+              <v-icon class="me-3" :color="getEventColor(selectedBooking.type)" size="32">
+                {{
+                  selectedBooking.type === 'wedding'
+                    ? 'mdi-ring'
+                    : selectedBooking.type === 'baptism'
+                      ? 'mdi-water'
+                      : selectedBooking.type === 'funeral'
+                        ? 'mdi-cross'
+                        : 'mdi-hands-pray'
+                }}
+              </v-icon>
+              <div>
+                <h2 class="text-h5 mb-1">{{ formatBookingDetails(selectedBooking).title }}</h2>
+                <v-chip
+                  :color="getEventColor(selectedBooking.type)"
+                  size="small"
+                  class="text-capitalize"
+                >
+                  {{ selectedBooking.type }}
+                </v-chip>
+              </div>
+            </div>
+            <v-btn icon="mdi-close" variant="text" @click="closeBookingDialog" />
           </v-card-title>
-          <v-card-text>
-            <v-list>
+
+          <v-divider />
+
+          <v-card-text class="pa-6">
+            <v-row>
+              <!-- Basic Information -->
+              <v-col cols="12" md="6">
+                <h3 class="text-h6 mb-4 d-flex align-center">
+                  <v-icon class="me-2" color="primary">mdi-information</v-icon>
+                  Basic Information
+                </h3>
+
+                <div class="mb-4">
+                  <div class="text-caption text-grey-darken-1 mb-1">Event Date & Time</div>
+                  <div class="text-body-1 font-weight-medium">
+                    <v-icon class="me-2" size="18">mdi-calendar</v-icon>
+                    {{ formatBookingDetails(selectedBooking).date }}
+                    <v-icon class="me-2 ms-4" size="18">mdi-clock</v-icon>
+                    {{ formatBookingDetails(selectedBooking).time }}
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <div class="text-caption text-grey-darken-1 mb-1">Created On</div>
+                  <div class="text-body-2">
+                    {{ new Date(selectedBooking.created_at).toLocaleDateString() }}
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <div class="text-caption text-grey-darken-1 mb-1">Status</div>
+                  <v-chip
+                    :color="
+                      selectedBooking.status === 'pending'
+                        ? 'orange'
+                        : selectedBooking.status === 'approved'
+                          ? 'green'
+                          : 'red'
+                    "
+                    size="small"
+                    variant="tonal"
+                  >
+                    {{ selectedBooking.status || 'pending' }}
+                  </v-chip>
+                </div>
+              </v-col>
+
+              <!-- Type-specific Details -->
+              <v-col cols="12" md="6">
+                <h3 class="text-h6 mb-4 d-flex align-center">
+                  <v-icon class="me-2" color="secondary">mdi-account-details</v-icon>
+                  Details
+                </h3>
+
+                <!-- Wedding Details -->
+                <div v-if="selectedBooking.type === 'wedding'">
+                  <div class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Bride</div>
+                    <div class="text-body-1">
+                      {{ selectedBooking.bride_firstname }} {{ selectedBooking.bride_lastname }}
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Groom</div>
+                    <div class="text-body-1">
+                      {{ selectedBooking.groom_firstname }} {{ selectedBooking.groom_lastname }}
+                    </div>
+                  </div>
+                  <div v-if="selectedBooking.title" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Event Title</div>
+                    <div class="text-body-1">{{ selectedBooking.title }}</div>
+                  </div>
+                  <div v-if="selectedBooking.comments" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
+                    <div class="text-body-2">{{ selectedBooking.comments }}</div>
+                  </div>
+                </div>
+
+                <!-- Baptism Details -->
+                <div v-if="selectedBooking.type === 'baptism'">
+                  <div class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Child</div>
+                    <div class="text-body-1">
+                      {{ selectedBooking.child_firstname }} {{ selectedBooking.child_lastname }}
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Date of Birth</div>
+                    <div class="text-body-2">
+                      {{ new Date(selectedBooking.child_dob).toLocaleDateString() }}
+                    </div>
+                  </div>
+                  <div v-if="selectedBooking.parent_father_firstname" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Father</div>
+                    <div class="text-body-2">
+                      {{ selectedBooking.parent_father_firstname }}
+                      {{ selectedBooking.parent_father_lastname }}
+                    </div>
+                  </div>
+                  <div v-if="selectedBooking.parent_mother_firstname" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Mother</div>
+                    <div class="text-body-2">
+                      {{ selectedBooking.parent_mother_firstname }}
+                      {{ selectedBooking.parent_mother_lastname }}
+                    </div>
+                  </div>
+                  <div v-if="selectedBooking.godparent_firstname" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Godparent</div>
+                    <div class="text-body-2">
+                      {{ selectedBooking.godparent_firstname }}
+                      {{ selectedBooking.godparent_lastname }}
+                    </div>
+                  </div>
+                  <div v-if="selectedBooking.additional_notes" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Additional Notes</div>
+                    <div class="text-body-2">{{ selectedBooking.additional_notes }}</div>
+                  </div>
+                </div>
+
+                <!-- Funeral Details -->
+                <div v-if="selectedBooking.type === 'funeral'">
+                  <div class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Deceased</div>
+                    <div class="text-body-1">
+                      {{ selectedBooking.deceased_firstname }}
+                      {{ selectedBooking.deceased_lastname }}
+                    </div>
+                  </div>
+                  <div v-if="selectedBooking.deceased_dob" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Date of Birth</div>
+                    <div class="text-body-2">
+                      {{ new Date(selectedBooking.deceased_dob).toLocaleDateString() }}
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Date of Death</div>
+                    <div class="text-body-2">
+                      {{ new Date(selectedBooking.deceased_dod).toLocaleDateString() }}
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Contact Person</div>
+                    <div class="text-body-1">
+                      {{ selectedBooking.contact_firstname }} {{ selectedBooking.contact_lastname }}
+                    </div>
+                  </div>
+                  <div v-if="selectedBooking.relationship_to_deceased" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Relationship</div>
+                    <div class="text-body-2">{{ selectedBooking.relationship_to_deceased }}</div>
+                  </div>
+                  <div v-if="selectedBooking.contact_phone" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Phone</div>
+                    <div class="text-body-2">{{ selectedBooking.contact_phone }}</div>
+                  </div>
+                  <div v-if="selectedBooking.contact_email" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Email</div>
+                    <div class="text-body-2">{{ selectedBooking.contact_email }}</div>
+                  </div>
+                </div>
+
+                <!-- Thanksgiving Details -->
+                <div v-if="selectedBooking.type === 'thanksgiving'">
+                  <div class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Participant</div>
+                    <div class="text-body-1">
+                      {{ selectedBooking.participant_firstname }}
+                      {{ selectedBooking.participant_lastname }}
+                    </div>
+                  </div>
+                  <div v-if="selectedBooking.type_of_thanksgiving" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Type of Thanksgiving</div>
+                    <div class="text-body-2 text-capitalize">
+                      {{ selectedBooking.type_of_thanksgiving }}
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Reason</div>
+                    <div class="text-body-2">{{ selectedBooking.reason_for_thanksgiving }}</div>
+                  </div>
+                  <div v-if="selectedBooking.family_members_count" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Family Members Count</div>
+                    <div class="text-body-2">{{ selectedBooking.family_members_count }}</div>
+                  </div>
+                </div>
+              </v-col>
+            </v-row>
+
+            <!-- Conflict Warning -->
+            <v-alert
+              v-if="bookingConflicts && bookingConflicts.length > 0"
+              type="warning"
+              variant="tonal"
+              class="mt-4"
+              prominent
+            >
+              <v-alert-title class="d-flex align-center">
+                <v-icon class="me-2">mdi-alert</v-icon>
+                Schedule Conflict Detected!
+              </v-alert-title>
+              <div class="mt-2">
+                <p class="mb-2">This booking conflicts with:</p>
+                <div
+                  v-for="conflict in bookingConflicts"
+                  :key="conflict.id"
+                  class="d-flex align-center mb-1"
+                >
+                  <v-chip :color="getEventColor(conflict.type)" size="small" class="me-2">
+                    {{ conflict.type }}
+                  </v-chip>
+                  <span class="text-body-2"
+                    >{{ conflict.name }} - {{ conflict.date }} at {{ conflict.time }}</span
+                  >
+                </div>
+                <p class="mt-2 text-caption">
+                  Please consider rescheduling or contact the conflicting party to resolve this
+                  issue.
+                </p>
+              </div>
+            </v-alert>
+          </v-card-text>
+
+          <v-divider />
+
+          <v-card-actions class="pa-6">
+            <v-spacer />
+            <v-btn variant="outlined" @click="closeBookingDialog" class="me-3"> Close </v-btn>
+            <v-btn
+              color="error"
+              variant="outlined"
+              @click="handleDenyBooking"
+              class="me-3"
+              :disabled="bookingActionLoading"
+            >
+              <v-icon class="me-1">mdi-close</v-icon>
+              Deny
+            </v-btn>
+            <v-btn color="success" @click="handleApproveBooking" :loading="bookingActionLoading">
+              <v-icon class="me-1">mdi-check</v-icon>
+              Approve
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-dialog v-model="conflictDialog" max-width="600" persistent>
+        <v-card class="glass-card">
+          <v-card-title class="d-flex align-center text-warning">
+            <v-icon class="me-2" color="warning" size="32">mdi-alert-circle</v-icon>
+            Schedule Conflict Detected
+          </v-card-title>
+
+          <v-card-text class="pa-6">
+            <p class="mb-4">
+              The booking you're trying to approve conflicts with existing scheduled events:
+            </p>
+
+            <v-list class="mb-4">
               <v-list-item
-                v-for="detail in formatBookingDetails(selectedBooking).details"
-                :key="detail.label"
+                v-for="conflict in bookingConflicts"
+                :key="conflict.id"
+                class="conflict-item pa-3 mb-2"
+                :style="{ borderLeft: `4px solid ${getEventColor(conflict.type)}` }"
               >
-                <v-list-item-title>{{ detail.label }}:</v-list-item-title>
-                <v-list-item-subtitle>{{ detail.value }}</v-list-item-subtitle>
+                <template #prepend>
+                  <v-chip :color="getEventColor(conflict.type)" size="small" class="me-3">
+                    {{ conflict.type }}
+                  </v-chip>
+                </template>
+
+                <v-list-item-title class="font-weight-semibold">
+                  {{ conflict.name }}
+                </v-list-item-title>
+                <v-list-item-subtitle>
+                  {{ conflict.date }} at {{ conflict.time }}
+                </v-list-item-subtitle>
               </v-list-item>
             </v-list>
+
+            <p class="text-body-2 text-grey-darken-1">
+              You can either reschedule one of the events or proceed with approval if you believe
+              the conflict can be managed.
+            </p>
           </v-card-text>
-          <v-card-actions>
+
+          <v-card-actions class="pa-6">
             <v-spacer />
-            <v-btn @click="bookingDialog = false">Close</v-btn>
-            <v-btn color="red" @click="denyBooking(selectedBooking)">Deny</v-btn>
-            <v-btn color="green" @click="approveBooking(selectedBooking)">Approve</v-btn>
+            <v-btn variant="outlined" @click="cancelConflictDialog" class="me-3"> Cancel </v-btn>
+            <v-btn color="warning" @click="forceApproveBooking" :loading="bookingActionLoading">
+              <v-icon class="me-1">mdi-check-bold</v-icon>
+              Approve Anyway
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -762,153 +1221,138 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Animated Background */
+.conflict-item {
+  background: rgba(var(--v-theme-surface), 0.8);
+  border-radius: 8px;
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
 .animated-bg {
   position: fixed;
-  width: 100%;
-  height: 100%;
   top: 0;
   left: 0;
-  z-index: -1;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  z-index: -2;
+  opacity: 0.05;
 }
 
-.animated-bg::before {
-  content: '';
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  top: -50%;
-  left: -50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: moveGrid 20s linear infinite;
+.v-theme--dark .animated-bg {
+  opacity: 0.03;
 }
 
-@keyframes moveGrid {
+@keyframes gradientShift {
   0% {
-    transform: translate(0, 0);
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
   }
   100% {
-    transform: translate(50px, 50px);
+    background-position: 0% 50%;
   }
 }
 
-/* Floating Shapes */
 .floating-shape {
   position: fixed;
-  opacity: 0.1;
-  animation: float 20s infinite ease-in-out;
-  pointer-events: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
   z-index: -1;
+  animation: float 6s ease-in-out infinite;
+}
+
+.v-theme--dark .floating-shape {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .shape-1 {
-  width: 300px;
-  height: 300px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
-  top: 10%;
+  width: 80px;
+  height: 80px;
+  top: 20%;
   left: 10%;
   animation-delay: 0s;
 }
 
 .shape-2 {
-  width: 200px;
-  height: 200px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+  width: 120px;
+  height: 120px;
   top: 60%;
   right: 10%;
-  animation-delay: 5s;
+  animation-delay: 2s;
 }
 
 .shape-3 {
-  width: 250px;
-  height: 250px;
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  border-radius: 31% 69% 23% 77% / 67% 31% 69% 33%;
-  bottom: 10%;
-  left: 30%;
-  animation-delay: 10s;
+  width: 60px;
+  height: 60px;
+  bottom: 20%;
+  left: 60%;
+  animation-delay: 4s;
 }
 
 @keyframes float {
   0%,
   100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  25% {
-    transform: translate(30px, -30px) rotate(90deg);
+    transform: translateY(0px);
   }
   50% {
-    transform: translate(-20px, 20px) rotate(180deg);
-  }
-  75% {
-    transform: translate(-30px, -20px) rotate(270deg);
+    transform: translateY(-20px);
   }
 }
 
-/* Glass Morphism Cards */
+/* Glass card effect */
 .glass-card {
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(var(--v-theme-surface), 0.85) !important;
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
-  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
 }
 
-.glass-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25) !important;
+.v-theme--dark .glass-card {
+  background: rgba(var(--v-theme-surface), 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-/* Header Styles */
+/* Header gradient */
 .header-gradient {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-weight: 800;
-  font-size: 2.5rem;
-  letter-spacing: -0.02em;
 }
 
-/* Navigation Tabs */
-.nav-tab {
-  position: relative;
-  padding: 12px 24px !important;
-  border-radius: 12px !important;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  background: transparent !important;
-  color: #6b7280 !important;
-  text-transform: none !important;
+/* Notification badge */
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff4444;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
 }
 
-.nav-tab:hover {
-  background: rgba(103, 126, 234, 0.1) !important;
-  color: #667eea !important;
-}
-
-.nav-tab.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-  box-shadow: 0 4px 15px rgba(103, 126, 234, 0.3) !important;
-}
-
-/* Stat Cards */
+/* Toned down stat cards */
 .stat-card {
+  background: rgba(var(--v-theme-surface), 0.95) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  padding: 30px;
-  background: white !important;
-  border-radius: 20px !important;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  border: none !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .stat-card::before {
@@ -917,305 +1361,241 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 3px;
   background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+  opacity: 0.6;
 }
 
 .stat-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card:hover::before {
+  opacity: 0.8;
+}
+
+.v-theme--dark .stat-card {
+  background: rgba(var(--v-theme-surface), 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.v-theme--dark .stat-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
 }
 
 .stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  margin: 0 auto 16px auto;
+  margin: 0 auto;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  color: white;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.v-theme--dark .stat-icon {
+  opacity: 0.8;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .stat-value {
-  font-size: 2.5rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1;
-  margin-bottom: 8px;
-}
-
-/* Calendar Styles */
-.calendar-container {
-  padding: 24px;
-  background: white !important;
-  border-radius: 20px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
-}
-
-.calendar-picker {
-  width: 100%;
-  max-width: none;
-}
-
-/* Event List */
-.event-item {
-  padding: 16px;
-  border-radius: 12px;
-  background: #f9fafb;
-  margin-bottom: 12px;
-  border-left: 4px solid;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.event-item:hover {
-  transform: translateX(8px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-/* Notification Badge */
-.notification-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: linear-gradient(135deg, #f93b3b 0%, #ff6b6b 100%);
-  color: white;
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(249, 59, 59, 0.3);
-  animation: pulse 2s infinite;
+  color: rgb(var(--v-theme-on-surface));
+  margin: 0;
+  opacity: 0.9;
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+.v-theme--dark .stat-value {
+  opacity: 0.95;
 }
 
-/* Quick Actions */
-.quick-action {
-  background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%) !important;
-  border-radius: 16px !important;
-  padding: 20px;
-  text-align: center;
-  cursor: pointer;
+/* Navigation tabs */
+.nav-tab {
+  border-radius: 12px;
   transition: all 0.3s ease;
-  border: 2px solid transparent !important;
+  color: rgba(var(--v-theme-on-surface), 0.7);
+  margin: 0 4px;
+}
+
+.nav-tab.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.nav-tab:hover:not(.active) {
+  background: rgba(var(--v-theme-primary), 0.08);
+  color: rgb(var(--v-theme-primary));
+}
+
+.v-theme--dark .nav-tab:hover:not(.active) {
+  background: rgba(var(--v-theme-primary), 0.12);
+}
+
+/* Quick actions */
+.quick-action {
+  background: rgba(var(--v-theme-surface), 0.95) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .quick-action:hover {
-  background: white !important;
-  border-color: #667eea !important;
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  background: rgba(var(--v-theme-primary), 0.05) !important;
+}
+
+.v-theme--dark .quick-action {
+  background: rgba(var(--v-theme-surface), 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.v-theme--dark .quick-action:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  background: rgba(var(--v-theme-primary), 0.08) !important;
+}
+
+.quick-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  background: rgba(var(--v-theme-primary), 0.1);
+  color: rgb(var(--v-theme-primary));
+  transition: all 0.3s ease;
+}
+
+.quick-action:hover .quick-action-icon {
+  background: rgba(var(--v-theme-primary), 0.15);
+  transform: scale(1.05);
+}
+
+.v-theme--dark .quick-action-icon {
+  background: rgba(var(--v-theme-primary), 0.15);
+}
+
+.v-theme--dark .quick-action:hover .quick-action-icon {
+  background: rgba(var(--v-theme-primary), 0.2);
+}
+
+/* Calendar picker */
+.calendar-picker {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.calendar-picker :deep(.v-date-picker-month__day) {
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.calendar-picker :deep(.v-date-picker-month__day:hover) {
+  background: rgba(var(--v-theme-primary), 0.1);
+}
+
+.calendar-picker :deep(.v-date-picker-month__day.has-event) {
+  background: rgba(var(--v-theme-primary), 0.1);
+  border: 2px solid rgba(var(--v-theme-primary), 0.3);
+}
+
+.calendar-picker :deep(.v-date-picker-month__day.multiple-events) {
+  background: rgba(var(--v-theme-secondary), 0.1);
+  border: 2px solid rgba(var(--v-theme-secondary), 0.3);
+}
+
+/* Event items */
+.event-item {
+  background: rgba(var(--v-theme-surface), 0.95);
+  border-radius: 12px;
+  border-left: 4px solid;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.event-item:hover {
+  background: rgba(var(--v-theme-primary), 0.05);
+  transform: translateX(4px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.v-theme--dark .event-item {
+  background: rgba(var(--v-theme-surface), 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.v-theme--dark .event-item:hover {
+  background: rgba(var(--v-theme-primary), 0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* Booking cards */
+.booking-card {
+  background: rgba(var(--v-theme-surface), 0.95);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.booking-card:hover {
+  background: rgba(var(--v-theme-surface-variant), 0.8);
+  transform: translateX(4px);
+}
+
+.quick-action {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(var(--v-theme-surface), 0.8) !important;
+  border: 1px solid rgba(var(--v-theme-outline), 0.2);
+}
+
+.quick-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  background: rgba(var(--v-theme-primary), 0.1) !important;
 }
 
 .quick-action-icon {
   width: 48px;
   height: 48px;
-  margin: 0 auto 12px auto;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgb(var(--v-theme-primary)), rgb(var(--v-theme-secondary)));
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0 auto 8px;
   color: white;
-  font-size: 24px;
 }
 
-/* Booking Card */
-.booking-card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  border: 1px solid #e5e7eb;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-
-.booking-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--booking-color);
-}
-
-.booking-card:hover {
-  transform: translateX(8px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-
-/* Activity Icon */
 .activity-icon {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-/* Text Colors */
-.text-green {
-  color: #10b981;
-}
-.text-orange {
-  color: #f59e0b;
-}
-.text-purple {
-  color: #8b5cf6;
+.notification-item {
+  border-bottom: 1px solid rgba(var(--v-theme-outline), 0.1);
+  transition: background-color 0.3s ease;
 }
 
-/* Animation for stat cards */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.stat-card {
-  animation: fadeInUp 0.6s ease forwards;
-}
-
-.stat-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.stat-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.stat-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-.stat-card:nth-child(4) {
-  animation-delay: 0.4s;
-}
-
-/* Responsive adjustments */
-@media (max-width: 960px) {
-  .header-gradient {
-    font-size: 2rem;
-  }
-
-  .stat-value {
-    font-size: 2rem;
-  }
-
-  .stat-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 24px;
-  }
-}
-
-@media (max-width: 600px) {
-  .header-gradient {
-    font-size: 1.75rem;
-  }
-
-  .nav-tab {
-    padding: 8px 16px !important;
-    font-size: 0.875rem;
-  }
-
-  .stat-card {
-    padding: 20px;
-  }
-
-  .stat-value {
-    font-size: 1.75rem;
-  }
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-}
-
-/* Space utilities */
-.space-y-3 > * + * {
-  margin-top: 12px;
-}
-
-.gap-3 {
-  gap: 12px;
-}
-
-.position-relative {
-  position: relative;
-}
-
-.flex-1 {
-  flex: 1;
-}
-
-:deep(.v-date-picker-month__day--event) {
-  position: relative;
-}
-
-:deep(.v-date-picker-month__day--event.multiple-events::after) {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #9c27b0;
-  box-shadow: 0 0 0 2px white;
-}
-
-:deep(.v-date-picker-month__day--event:not(.multiple-events)::after) {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
+.notification-item:hover {
+  background: rgba(var(--v-theme-surface-variant), 0.5);
 }
 </style>

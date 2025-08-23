@@ -15,7 +15,10 @@ import {
   approveBooking,
   denyBooking,
   createEvent,
-} from '@/functions/adminDashboard'
+  checkBookingConflicts,
+  getBookingDetails,
+  forceApproveBooking,
+} from '@/views/admin/functions/adminDashboard'
 
 export const useAuthUserStore = defineStore('authUser', () => {
   const notifications = ref([])
@@ -49,6 +52,7 @@ export const useAuthUserStore = defineStore('authUser', () => {
   })
 
   const unreadNotificationsCount = computed(() => notifications.value.filter((n) => !n.read).length)
+
   // Dashboard Loader
   async function loadDashboardData() {
     await Promise.all([
@@ -59,6 +63,7 @@ export const useAuthUserStore = defineStore('authUser', () => {
       loadRecentActivities(recentActivities),
     ])
   }
+
   // States
   const userData = ref(null)
   const authPages = ref([])
@@ -177,6 +182,155 @@ export const useAuthUserStore = defineStore('authUser', () => {
     }
   }
 
+  // Calendar helper functions for the dashboard
+  const hasEvent = computed(() => (date) => {
+    return calendarEvents.value.some((event) => event.date === date)
+  })
+
+  const hasMultipleEvents = computed(() => (date) => {
+    return calendarEvents.value.filter((event) => event.date === date).length > 1
+  })
+
+  const getSelectedDateEvents = computed(() => (selectedDate) => {
+    const dateStr = selectedDate.toISOString().split('T')[0]
+    return calendarEvents.value.filter((event) => event.date === dateStr)
+  })
+
+  const eventDates = computed(() => (date) => {
+    const dateEvents = calendarEvents.value.filter((event) => event.date === date)
+    if (dateEvents.length === 0) return false
+    if (dateEvents.length === 1) return getEventColor(dateEvents[0].type)
+    return '#9C27B0' // Multiple events color
+  })
+
+  // Booking formatting helper
+  const formatBookingDetails = computed(() => (booking) => {
+    let title = ''
+    let subtitle = ''
+    let date = ''
+    let time = ''
+
+    switch (booking.type) {
+      case 'wedding':
+        title = `Wedding Ceremony`
+        subtitle =
+          booking.title ||
+          `${booking.bride_firstname || ''} & ${booking.groom_firstname || ''}`.trim()
+        date = booking.wedding_date
+          ? new Date(booking.wedding_date).toLocaleDateString()
+          : 'Date TBD'
+        time = '10:00 AM' // Default wedding time
+        break
+
+      case 'baptism':
+        title = `Baptism Ceremony`
+        subtitle = `${booking.child_firstname} ${booking.child_lastname}`
+        date = booking.baptism_date
+          ? new Date(booking.baptism_date).toLocaleDateString()
+          : 'Date TBD'
+        time = '2:00 PM' // Default baptism time
+        break
+
+      case 'funeral':
+        title = `Funeral Service`
+        subtitle = `${booking.deceased_firstname} ${booking.deceased_lastname}`
+        date = booking.funeral_date
+          ? new Date(booking.funeral_date).toLocaleDateString()
+          : 'Date TBD'
+        time = booking.funeral_time || '9:00 AM'
+        break
+
+      case 'thanksgiving':
+        title = `Thanksgiving Service`
+        subtitle = `${booking.participant_firstname} ${booking.participant_lastname}`
+        date = booking.thanksgiving_date
+          ? new Date(booking.thanksgiving_date).toLocaleDateString()
+          : 'Date TBD'
+        time = '4:00 PM' // Default thanksgiving time
+        break
+
+      default:
+        title = 'Unknown Event'
+        subtitle = 'Details unavailable'
+        date = 'Date TBD'
+        time = 'Time TBD'
+    }
+
+    return { title, subtitle, date, time }
+  })
+
+  // Notification management
+  const addNotification = (notification) => {
+    notifications.value.unshift({
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      read: false,
+      ...notification,
+    })
+  }
+
+  const markNotificationAsRead = (notificationId) => {
+    const notification = notifications.value.find((n) => n.id === notificationId)
+    if (notification) {
+      notification.read = true
+    }
+  }
+
+  // Booking conflict detection
+  const checkConflicts = async (bookingDate, bookingTime) => {
+    return await checkBookingConflicts(bookingDate, bookingTime)
+  }
+
+  // Get detailed booking information
+  const getDetailedBookingInfo = (booking) => {
+    return getBookingDetails(booking)
+  }
+
+  // Enhanced approve booking with conflict checking
+  const approveBookingWithConflictCheck = async (booking) => {
+    try {
+      // Get the booking date and time
+      let bookingDate, bookingTime
+
+      switch (booking.type) {
+        case 'wedding':
+          bookingDate = booking.wedding_date
+          bookingTime = '10:00'
+          break
+        case 'baptism':
+          bookingDate = booking.baptism_date
+          bookingTime = '14:00'
+          break
+        case 'funeral':
+          bookingDate = booking.funeral_date
+          bookingTime = booking.funeral_time || '09:00'
+          break
+        case 'thanksgiving':
+          bookingDate = booking.thanksgiving_date
+          bookingTime = '16:00'
+          break
+      }
+
+      // Check for conflicts before approving
+      if (bookingDate && bookingTime) {
+        const conflicts = await checkBookingConflicts(bookingDate, bookingTime)
+        if (conflicts.length > 0) {
+          return {
+            success: false,
+            conflicts: conflicts,
+            message: `Conflict detected! There is already a ${conflicts[0].type} scheduled at ${bookingTime} on ${bookingDate}`,
+          }
+        }
+      }
+
+      // If no conflicts, proceed with approval
+      return await approveBooking(booking, loadDashboardData)
+    } catch (error) {
+      console.error('Error in conflict check approval:', error)
+      return { error }
+    }
+  }
+
   return {
     userData,
     userRole,
@@ -200,12 +354,35 @@ export const useAuthUserStore = defineStore('authUser', () => {
     eventCategories,
     unreadNotificationsCount,
     statsTrends,
-    // Dashboard
+
+    // Dashboard functions
     loadDashboardData,
-    approveBooking: (booking) => approveBooking(booking, loadDashboardData),
+    loadPendingBookings: () => loadPendingBookings(pendingBookings, stats),
+    loadStats: () => loadStats(stats),
+    loadRecentActivities: () => loadRecentActivities(recentActivities),
+
+    // Booking management with conflict detection
+    approveBooking: approveBookingWithConflictCheck,
+    forceApproveBooking: (booking) => forceApproveBooking(booking, loadDashboardData),
     denyBooking: (booking) => denyBooking(booking, loadDashboardData),
     createEvent: (eventData) => createEvent(eventData, loadDashboardData),
+    checkConflicts,
+    getDetailedBookingInfo,
 
+    // Calendar helpers
+    hasEvent,
+    hasMultipleEvents,
+    getSelectedDateEvents,
+    eventDates,
+
+    // Booking helpers
+    formatBookingDetails,
+
+    // Notification management
+    addNotification,
+    markNotificationAsRead,
+
+    // Utility functions
     getEventColor,
     getEventGradient,
   }
