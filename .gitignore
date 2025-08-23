@@ -33,5 +33,5 @@ coverage
 .env
 
 # History files and folders
-.history/
+.history
 *.history

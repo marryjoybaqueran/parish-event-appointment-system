@@ -6,6 +6,7 @@ import PreloaderView from '@/components/layout/PreloaderView.vue'
 import NotificationWidget from './components/NotificationWidget.vue'
 import { mockNotifications } from './data/notificationData.js'
 import AppBar from '@/components/layout/AppBar.vue'
+import MyForms from '@/components/layout/MyForms.vue'
 
 const router = useRouter()
 
@@ -96,6 +97,11 @@ onMounted(() => {
   <NavBar2>
     <template #content>
       <v-container fluid class="pa-4">
+          <v-row>
+            <v-col cols="12">
+              <MyForms />
+            </v-col>
+          </v-row>
         <!-- Header section -->
         <v-row class="mb-4">
           <v-col cols="12">

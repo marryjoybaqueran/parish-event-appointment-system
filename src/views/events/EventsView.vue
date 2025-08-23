@@ -5,6 +5,7 @@ import PreloaderView from '@/components/layout/PreloaderView.vue'
 import Calendar from './components/CalendarWidget.vue'
 import calendarEvents from './data/calendarData'
 import AppBar from '@/components/layout/AppBar.vue'
+import MyForms from '@/components/layout/MyForms.vue'
 // Use the shared calendar data (exported array)
 const events = ref(calendarEvents)
 
@@ -35,20 +36,11 @@ onMounted(() => {
     <template #content>
       <v-container fluid class="pa-2 pa-sm-4">
         <!-- Page header -->
-        <v-row class="mb-3 mb-sm-4">
-          <v-col cols="12">
-            <div class="d-flex flex-column flex-sm-row justify-space-between align-start align-sm-center">
-              <div class="mb-3 mb-sm-0">
-                <h1 class="text-h4 text-sm-h3 primary--text mb-1 mb-sm-2">Parish Events</h1>
-                <p class="text-body-2 text-sm-body-1 grey--text text--darken-1">
-                  View and manage church events, masses, and appointments
-                </p>
-              </div>
-            </div>
-            
-            <v-divider class="mt-3 mt-sm-4"></v-divider>
-          </v-col>
-        </v-row>
+         <v-row>
+            <v-col cols="12">
+              <MyForms />
+            </v-col>
+          </v-row>
 
         <!-- Calendar component -->
         <v-row>

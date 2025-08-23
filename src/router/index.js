@@ -19,7 +19,9 @@ import TrialPage from '@/views/error/TrialPage.vue'
 // import CameraView from '@/views/camera/CameraView.vue'
 import Events from '@/views/events/EventsView.vue'
 import Notifications from '@/views/notifications/NotificationsView.vue'
-
+import Pending from '@/views/PendingView.vue'
+import WeddingContinue from '@/views/contWedding/ContWeddingView.vue'
+import WeddingContinue2 from '@/views/contWedding/CameraWeddingView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -50,6 +52,11 @@ const router = createRouter({
       name: 'book-event',
       component: BookEvent,
     },
+    {
+      path: '/pending',
+      name: 'pending',
+      component: Pending,
+    },
    /*   {
       path: '/camera',
       name: 'camera',
@@ -60,6 +67,18 @@ const router = createRouter({
       path: '/events',
       name: 'events',
       component: Events,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/wedding-mass-continue',
+      name: '/wedding-mass-continue',
+      component: WeddingContinue,
+      meta: { requiresAuth: true },
+    },
+     {
+      path: '/wedding-mass-continue-2',
+      name: '/wedding-mass-continue-2',
+      component: WeddingContinue2,
       meta: { requiresAuth: true },
     },
     {
