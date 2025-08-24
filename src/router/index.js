@@ -36,6 +36,8 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
+      // Add redirect since we handle this in beforeEach
+      redirect: '/homepage'
     },
     {
       path: '/login',
@@ -72,13 +74,13 @@ const router = createRouter({
     },
     {
       path: '/wedding-mass-continue',
-      name: '/wedding-mass-continue',
+      name: 'wedding-mass-continue',
       component: WeddingContinue,
       meta: { requiresAuth: true },
     },
      {
       path: '/wedding-mass-continue-2',
-      name: '/wedding-mass-continue-2',
+      name: 'wedding-mass-continue-2',
       component: WeddingContinue2,
       meta: { requiresAuth: true },
     },
@@ -163,6 +165,11 @@ const router = createRouter({
       name: 'forbidden',
       component: ForbiddenView,
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'catch-all',
+      redirect: '/page-not-found'
+    }
   ],
 })
 

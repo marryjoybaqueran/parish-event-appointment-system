@@ -106,23 +106,88 @@ export const useNotificationStore = defineStore('notifications', () => {
   }
 
   // Function para sa marking notifications as read
-  const markAsRead = (notificationId) => {
+  const markAsRead = async (notificationId) => {
     const notification = notifications.value.find(n => n.id === notificationId)
     if (notification && !notification.isRead) {
+      // Update sa database if it's a database notification
+      if (typeof notificationId === 'number' || notificationId.toString().match(/^\d+$/)) {
+        try {
+          const { error } = await supabase
+            .from('notifications')
+            .update({ is_read: true })
+            .eq('id', notificationId)
+          
+          if (error) {
+            console.error('Error marking notification as read in database:', error.message)
+            return false
+          }
+        } catch (err) {
+          console.error('Failed to mark notification as read in database:', err)
+          return false
+        }
+      }
+      
+      // Update local state
       notification.isRead = true
       unreadCount.value = unreadNotifications.value.length
+      return true
     }
+    return false
   }
 
   // Function para sa marking all notifications as read
-  const markAllAsRead = () => {
-    notifications.value.forEach(n => n.isRead = true)
-    unreadCount.value = 0
+  const markAllAsRead = async () => {
+    const user = await getCurrentUser()
+    if (!user) return false
+
+    try {
+      // Update all unread notifications sa database
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+      
+      if (error) {
+        console.error('Error marking all notifications as read in database:', error.message)
+        return false
+      }
+      
+      // Update local state
+      notifications.value.forEach(n => n.isRead = true)
+      unreadCount.value = 0
+      return true
+    } catch (err) {
+      console.error('Failed to mark all notifications as read:', err)
+      return false
+    }
   }
 
   // Function para sa clearing read notifications
-  const clearReadNotifications = () => {
-    notifications.value = notifications.value.filter(n => !n.isRead)
+  const clearReadNotifications = async () => {
+    const user = await getCurrentUser()
+    if (!user) return false
+
+    try {
+      // Delete read notifications from database
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('is_read', true)
+      
+      if (error) {
+        console.error('Error clearing read notifications from database:', error.message)
+        return false
+      }
+      
+      // Update local state
+      notifications.value = notifications.value.filter(n => !n.isRead)
+      return true
+    } catch (err) {
+      console.error('Failed to clear read notifications:', err)
+      return false
+    }
   }
 
   // Function para sa deleting specific notification
@@ -172,7 +237,8 @@ export const useNotificationStore = defineStore('notifications', () => {
           message: notification.message,
           color: notification.type, // Map type to color
           icon: notification.icon,
-          user_id: user.id
+          user_id: user.id,
+          is_read: false // New notifications default to unread
         }])
         .select()
         .single()
@@ -219,7 +285,7 @@ export const useNotificationStore = defineStore('notifications', () => {
         message: dbNotification.message,
         type: dbNotification.color || 'info',
         timestamp: new Date(dbNotification.created_at),
-        isRead: false, // Default to unread, can be enhanced with is_read column
+        isRead: dbNotification.is_read || false, // Use database is_read column
         icon: dbNotification.icon || 'mdi-bell',
         actionUrl: '/notifications', // Default action
         bookingType: 'database' // Mark as database notification
@@ -264,8 +330,8 @@ export const useNotificationStore = defineStore('notifications', () => {
           const oldRecord = payload.old
           const newRecord = payload.new
           
-          // Check if is_approve or is_denied changed
-          if (oldRecord.is_approve !== newRecord.is_approve && newRecord.is_approve === true) {
+          // Check if is_approved or is_denied changed
+          if (oldRecord.is_approved !== newRecord.is_approved && newRecord.is_approved === true) {
             const notification = createNotification('wedding', newRecord, 'approved')
             if (notification) addNotification(notification)
           }
@@ -304,8 +370,8 @@ export const useNotificationStore = defineStore('notifications', () => {
           const oldRecord = payload.old
           const newRecord = payload.new
           
-          // Check if is_approve or is_denied changed
-          if (oldRecord.is_approve !== newRecord.is_approve && newRecord.is_approve === true) {
+          // Check if is_approved or is_denied changed
+          if (oldRecord.is_approved !== newRecord.is_approved && newRecord.is_approved === true) {
             const notification = createNotification('funeral', newRecord, 'approved')
             if (notification) addNotification(notification)
           }
