@@ -12,6 +12,8 @@ import AdminDashboard from '@/views/admin/AdminDashboard.vue'
 import AdminBookingsView from '@/views/admin/AdminBookingsView.vue'
 import AdminMembersView from '@/views/admin/AdminMembersView.vue'
 import AdminEventsView from '@/views/admin/AdminEventsView.vue'
+import AdminAlertsView from '@/views/admin/AdminAlertsView.vue'
+
 import NotFoundView from '@/views/error/NotFoundView.vue'
 import FFBookingListView from '@/views/admin/FFBookingListView.vue'
 import BFBookingListView from '@/views/admin/BFBookingListView.vue'
@@ -145,6 +147,13 @@ const router = createRouter({
       path: '/admin-events-view',
       name: 'admin-events-view',
       component: AdminEventsView,
+      meta: { requiresAdmin: true },
+    },
+    {
+      //path: '/admin/admin-alerts-view',
+      path: '/admin-alerts-view',
+      name: 'admin-alerts-view',
+      component: AdminAlertsView,
       meta: { requiresAdmin: true },
     },
     {

@@ -123,7 +123,7 @@ onMounted(async () => {
             </RouterLink>
 
             <!-- NOTIFICATIONS TAB -->
-            <RouterLink to="/admin/notifications" class="router-link">
+            <RouterLink to="admin-alerts-view" class="router-link">
               <v-badge
                 :model-value="notificationStore.hasUnreadNotifications"
                 :content="notificationStore.unreadCount"
@@ -290,7 +290,7 @@ onMounted(async () => {
             rounded="lg"
             color="primary"
           >
-            <RouterLink to="/admin/notifications" class="router-link mobile-link">
+            <RouterLink to="admin-alerts-view" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-badge
                   :model-value="notificationStore.hasUnreadNotifications"
