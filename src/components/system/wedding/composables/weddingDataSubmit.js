@@ -20,6 +20,7 @@ export function useWeddingForm() {
     groom_firstname: '',
     groom_lastname: '',
     wedding_date: '',
+    starting_time: '',
   })
 
   // Store references
@@ -32,7 +33,8 @@ export function useWeddingForm() {
            formData.value.bride_lastname && 
            formData.value.groom_firstname && 
            formData.value.groom_lastname && 
-           formData.value.wedding_date
+           formData.value.wedding_date && 
+           formData.value.starting_time
   })
 
   // Show validation warnings based on touch interaction
@@ -48,6 +50,7 @@ export function useWeddingForm() {
       groom_firstname: '',
       groom_lastname: '',
       wedding_date: '',
+      starting_time: '',
     }
     formTouched.value = false
   }
@@ -68,6 +71,7 @@ export function useWeddingForm() {
       groom_firstname: formData.value.groom_firstname,
       groom_lastname: formData.value.groom_lastname,
       wedding_date: formData.value.wedding_date,
+      starting_time: formData.value.starting_time,
     }
 
     // Insert the wedding booking
