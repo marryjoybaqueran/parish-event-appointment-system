@@ -37,7 +37,7 @@ const hasMultipleEvents = authUser.hasMultipleEvents
 const getSelectedDateEvents = authUser.getSelectedDateEvents
 const formatBookingDetails = authUser.formatBookingDetails
 const getEventColor = authUser.getEventColor
-const eventDates = authUser.eventDates // This is the getter function for date => color|false
+const eventDates = authUser.eventDates
 
 const newEvent = ref({
   title: '',
@@ -49,8 +49,7 @@ const newEvent = ref({
 
 const quickActions = ref([
   { icon: 'mdi-plus', label: 'Add Event', click: () => (eventDialog.value = true) },
-  { icon: 'mdi-file-document', label: 'Reports', click: () => console.log('Reports clicked') },
-  { icon: 'mdi-email', label: 'Messages', click: () => console.log('Messages clicked') },
+
   { icon: 'mdi-cog', label: 'Settings', click: () => console.log('Settings clicked') },
 ])
 
@@ -303,30 +302,6 @@ const resetEventForm = () => {
     date: '',
     time: '',
     type: 'announcement',
-  }
-}
-
-const approveBooking = async (booking) => {
-  const result = await authUser.approveBooking(booking)
-
-  if (result.success) {
-    bookingDialog.value = false
-    // TODO: Add success feedback
-  } else {
-    console.error('Error approving booking:', result.error)
-    // TODO: Add error feedback
-  }
-}
-
-const denyBooking = async (booking) => {
-  const result = await authUser.denyBooking(booking)
-
-  if (result.success) {
-    bookingDialog.value = false
-    // TODO: Add success feedback
-  } else {
-    console.error('Error denying booking:', result.error)
-    // TODO: Add error feedback
   }
 }
 
@@ -745,6 +720,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Bookings Management View -->
+        <!-- Bookings Management View -->
         <div v-if="currentView === 'bookings'">
           <v-card class="glass-card">
             <v-card-title>Booking Management</v-card-title>
@@ -759,6 +735,8 @@ onUnmounted(() => {
                   { title: 'Actions', key: 'actions', sortable: false },
                 ]"
                 class="booking-table"
+                @click:row="(_, { item }) => openBookingDetails(item)"
+                hover
               >
                 <template #[`item.type`]="{ item }">
                   <v-chip :color="getEventColor(item.type)" size="small">
@@ -776,16 +754,12 @@ onUnmounted(() => {
                 </template>
                 <template #[`item.actions`]="{ item }">
                   <v-btn
-                    color="green"
+                    color="primary"
                     size="small"
-                    variant="outlined"
-                    class="me-2"
-                    @click="approveBooking(item)"
+                    variant="text"
+                    @click.stop="openBookingDetails(item)"
                   >
-                    Approve
-                  </v-btn>
-                  <v-btn color="red" size="small" variant="outlined" @click="denyBooking(item)">
-                    Deny
+                    View Details
                   </v-btn>
                 </template>
               </v-data-table>
