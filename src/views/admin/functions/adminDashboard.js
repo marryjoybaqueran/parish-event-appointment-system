@@ -667,6 +667,77 @@ export async function denyBooking(booking, loadDashboardData) {
   }
 }
 
+export async function denyBookingWithComment(booking, denialComment, loadDashboardData) {
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+    if (userError) throw userError
+
+    const updates = {
+      is_denied: true,
+      comment: denialComment,
+      denied_at: new Date().toISOString(),
+      denied_by: user.id,
+    }
+
+    const { error } = await supabase.from(booking.table).update(updates).eq('id', booking.id)
+
+    if (error) throw error
+
+    await supabase.from('audit_logs').insert([
+      {
+        action: `Denied ${booking.type} booking for ${getBookingName(booking)} with comment: "${denialComment}"`,
+        user_id: user.id,
+        table_name: booking.table,
+        record_id: booking.id,
+        old_data: { is_approved: false, is_denied: false },
+        new_data: { is_approved: false, is_denied: true, comment: denialComment },
+        changed_at: new Date().toISOString(),
+      },
+    ])
+
+    // Send notification to user about denial
+    await supabase.from('notifications').insert([
+      {
+        user_id: booking.user_id,
+        title: `${booking.type.charAt(0).toUpperCase() + booking.type.slice(1)} Booking Denied`,
+        message: `Your ${booking.type} booking has been denied. Reason: ${denialComment}`,
+        color: 'error',
+        icon: 'mdi-close-circle',
+        is_read: false,
+      },
+    ])
+
+    await loadDashboardData()
+    return { success: true }
+  } catch (error) {
+    console.error('Error denying booking with comment:', error)
+    return { error }
+  }
+}
+
+// Function to get attached images for a booking
+export function getBookingAttachedImages(booking) {
+  const images = []
+
+  switch (booking.type) {
+    case 'wedding':
+      if (booking.attached_images_1) images.push(booking.attached_images_1)
+      if (booking.attached_images_2) images.push(booking.attached_images_2)
+      if (booking.attached_images_3) images.push(booking.attached_images_3)
+      break
+    case 'baptism':
+    case 'funeral':
+    case 'thanksgiving':
+      if (booking.attached_images) images.push(booking.attached_images)
+      break
+  }
+
+  return images.filter((img) => img && img.trim() !== '')
+}
+
 export async function createEvent(eventData, loadDashboardData) {
   try {
     const { error } = await supabase.from('announcements').insert([
@@ -731,7 +802,7 @@ export function getBookingDetails(booking) {
         weddingDate: booking.wedding_date,
         starting_time: booking.starting_time || '10:00',
         ending_time: booking.ending_time || '12:00',
-        comments: booking.comments,
+        comments: booking.comment,
         attachedImages: booking.attached_images,
         contactInfo: `Contact via user: ${booking.user_id}`,
       }

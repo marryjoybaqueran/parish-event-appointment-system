@@ -14,10 +14,12 @@ import {
   loadRecentActivities,
   approveBooking,
   denyBooking,
+  denyBookingWithComment,
   createEvent,
   checkBookingConflicts,
   getBookingDetails,
   forceApproveBooking,
+  getBookingAttachedImages,
 } from '@/views/admin/functions/adminDashboard'
 
 export const useAuthUserStore = defineStore('authUser', () => {
@@ -376,9 +378,12 @@ export const useAuthUserStore = defineStore('authUser', () => {
     approveBooking: approveBookingWithConflictCheck,
     forceApproveBooking: (booking) => forceApproveBooking(booking, loadDashboardData),
     denyBooking: (booking) => denyBooking(booking, loadDashboardData),
+    denyBookingWithComment: (booking, comment) =>
+      denyBookingWithComment(booking, comment, loadDashboardData),
     createEvent: (eventData) => createEvent(eventData, loadDashboardData),
     checkConflicts,
     getDetailedBookingInfo,
+    getBookingAttachedImages,
 
     // Calendar helpers
     hasEvent,

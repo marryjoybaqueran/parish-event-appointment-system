@@ -164,7 +164,7 @@ const getReferenceId = (booking) => {
               </h4>
               <p class="text-caption text-medium-emphasis ma-0">{{ getBookingTypeLabel(booking) }}</p>
               <p v-if="getReferenceId(booking)" class="text-caption primary--text ma-0">{{ getReferenceId(booking) }}</p>
-              <p v-if="booking.comments" class="text-caption grey--text ma-0">{{ booking.comments }}</p>
+              <p v-if="booking.comment" class="text-caption grey--text ma-0">{{ booking.comment }}</p>
             </div>
             <v-chip
               :color="getStatusColor(booking)"
@@ -214,7 +214,7 @@ const getReferenceId = (booking) => {
                 {{ getStatusText(booking) }}
               </v-chip>
               <div v-if="getReferenceId(booking)" class="text-caption mt-2">{{ getReferenceId(booking) }}</div>
-              <div v-if="booking.comments" class="text-caption grey--text mt-1">{{ booking.comments }}</div>
+              <div v-if="booking.comment" class="text-caption grey--text mt-1">{{ booking.comment }}</div>
             </v-col>
           </v-row>
         </template>

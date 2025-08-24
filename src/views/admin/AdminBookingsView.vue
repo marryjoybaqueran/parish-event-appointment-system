@@ -14,6 +14,11 @@ const bookingActionLoading = ref(false)
 const bookingConflicts = ref([])
 const conflictDialog = ref(false)
 const pendingApprovalBooking = ref(null)
+const denialDialog = ref(false)
+const denialComment = ref('')
+const imageViewerDialog = ref(false)
+const selectedImages = ref([])
+const currentImageIndex = ref(0)
 
 // Booking data
 const weddingBookings = ref([])
@@ -43,39 +48,44 @@ const loadBookings = async () => {
       supabase.from('announcements').select('*').order('created_at', { ascending: false }),
     ])
 
-    weddingBookings.value = weddings.data?.map((booking) => ({
-      ...booking,
-      type: 'wedding',
-      table: 'wedding_bookings',
-      status: booking.is_approved ? 'approved' : 'pending'
-    })) || []
+    weddingBookings.value =
+      weddings.data?.map((booking) => ({
+        ...booking,
+        type: 'wedding',
+        table: 'wedding_bookings',
+        status: booking.is_approved ? 'approved' : 'pending',
+      })) || []
 
-    baptismBookings.value = baptisms.data?.map((booking) => ({
-      ...booking,
-      type: 'baptism',
-      table: 'baptism_bookings',
-      status: booking.is_approved ? 'approved' : 'pending'
-    })) || []
+    baptismBookings.value =
+      baptisms.data?.map((booking) => ({
+        ...booking,
+        type: 'baptism',
+        table: 'baptism_bookings',
+        status: booking.is_approved ? 'approved' : 'pending',
+      })) || []
 
-    funeralBookings.value = funerals.data?.map((booking) => ({
-      ...booking,
-      type: 'funeral',
-      table: 'funeral_bookings',
-      status: booking.is_approved ? 'approved' : 'pending'
-    })) || []
+    funeralBookings.value =
+      funerals.data?.map((booking) => ({
+        ...booking,
+        type: 'funeral',
+        table: 'funeral_bookings',
+        status: booking.is_approved ? 'approved' : 'pending',
+      })) || []
 
-    thanksgivingBookings.value = thanksgivings.data?.map((booking) => ({
-      ...booking,
-      type: 'thanksgiving',
-      table: 'thanksgiving_bookings',
-      status: booking.is_approved ? 'approved' : 'pending'
-    })) || []
+    thanksgivingBookings.value =
+      thanksgivings.data?.map((booking) => ({
+        ...booking,
+        type: 'thanksgiving',
+        table: 'thanksgiving_bookings',
+        status: booking.is_approved ? 'approved' : 'pending',
+      })) || []
 
-    announcements.value = events.data?.map((event) => ({
-      ...event,
-      type: event.type || 'announcement',
-      status: 'confirmed'
-    })) || []
+    announcements.value =
+      events.data?.map((event) => ({
+        ...event,
+        type: event.type || 'announcement',
+        status: 'confirmed',
+      })) || []
   } catch (error) {
     console.error('Error loading bookings:', error)
   } finally {
@@ -257,16 +267,28 @@ const handleApproveBooking = async () => {
 const handleDenyBooking = async () => {
   if (!selectedBooking.value) return
 
+  // Open denial dialog to get comment
+  denialDialog.value = true
+}
+
+const confirmDenyBooking = async () => {
+  if (!selectedBooking.value || !denialComment.value.trim()) return
+
   bookingActionLoading.value = true
 
   try {
-    const result = await authUser.denyBooking(selectedBooking.value)
+    const result = await authUser.denyBookingWithComment(
+      selectedBooking.value,
+      denialComment.value.trim(),
+    )
 
     if (result.success) {
       authUser.addNotification({
         message: `${selectedBooking.value.type} booking denied`,
         type: 'info',
       })
+      denialDialog.value = false
+      denialComment.value = ''
       await loadBookings()
       closeBookingDialog()
     } else {
@@ -284,6 +306,38 @@ const handleDenyBooking = async () => {
     })
   } finally {
     bookingActionLoading.value = false
+  }
+}
+
+const cancelDenialDialog = () => {
+  denialDialog.value = false
+  denialComment.value = ''
+}
+
+const viewImages = (booking) => {
+  const images = authUser.getBookingAttachedImages(booking)
+  if (images.length > 0) {
+    selectedImages.value = images
+    currentImageIndex.value = 0
+    imageViewerDialog.value = true
+  }
+}
+
+const closeImageViewer = () => {
+  imageViewerDialog.value = false
+  selectedImages.value = []
+  currentImageIndex.value = 0
+}
+
+const previousImage = () => {
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--
+  }
+}
+
+const nextImage = () => {
+  if (currentImageIndex.value < selectedImages.value.length - 1) {
+    currentImageIndex.value++
   }
 }
 
@@ -516,7 +570,8 @@ onMounted(async () => {
                         {{ formatBookingDetails(booking).date }}
                       </div>
                       <div class="text-caption text-grey">
-                        {{ formatBookingDetails(booking).starting_time }} - {{ formatBookingDetails(booking).ending_time }}
+                        {{ formatBookingDetails(booking).starting_time }} -
+                        {{ formatBookingDetails(booking).ending_time }}
                       </div>
                       <v-chip
                         :color="getStatusColor(booking)"
@@ -585,7 +640,8 @@ onMounted(async () => {
                     <v-icon class="me-2" size="18">mdi-calendar</v-icon>
                     {{ formatBookingDetails(selectedBooking).date }}
                     <v-icon class="me-2 ms-4" size="18">mdi-clock</v-icon>
-                    {{ formatBookingDetails(selectedBooking).starting_time }} - {{ formatBookingDetails(selectedBooking).ending_time }}
+                    {{ formatBookingDetails(selectedBooking).starting_time }} -
+                    {{ formatBookingDetails(selectedBooking).ending_time }}
                   </div>
                 </div>
 
@@ -601,6 +657,17 @@ onMounted(async () => {
                   <v-chip :color="getStatusColor(selectedBooking)" size="small" variant="tonal">
                     {{ getStatusText(selectedBooking) }}
                   </v-chip>
+                </div>
+
+                <!-- Denial Reason (if booking was denied) -->
+                <div v-if="selectedBooking.is_denied && selectedBooking.comment" class="mb-4">
+                  <div class="text-caption text-grey-darken-1 mb-1">Denial Reason</div>
+                  <v-alert
+                    type="error"
+                    variant="tonal"
+                    density="compact"
+                    :text="selectedBooking.comment"
+                  />
                 </div>
               </v-col>
 
@@ -629,9 +696,9 @@ onMounted(async () => {
                     <div class="text-caption text-grey-darken-1 mb-1">Event Title</div>
                     <div class="text-body-1">{{ selectedBooking.title }}</div>
                   </div>
-                  <div v-if="selectedBooking.comments" class="mb-3">
+                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
                     <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
-                    <div class="text-body-2">{{ selectedBooking.comments }}</div>
+                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
                   </div>
                 </div>
 
@@ -674,6 +741,10 @@ onMounted(async () => {
                     <div class="text-caption text-grey-darken-1 mb-1">Additional Notes</div>
                     <div class="text-body-2">{{ selectedBooking.additional_notes }}</div>
                   </div>
+                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
+                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
+                  </div>
                 </div>
 
                 <!-- Funeral Details -->
@@ -715,6 +786,10 @@ onMounted(async () => {
                     <div class="text-caption text-grey-darken-1 mb-1">Email</div>
                     <div class="text-body-2">{{ selectedBooking.contact_email }}</div>
                   </div>
+                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
+                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
+                  </div>
                 </div>
 
                 <!-- Thanksgiving Details -->
@@ -739,6 +814,10 @@ onMounted(async () => {
                   <div v-if="selectedBooking.family_members_count" class="mb-3">
                     <div class="text-caption text-grey-darken-1 mb-1">Family Members Count</div>
                     <div class="text-body-2">{{ selectedBooking.family_members_count }}</div>
+                  </div>
+                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
+                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
                   </div>
                 </div>
 
@@ -797,6 +876,16 @@ onMounted(async () => {
           <v-divider />
 
           <v-card-actions class="pa-6">
+            <v-btn
+              v-if="authUser.getBookingAttachedImages(selectedBooking).length > 0"
+              color="info"
+              variant="outlined"
+              @click="viewImages(selectedBooking)"
+              class="me-3"
+            >
+              <v-icon class="me-1">mdi-image-multiple</v-icon>
+              View Images ({{ authUser.getBookingAttachedImages(selectedBooking).length }})
+            </v-btn>
             <v-spacer />
             <v-btn variant="outlined" @click="closeBookingDialog" class="me-3"> Close </v-btn>
             <template
@@ -818,11 +907,7 @@ onMounted(async () => {
                 <v-icon class="me-1">mdi-close</v-icon>
                 Deny
               </v-btn>
-              <v-btn
-                color="success"
-                @click="handleApproveBooking"
-                :loading="bookingActionLoading"
-              >
+              <v-btn color="success" @click="handleApproveBooking" :loading="bookingActionLoading">
                 <v-icon class="me-1">mdi-check</v-icon>
                 Approve
               </v-btn>
@@ -878,6 +963,98 @@ onMounted(async () => {
             <v-btn color="warning" @click="forceApproveBooking" :loading="bookingActionLoading">
               <v-icon class="me-1">mdi-check-bold</v-icon>
               Approve Anyway
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- Denial Comment Dialog -->
+      <v-dialog v-model="denialDialog" max-width="500" persistent>
+        <v-card class="glass-card">
+          <v-card-title class="d-flex align-center text-error">
+            <v-icon class="me-2" color="error" size="32">mdi-close-circle</v-icon>
+            Deny Booking
+          </v-card-title>
+
+          <v-card-text class="pa-6">
+            <p class="mb-4">
+              Please provide a reason for denying this {{ selectedBooking?.type }} booking:
+            </p>
+
+            <v-textarea
+              v-model="denialComment"
+              label="Reason for denial"
+              placeholder="Enter the reason why this booking is being denied..."
+              rows="4"
+              required
+              :rules="[(v) => !!v || 'Reason is required']"
+              variant="outlined"
+            />
+          </v-card-text>
+
+          <v-card-actions class="pa-6">
+            <v-spacer />
+            <v-btn variant="outlined" @click="cancelDenialDialog" class="me-3"> Cancel </v-btn>
+            <v-btn
+              color="error"
+              @click="confirmDenyBooking"
+              :loading="bookingActionLoading"
+              :disabled="!denialComment.trim()"
+            >
+              <v-icon class="me-1">mdi-close</v-icon>
+              Confirm Denial
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- Image Viewer Dialog -->
+      <v-dialog v-model="imageViewerDialog" max-width="800">
+        <v-card class="glass-card">
+          <v-card-title class="d-flex align-center justify-space-between pa-4">
+            <div class="d-flex align-center">
+              <v-icon class="me-2" color="primary">mdi-image-multiple</v-icon>
+              Attached Images ({{ currentImageIndex + 1 }} of {{ selectedImages.length }})
+            </div>
+            <v-btn icon="mdi-close" variant="text" @click="closeImageViewer" />
+          </v-card-title>
+
+          <v-card-text class="pa-0">
+            <div class="d-flex justify-center align-center" style="min-height: 400px">
+              <v-img
+                v-if="selectedImages[currentImageIndex]"
+                :src="selectedImages[currentImageIndex]"
+                :alt="`Attached image ${currentImageIndex + 1}`"
+                contain
+                max-height="500"
+                class="mx-auto"
+              />
+            </div>
+          </v-card-text>
+
+          <v-card-actions class="pa-4" v-if="selectedImages.length > 1">
+            <v-btn @click="previousImage" :disabled="currentImageIndex === 0" variant="outlined">
+              <v-icon>mdi-chevron-left</v-icon>
+              Previous
+            </v-btn>
+            <v-spacer />
+            <div class="text-center">
+              <v-pagination
+                v-model="currentImageIndex"
+                :length="selectedImages.length"
+                :total-visible="3"
+                density="compact"
+                @update:model-value="(val) => (currentImageIndex = val - 1)"
+              />
+            </div>
+            <v-spacer />
+            <v-btn
+              @click="nextImage"
+              :disabled="currentImageIndex === selectedImages.length - 1"
+              variant="outlined"
+            >
+              Next
+              <v-icon>mdi-chevron-right</v-icon>
             </v-btn>
           </v-card-actions>
         </v-card>
