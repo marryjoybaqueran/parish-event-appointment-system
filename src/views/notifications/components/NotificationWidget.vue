@@ -13,7 +13,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['markAsRead', 'click'])
+const emit = defineEmits(['markAsRead', 'click', 'delete'])
 
 // Computed properties para sa styling
 const cardClasses = computed(() => [
@@ -41,6 +41,12 @@ const handleClick = () => {
     emit('markAsRead', props.notification.id)
   }
   emit('click', props.notification)
+}
+
+const handleDelete = (event) => {
+  // Stop event propagation para dili ma-trigger ang card click
+  event.stopPropagation()
+  emit('delete', props.notification.id)
 }
 </script>
 
@@ -79,15 +85,29 @@ const handleClick = () => {
               {{ notification.title }}
             </h3>
             
-            <!-- Unread indicator -->
-            <v-chip
-              v-if="!notification.isRead"
-              color="primary"
-              size="x-small"
-              class="ms-2"
-            >
-              New
-            </v-chip>
+            <div class="d-flex align-center gap-2">
+              <!-- Unread indicator -->
+              <v-chip
+                v-if="!notification.isRead"
+                color="primary"
+                size="x-small"
+              >
+                New
+              </v-chip>
+              
+              <!-- Delete button -->
+              <v-btn
+                icon
+                size="x-small"
+                variant="text"
+                color="error"
+                class="delete-btn"
+                @click="handleDelete"
+                :title="'Delete notification'"
+              >
+                <v-icon size="small">mdi-close</v-icon>
+              </v-btn>
+            </div>
           </div>
 
           <p 
@@ -142,5 +162,18 @@ const handleClick = () => {
 .notification-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.delete-btn {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.notification-card:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  background-color: rgba(var(--v-theme-error), 0.1) !important;
 }
 </style>

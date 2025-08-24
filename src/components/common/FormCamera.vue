@@ -114,9 +114,9 @@ const getButtonText = computed(() => {
   <div class="form-camera">
     <!-- Section Header -->
     <v-divider thickness="3" class="mt-7">
-      <h2 class="info mt-7">
+      <h5 class="info mt-7">
         {{ label }}{{ isRequired ? ' (Required)' : '' }}
-      </h2>
+      </h5>
     </v-divider>
 
     <v-row class="mt-4">
@@ -258,47 +258,11 @@ const getButtonText = computed(() => {
             variant="outlined"
             class="text-caption"
           >
-            <v-icon start>mdi-information</v-icon>
             At least one image is required para sa form
           </v-alert>
         </div>
 
-        <!-- Tips Card para sa Camera -->
-        <v-card class="mt-4 tips-card" variant="outlined" rounded="lg">
-          <v-list density="compact">
-            <v-list-subheader class="text-primary text-caption font-weight-medium">
-              Image Requirements
-            </v-list-subheader>
-
-            <v-list-item
-              v-if="isRequired"
-              prepend-icon="mdi-check-circle"
-              title="Required"
-              subtitle="At least 1 image must be attached"
-              class="text-caption"
-            >
-            </v-list-item>
-
-           
-            <v-list-item
-                prepend-icon="mdi-camera"
-                title="Tips para sa Clear Photo"
-                class="text-caption"
-            >
-                <template #subtitle>
-                    Use good lighting (preferably natural).
-                </template>
-            </v-list-item>
-
-            <v-list-item
-              prepend-icon="mdi-camera-enhance"
-              title="Source Options"
-              subtitle="Take new photo or choose from gallery"
-              class="text-caption"
-            >
-            </v-list-item>
-          </v-list>
-        </v-card>
+       
       </v-col>
     </v-row>
   </div>
@@ -306,8 +270,10 @@ const getButtonText = computed(() => {
 
 <style scoped>
 .info {
-  padding-bottom: 20px;
+  padding-bottom: 12px;
   font-family: 'RocknRoll One';
+  font-size: 1.15rem; /* default desktop/tablet size */
+  margin: 0; /* ensure consistent spacing with v-divider */
 }
 
 /* Camera integration styles */
@@ -339,6 +305,16 @@ const getButtonText = computed(() => {
 @media (max-width: 600px) {
   .image-preview-card {
     margin-bottom: 16px;
+  }
+  /* Make header and buttons more compact on small screens */
+  .info {
+    font-size: 0.95rem;
+    padding-bottom: 8px;
+  }
+  .camera-button {
+    font-size: 0.9rem;
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
 }
 </style>
