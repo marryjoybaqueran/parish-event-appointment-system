@@ -109,7 +109,7 @@ onMounted(async () => {
             </RouterLink>
 
             <!-- EVENTS MANAGEMENT -->
-            <RouterLink to="/admin-events-view" class="router-link">
+            <RouterLink to="/admin/events" class="router-link">
               <v-btn
                 class="mr-3 nav-btn events-btn"
                 variant="outlined"
@@ -275,7 +275,7 @@ onMounted(async () => {
             rounded="lg"
             color="primary"
           >
-            <RouterLink to="/admin-events-view" class="router-link mobile-link">
+            <RouterLink to="/admin/events" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-icon class="mobile-nav-icon">mdi-calendar-multiselect</v-icon>
               </template>

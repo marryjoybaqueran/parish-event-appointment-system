@@ -18,6 +18,7 @@ const searchQuery = ref('')
 // Event categories for display
 const eventCategories = ref([
   { name: 'announcement', label: 'Announcement', color: '#9C27B0', icon: 'mdi-bullhorn' },
+  { name: 'meeting', label: 'Meeting', color: '#9C27B0', icon: 'mdi-bullhorn' },
   { name: 'mass', label: 'Holy Mass', color: '#f093fb', icon: 'mdi-church' },
   { name: 'event', label: 'Parish Event', color: '#43e97b', icon: 'mdi-calendar-star' },
   { name: 'celebration', label: 'Celebration', color: '#FF9800', icon: 'mdi-party-popper' },

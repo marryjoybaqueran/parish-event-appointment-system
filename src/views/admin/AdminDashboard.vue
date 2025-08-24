@@ -22,6 +22,20 @@ const bookingConflicts = ref([])
 const conflictDialog = ref(false)
 const pendingApprovalBooking = ref(null)
 
+const activitiesPage = ref(1)
+const activitiesPerPage = ref(5)
+const paginatedRecentActivities = computed(() => {
+  const start = (activitiesPage.value - 1) * activitiesPerPage.value
+  const end = start + activitiesPerPage.value
+  return recentActivities.value.slice(start, end)
+})
+const activitiesTotalPages = computed(() => {
+  return Math.ceil(recentActivities.value.length / activitiesPerPage.value)
+})
+const resetActivitiesPagination = () => {
+  activitiesPage.value = 1
+}
+
 // Computed store-driven data
 const stats = computed(() => authUser.stats)
 const statsTrends = computed(() => authUser.statsTrends)
@@ -30,6 +44,17 @@ const calendarEvents = computed(() => authUser.calendarEvents)
 const pendingBookings = computed(() => authUser.pendingBookings)
 const notifications = computed(() => authUser.notifications)
 const unreadCount = computed(() => authUser.unreadNotificationsCount)
+const eventCategories = ref([
+  { name: 'announcement', label: 'Announcement', color: '#9C27B0', icon: 'mdi-bullhorn' },
+  { name: 'meeting', label: 'Meeting', color: '#9C27B0', icon: 'mdi-bullhorn' },
+  { name: 'mass', label: 'Holy Mass', color: '#f093fb', icon: 'mdi-church' },
+  { name: 'event', label: 'Parish Event', color: '#43e97b', icon: 'mdi-calendar-star' },
+  { name: 'celebration', label: 'Celebration', color: '#FF9800', icon: 'mdi-party-popper' },
+  { name: 'wedding', label: 'Wedding', color: '#667eea', icon: 'mdi-heart' },
+  { name: 'baptism', label: 'Baptism', color: '#4facfe', icon: 'mdi-water' },
+  { name: 'funeral', label: 'Funeral', color: '#424242', icon: 'mdi-cross' },
+  { name: 'thanksgiving', label: 'Thanksgiving', color: '#FF5722', icon: 'mdi-hands-pray' },
+])
 
 // Store functions
 const hasEvent = authUser.hasEvent
@@ -621,26 +646,72 @@ onUnmounted(() => {
 
               <!-- Recent Activities Section -->
               <v-card class="glass-card mb-4">
-                <v-card-title class="d-flex align-center">
-                  <v-icon class="me-2 text-green">mdi-history</v-icon>
-                  Recent Activity
+                <v-card-title class="d-flex align-center justify-space-between">
+                  <div class="d-flex align-center">
+                    <v-icon class="me-2 text-green">mdi-history</v-icon>
+                    Recent Activity
+                  </div>
+                  <v-chip color="primary" variant="outlined" size="small">
+                    {{ recentActivities.length }} total
+                  </v-chip>
                 </v-card-title>
                 <v-card-text>
-                  <div class="space-y-3">
-                    <div
-                      v-for="(activity, index) in recentActivities"
-                      :key="index"
-                      class="d-flex gap-3"
-                    >
-                      <div class="activity-icon" :class="`bg-${activity.color}-lighten-4`">
-                        <v-icon :color="activity.color">{{ activity.icon }}</v-icon>
-                      </div>
-                      <div class="flex-1 mx-2">
-                        <div class="text-caption">{{ activity.action }}</div>
-                        <div class="text-caption text-grey-darken-2">
-                          {{ new Date(activity.changed_at).toLocaleString() }}
+                  <div
+                    v-if="recentActivities.length === 0"
+                    class="text-center py-8 text-grey-darken-1"
+                  >
+                    <v-icon size="64" color="grey-lighten-2">mdi-history</v-icon>
+                    <p class="mt-3">No recent activities</p>
+                  </div>
+                  <div v-else>
+                    <div class="space-y-3">
+                      <div
+                        v-for="(activity, index) in paginatedRecentActivities"
+                        :key="index"
+                        class="d-flex gap-3 activity-item pa-3"
+                      >
+                        <div class="activity-icon" :class="`bg-${activity.color}-lighten-4`">
+                          <v-icon :color="activity.color" size="18">{{ activity.icon }}</v-icon>
+                        </div>
+                        <div class="flex-1 mx-2">
+                          <div class="text-body-2 font-weight-medium">{{ activity.action }}</div>
+                          <div class="text-caption text-grey-darken-2">
+                            {{ new Date(activity.changed_at).toLocaleString() }}
+                          </div>
                         </div>
                       </div>
+                    </div>
+
+                    <!-- Activities Pagination -->
+                    <div v-if="activitiesTotalPages > 1" class="d-flex justify-center mt-4">
+                      <v-pagination
+                        v-model="activitiesPage"
+                        :length="activitiesTotalPages"
+                        :total-visible="3"
+                        size="small"
+                        color="primary"
+                        variant="flat"
+                      />
+                    </div>
+
+                    <!-- Show more/less buttons alternative -->
+                    <div
+                      v-if="recentActivities.length > activitiesPerPage"
+                      class="text-center mt-4"
+                    >
+                      <v-btn
+                        variant="text"
+                        color="primary"
+                        size="small"
+                        @click="
+                          () => {
+                            activitiesPerPage = activitiesPerPage === 3 ? 5 : 3
+                            resetActivitiesPagination()
+                          }
+                        "
+                      >
+                        {{ activitiesPerPage === 3 ? 'Show More' : 'Show Less' }}
+                      </v-btn>
                     </div>
                   </div>
                 </v-card-text>
@@ -705,7 +776,6 @@ onUnmounted(() => {
           </v-card>
         </div>
 
-        <!-- Bookings Management View -->
         <!-- Bookings Management View -->
         <div v-if="currentView === 'bookings'">
           <v-card class="glass-card">
@@ -851,7 +921,9 @@ onUnmounted(() => {
 
               <v-select
                 v-model="newEvent.type"
-                :items="['announcement', 'mass', 'meeting', 'celebration']"
+                :items="eventCategories"
+                item-title="label"
+                item-value="name"
                 label="Event Type"
                 variant="outlined"
                 class="mb-3"
@@ -1197,6 +1269,27 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.activity-item {
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(var(--v-theme-outline), 0.1);
+}
+
+.activity-item:hover {
+  background: rgba(var(--v-theme-surface-variant), 0.5);
+  transform: translateX(2px);
+}
+
+.activity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .conflict-item {
   background: rgba(var(--v-theme-surface), 0.8);
   border-radius: 8px;
@@ -1573,5 +1666,11 @@ onUnmounted(() => {
 
 .notification-item:hover {
   background: rgba(var(--v-theme-surface-variant), 0.5);
+}
+
+@media (max-width: 600px) {
+  .v-pagination {
+    scale: 0.8;
+  }
 }
 </style>
