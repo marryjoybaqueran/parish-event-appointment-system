@@ -14,7 +14,7 @@ const isLoggedIn = ref(false)
 // Load functions during component mounting
 onMounted(async () => {
   isLoggedIn.value = await authStore.isAuthenticated()
-  await notificationStore.fetchNotifications()
+  await notificationStore.loadStoredNotifications()
 })
 </script>
 
