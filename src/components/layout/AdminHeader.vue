@@ -81,7 +81,7 @@ onMounted(async () => {
               </v-btn>
             </RouterLink>
 
-            <RouterLink to="/admin/bookings" class="router-link">
+            <RouterLink to="/admin-booking-view" class="router-link">
               <v-btn
                 class="mr-3 nav-btn bookings-btn"
                 variant="outlined"
@@ -95,7 +95,7 @@ onMounted(async () => {
             </RouterLink>
 
             <!-- MEMBERS MANAGEMENT -->
-            <RouterLink to="/admin/members" class="router-link">
+            <RouterLink to="admin-members-view" class="router-link">
               <v-btn
                 class="mr-3 nav-btn members-btn"
                 variant="outlined"
@@ -245,7 +245,7 @@ onMounted(async () => {
             rounded="lg"
             color="primary"
           >
-            <RouterLink to="/admin/bookings" class="router-link mobile-link">
+            <RouterLink to="admin-booking-view" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-icon class="mobile-nav-icon">mdi-clipboard-check</v-icon>
               </template>
@@ -260,7 +260,7 @@ onMounted(async () => {
             rounded="lg"
             color="primary"
           >
-            <RouterLink to="/admin/members" class="router-link mobile-link">
+            <RouterLink to="admin-members-view" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-icon class="mobile-nav-icon">mdi-account-group</v-icon>
               </template>

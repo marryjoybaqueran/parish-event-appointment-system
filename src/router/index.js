@@ -10,6 +10,7 @@ import ThanksGivingMass from '@/views/auth/ThanksGivingMass.vue'
 import TrialHeader from '@/views/TrialHeader.vue'
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
 import AdminBookingsView from '@/views/admin/AdminBookingsView.vue'
+import AdminMembersView from '@/views/admin/AdminMembersView.vue'
 import NotFoundView from '@/views/error/NotFoundView.vue'
 import FFBookingListView from '@/views/admin/FFBookingListView.vue'
 import BFBookingListView from '@/views/admin/BFBookingListView.vue'
@@ -102,6 +103,13 @@ const router = createRouter({
       component: AdminBookingsView,
       meta: { requiresAdmin: true },
     },
+ {
+      //path: '/admin/admin-members-view',
+      path: '/admin-members-view',
+      name: 'admin-members-view',
+      component: AdminMembersView,
+      meta: { requiresAdmin: true },
+    },
 
     {
       path: '/trial-header',
@@ -131,7 +139,7 @@ const router = createRouter({
       component: TGBookingListView,
       meta: { requiresAdmin: true },
     },
-   
+
     {
       path: '/forbidden',
       name: 'forbidden',
