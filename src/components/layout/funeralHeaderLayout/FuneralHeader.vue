@@ -55,7 +55,7 @@ const {
                 {{ booking.deceased_firstname }} {{ booking.deceased_lastname }}
               </h4>
               <p class="text-caption text-medium-emphasis ma-0">Funeral Booking</p>
-              <p v-if="booking.id" class="text-caption primary--text ma-0">ID: {{ booking.id }}</p>
+              <p v-if="booking.ref_number" class="text-caption primary--text ma-0">REF: {{ booking.ref_number }}</p>
               <p v-if="booking.comments" class="text-caption grey--text ma-0">{{ booking.comments }}</p>
             </div>
             <v-chip
@@ -105,7 +105,7 @@ const {
               <v-chip :color="getStatusColor(booking)" variant="flat" rounded="pill">
                 {{ getStatusText(booking) }}
               </v-chip>
-              <div v-if="booking.id" class="text-caption mt-2">ID: {{ booking.id }}</div>
+              <div v-if="booking.ref_number" class="text-caption mt-2">REF: {{ booking.ref_number }}</div>
               <div v-if="booking.comments" class="text-caption grey--text mt-1">{{ booking.comments }}</div>
             </v-col>
           </v-row>

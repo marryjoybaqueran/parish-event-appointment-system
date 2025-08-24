@@ -120,9 +120,7 @@ const getBookingTypeLabel = (booking) => {
 const getReferenceId = (booking) => {
   if (booking.bookingType === 'wedding' && booking.ref_number) {
     return `Ref: ${booking.ref_number}`
-  } else if (booking.bookingType === 'funeral') {
-    return `ID: ${booking.id}`
-  }
+  } 
   return null
 }
 </script>
