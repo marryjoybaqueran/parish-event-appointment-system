@@ -133,7 +133,7 @@ const router = createRouter({
       component: AdminMembersView,
       meta: { requiresAdmin: true },
     },
-  {
+    {
       //path: '/admin/admin-events-view',
       path: '/admin-events-view',
       name: 'admin-events-view',
@@ -208,8 +208,19 @@ router.beforeEach(async (to) => {
 
   // If logged in, prevent access to login or register pages
   if (isLoggedIn && (to.name === 'login' || to.name === 'register')) {
-    // redirect the user to the dashboard page
-    return { name: 'homepage' }
+    // Redirect based on role
+    let userRole = null
+    if (user) {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single()
+      userRole = roleData?.role
+    }
+
+    const isAdmin = userRole === 'admin'
+    return isAdmin ? { name: 'admin-dashboard' } : { name: 'homepage' }
   }
 
   let userRole = null
@@ -224,26 +235,52 @@ router.beforeEach(async (to) => {
 
   const isAdmin = userRole === 'admin'
 
+  // Admin route protection
   if (to.meta.requiresAdmin) {
     if (!isLoggedIn || !isAdmin) {
       return '/forbidden'
     }
   }
 
-  /*
-  // Check user if the user is logged in or not admin
-  if (isLoggedIn && !isAdmin) {
-    if (to.path.startsWith('/admin/users')) {
+  // Restrict admin access to normal user pages
+  if (isAdmin) {
+    const userOnlyPages = [
+      'homepage',
+      'book-event',
+      'events',
+      'notifications',
+      'wedding-mass-form',
+      'baptism-mass',
+      'funeral-mass',
+      'thanks-giving-mass',
+      'wedding-mass-continue',
+      'wedding-mass-continue-2',
+      'finnish',
+      'pending',
+    ]
+
+    if (userOnlyPages.includes(to.name)) {
+      return { name: 'admin-dashboard' }
+    }
+  }
+
+  // Restrict normal users from admin pages
+  if (!isAdmin) {
+    const adminOnlyPages = [
+      'admin-dashboard',
+      'admin-booking-view',
+      'admin-members-view',
+      'admin-events-view',
+      'funeral-mass-form-bookinglist-view',
+      'baptism-mass-form-bookinglist-view',
+      'thanksgiving-mass-form-bookinglist-view',
+    ]
+
+    if (adminOnlyPages.includes(to.name)) {
       return { name: 'forbidden' }
     }
   }
 
-  // If not logged in, prevent access to system pages
-  if (!isLoggedIn && to.path.startsWith('/admin')) {
-    // redirect the user to the login page
-    return { name: 'login' }
-  }
-*/
   if (router.resolve(to).matched.length === 0) {
     return { name: 'page-not-found' }
   }
