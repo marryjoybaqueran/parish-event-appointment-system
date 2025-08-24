@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
@@ -11,23 +11,12 @@ const loading = ref(true)
 const members = ref([])
 const selectedMember = ref(null)
 const memberDialog = ref(false)
-const addMemberDialog = ref(false)
 const confirmDeleteDialog = ref(false)
 const memberToDelete = ref(null)
 const searchQuery = ref('')
 const selectedRole = ref('all')
 const sortBy = ref('created_at')
 const sortOrder = ref('desc')
-
-// New member form
-const newMember = ref({
-  email: '',
-  password: '',
-  first_name: '',
-  last_name: '',
-  phone: '',
-  role: 'user'
-})
 
 // Pagination
 const page = ref(1)
@@ -45,17 +34,18 @@ const filteredMembers = computed(() => {
   // Filter by search query
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(member =>
-      member.email?.toLowerCase().includes(query) ||
-      member.first_name?.toLowerCase().includes(query) ||
-      member.last_name?.toLowerCase().includes(query) ||
-      member.phone?.includes(query)
+    filtered = filtered.filter(
+      (member) =>
+        member.email?.toLowerCase().includes(query) ||
+        member.first_name?.toLowerCase().includes(query) ||
+        member.last_name?.toLowerCase().includes(query) ||
+        member.phone?.includes(query),
     )
   }
 
   // Filter by role
   if (selectedRole.value !== 'all') {
-    filtered = filtered.filter(member => member.role === selectedRole.value)
+    filtered = filtered.filter((member) => member.role === selectedRole.value)
   }
 
   return filtered
@@ -75,7 +65,7 @@ const roleOptions = [
   { value: 'all', title: 'All Roles' },
   { value: 'user', title: 'User' },
   { value: 'admin', title: 'Administrator' },
-  { value: 'moderator', title: 'Moderator' }
+  { value: 'moderator', title: 'Moderator' },
 ]
 
 // Load members with their bookings
@@ -86,66 +76,182 @@ const loadMembers = async () => {
     // Get all users with their roles
     const { data: users, error: usersError } = await supabase
       .from('user_roles')
-      .select(`
+      .select(
+        `
         user_id,
         role,
         created_at,
         updated_at
-      `)
+      `,
+      )
       .order(sortBy.value, { ascending: sortOrder.value === 'asc' })
 
     if (usersError) throw usersError
 
-
-    // Load booking counts for each user
+    // Load booking counts for each user in parallel for better performance
     const membersWithBookings = await Promise.all(
       users.map(async (user) => {
         try {
-          // Get user profile data
-          const { data: authUser } = await supabase.auth.admin.getUserById(user.user_id)
+          // Since admin API is not accessible, we'll get user data from the current user
+          // or set default values and get what we can from bookings
+          let userEmail = `user-${user.user_id.slice(0, 8)}@parish.local`
+          let firstName = 'Member'
+          let lastName = ''
+          let phone = ''
+          let imageUrl = ''
+          let lastSignIn = null
+
+          // Try to get user info from their most recent booking
+          const [recentWedding, recentBaptism, recentFuneral, recentThanksgiving] =
+            await Promise.all([
+              supabase
+                .from('wedding_bookings')
+                .select('bride_email, bride_firstname, groom_firstname')
+                .eq('user_id', user.user_id)
+                .order('created_at', { ascending: false })
+                .limit(1),
+              supabase
+                .from('baptism_bookings')
+                .select('father_email, father_firstname, father_lastname')
+                .eq('user_id', user.user_id)
+                .order('created_at', { ascending: false })
+                .limit(1),
+              supabase
+                .from('funeral_bookings')
+                .select('requestor_email, requestor_firstname, requestor_lastname')
+                .eq('user_id', user.user_id)
+                .order('created_at', { ascending: false })
+                .limit(1),
+              supabase
+                .from('thanksgiving_bookings')
+                .select('participant_email, participant_firstname, participant_lastname')
+                .eq('user_id', user.user_id)
+                .order('created_at', { ascending: false })
+                .limit(1),
+            ])
+
+          // Use the most recent booking data we can find
+          if (recentWedding.data && recentWedding.data.length > 0) {
+            userEmail = recentWedding.data[0].bride_email || userEmail
+            firstName = recentWedding.data[0].bride_firstname || firstName
+            lastName = recentWedding.data[0].groom_firstname
+              ? `& ${recentWedding.data[0].groom_firstname}`
+              : lastName
+          } else if (recentBaptism.data && recentBaptism.data.length > 0) {
+            userEmail = recentBaptism.data[0].father_email || userEmail
+            firstName = recentBaptism.data[0].father_firstname || firstName
+            lastName = recentBaptism.data[0].father_lastname || lastName
+          } else if (recentFuneral.data && recentFuneral.data.length > 0) {
+            userEmail = recentFuneral.data[0].requestor_email || userEmail
+            firstName = recentFuneral.data[0].requestor_firstname || firstName
+            lastName = recentFuneral.data[0].requestor_lastname || lastName
+          } else if (recentThanksgiving.data && recentThanksgiving.data.length > 0) {
+            userEmail = recentThanksgiving.data[0].participant_email || userEmail
+            firstName = recentThanksgiving.data[0].participant_firstname || firstName
+            lastName = recentThanksgiving.data[0].participant_lastname || lastName
+          }
 
           // Count bookings for this user
           const [weddingCount, baptismCount, funeralCount, thanksgivingCount] = await Promise.all([
-            supabase.from('wedding_bookings').select('id', { count: 'exact', head: true }).eq('user_id', user.user_id),
-            supabase.from('baptism_bookings').select('id', { count: 'exact', head: true }).eq('user_id', user.user_id),
-            supabase.from('funeral_bookings').select('id', { count: 'exact', head: true }).eq('user_id', user.user_id),
-            supabase.from('thanksgiving_bookings').select('id', { count: 'exact', head: true }).eq('user_id', user.user_id)
+            supabase
+              .from('wedding_bookings')
+              .select('id', { count: 'exact', head: true })
+              .eq('user_id', user.user_id),
+            supabase
+              .from('baptism_bookings')
+              .select('id', { count: 'exact', head: true })
+              .eq('user_id', user.user_id),
+            supabase
+              .from('funeral_bookings')
+              .select('id', { count: 'exact', head: true })
+              .eq('user_id', user.user_id),
+            supabase
+              .from('thanksgiving_bookings')
+              .select('id', { count: 'exact', head: true })
+              .eq('user_id', user.user_id),
           ])
 
           // Get recent bookings
-          const [recentWeddings, recentBaptisms, recentFunerals, recentThanksgivings] = await Promise.all([
-            supabase.from('wedding_bookings').select('id, created_at, bride_firstname, groom_firstname, is_approve').eq('user_id', user.user_id).order('created_at', { ascending: false }).limit(5),
-            supabase.from('baptism_bookings').select('id, created_at, child_firstname, child_lastname, is_approved').eq('user_id', user.user_id).order('created_at', { ascending: false }).limit(5),
-            supabase.from('funeral_bookings').select('id, created_at, deceased_firstname, deceased_lastname, is_approved').eq('user_id', user.user_id).order('created_at', { ascending: false }).limit(5),
-            supabase.from('thanksgiving_bookings').select('id, created_at, participant_firstname, participant_lastname, is_approved').eq('user_id', user.user_id).order('created_at', { ascending: false }).limit(5)
-          ])
+          const [recentWeddings, recentBaptisms, recentFunerals, recentThanksgivings] =
+            await Promise.all([
+              supabase
+                .from('wedding_bookings')
+                .select('id, created_at, bride_firstname, groom_firstname, is_approved')
+                .eq('user_id', user.user_id)
+                .order('created_at', { ascending: false })
+                .limit(5),
+              supabase
+                .from('baptism_bookings')
+                .select('id, created_at, child_firstname, child_lastname, is_approved')
+                .eq('user_id', user.user_id)
+                .order('created_at', { ascending: false })
+                .limit(5),
+              supabase
+                .from('funeral_bookings')
+                .select('id, created_at, deceased_firstname, deceased_lastname, is_approved')
+                .eq('user_id', user.user_id)
+                .order('created_at', { ascending: false })
+                .limit(5),
+              supabase
+                .from('thanksgiving_bookings')
+                .select('id, created_at, participant_firstname, participant_lastname, is_approved')
+                .eq('user_id', user.user_id)
+                .order('created_at', { ascending: false })
+                .limit(5),
+            ])
 
-          const totalBookings = (weddingCount.count || 0) + (baptismCount.count || 0) + (funeralCount.count || 0) + (thanksgivingCount.count || 0)
+          const totalBookings =
+            (weddingCount.count || 0) +
+            (baptismCount.count || 0) +
+            (funeralCount.count || 0) +
+            (thanksgivingCount.count || 0)
 
           const recentBookings = [
-            ...(recentWeddings.data || []).map(b => ({ ...b, type: 'wedding', name: `${b.bride_firstname} & ${b.groom_firstname}`, approved: b.is_approve })),
-            ...(recentBaptisms.data || []).map(b => ({ ...b, type: 'baptism', name: `${b.child_firstname} ${b.child_lastname}`, approved: b.is_approved })),
-            ...(recentFunerals.data || []).map(b => ({ ...b, type: 'funeral', name: `${b.deceased_firstname} ${b.deceased_lastname}`, approved: b.is_approved })),
-            ...(recentThanksgivings.data || []).map(b => ({ ...b, type: 'thanksgiving', name: `${b.participant_firstname} ${b.participant_lastname}`, approved: b.is_approved }))
-          ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5)
+            ...(recentWeddings.data || []).map((b) => ({
+              ...b,
+              type: 'wedding',
+              name: `${b.bride_firstname} & ${b.groom_firstname}`,
+              approved: b.is_approved,
+            })),
+            ...(recentBaptisms.data || []).map((b) => ({
+              ...b,
+              type: 'baptism',
+              name: `${b.child_firstname} ${b.child_lastname}`,
+              approved: b.is_approved,
+            })),
+            ...(recentFunerals.data || []).map((b) => ({
+              ...b,
+              type: 'funeral',
+              name: `${b.deceased_firstname} ${b.deceased_lastname}`,
+              approved: b.is_approved,
+            })),
+            ...(recentThanksgivings.data || []).map((b) => ({
+              ...b,
+              type: 'thanksgiving',
+              name: `${b.participant_firstname} ${b.participant_lastname}`,
+              approved: b.is_approved,
+            })),
+          ]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 5)
 
           return {
             ...user,
             id: user.user_id,
-            email: authUser?.user?.email || 'Unknown',
-            first_name: authUser?.user?.user_metadata?.first_name || '',
-            last_name: authUser?.user?.user_metadata?.last_name || '',
-            phone: authUser?.user?.user_metadata?.phone || '',
-            image_url: authUser?.user?.user_metadata?.image_url || '',
-            last_sign_in: authUser?.user?.last_sign_in_at,
+            email: userEmail,
+            first_name: firstName,
+            last_name: lastName,
+            phone: phone,
+            image_url: imageUrl,
+            last_sign_in: lastSignIn,
             bookings: {
               total: totalBookings,
               wedding: weddingCount.count || 0,
               baptism: baptismCount.count || 0,
               funeral: funeralCount.count || 0,
               thanksgiving: thanksgivingCount.count || 0,
-              recent: recentBookings
-            }
+              recent: recentBookings,
+            },
           }
         } catch (error) {
           console.error(`Error loading data for user ${user.user_id}:`, error)
@@ -157,20 +263,19 @@ const loadMembers = async () => {
             last_name: '',
             phone: '',
             image_url: '',
-            bookings: { total: 0, wedding: 0, baptism: 0, funeral: 0, thanksgiving: 0, recent: [] }
+            bookings: { total: 0, wedding: 0, baptism: 0, funeral: 0, thanksgiving: 0, recent: [] },
           }
         }
-      })
+      }),
     )
 
     members.value = membersWithBookings
     totalMembers.value = membersWithBookings.length
-
   } catch (error) {
     console.error('Error loading members:', error)
     authUser.addNotification({
       message: 'Failed to load members',
-      type: 'error'
+      type: 'error',
     })
   } finally {
     loading.value = false
@@ -181,54 +286,6 @@ const loadMembers = async () => {
 const viewMemberDetails = (member) => {
   selectedMember.value = member
   memberDialog.value = true
-}
-
-// Add new member
-const addMember = async () => {
-  try {
-    actionLoading.value = true
-
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: newMember.value.email,
-      password: newMember.value.password,
-      user_metadata: {
-        first_name: newMember.value.first_name,
-        last_name: newMember.value.last_name,
-        phone: newMember.value.phone
-      }
-    })
-
-    if (authError) throw authError
-
-    // Add user role
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert([{
-        user_id: authData.user.id,
-        role: newMember.value.role
-      }])
-
-    if (roleError) throw roleError
-
-    authUser.addNotification({
-      message: `Member ${newMember.value.first_name} ${newMember.value.last_name} added successfully`,
-      type: 'success'
-    })
-
-    addMemberDialog.value = false
-    resetNewMemberForm()
-    await loadMembers()
-
-  } catch (error) {
-    console.error('Error adding member:', error)
-    authUser.addNotification({
-      message: `Failed to add member: ${error.message}`,
-      type: 'error'
-    })
-  } finally {
-    actionLoading.value = false
-  }
 }
 
 // Update member role
@@ -245,16 +302,15 @@ const updateMemberRole = async (memberId, newRole) => {
 
     authUser.addNotification({
       message: 'Member role updated successfully',
-      type: 'success'
+      type: 'success',
     })
 
     await loadMembers()
-
   } catch (error) {
     console.error('Error updating member role:', error)
     authUser.addNotification({
       message: 'Failed to update member role',
-      type: 'error'
+      type: 'error',
     })
   } finally {
     actionLoading.value = false
@@ -281,18 +337,17 @@ const deleteMember = async () => {
 
     authUser.addNotification({
       message: `Member ${memberToDelete.value.first_name} ${memberToDelete.value.last_name} deleted successfully`,
-      type: 'success'
+      type: 'success',
     })
 
     confirmDeleteDialog.value = false
     memberToDelete.value = null
     await loadMembers()
-
   } catch (error) {
     console.error('Error deleting member:', error)
     authUser.addNotification({
       message: 'Failed to delete member',
-      type: 'error'
+      type: 'error',
     })
   } finally {
     deleteLoading.value = false
@@ -305,41 +360,43 @@ const confirmDelete = (member) => {
   confirmDeleteDialog.value = true
 }
 
-// Reset new member form
-const resetNewMemberForm = () => {
-  newMember.value = {
-    email: '',
-    password: '',
-    first_name: '',
-    last_name: '',
-    phone: '',
-    role: 'user'
-  }
-}
-
 // Get role color
 const getRoleColor = (role) => {
   switch (role) {
-    case 'admin': return 'red'
-    case 'moderator': return 'orange'
-    case 'user': return 'blue'
-    default: return 'grey'
+    case 'admin':
+      return 'red'
+    case 'moderator':
+      return 'orange'
+    case 'user':
+      return 'blue'
+    default:
+      return 'grey'
   }
 }
 
 // Get booking type color
 const getBookingTypeColor = (type) => {
   switch (type) {
-    case 'wedding': return '#667eea'
-    case 'baptism': return '#4facfe'
-    case 'funeral': return '#424242'
-    case 'thanksgiving': return '#FF5722'
-    default: return '#757575'
+    case 'wedding':
+      return '#667eea'
+    case 'baptism':
+      return '#4facfe'
+    case 'funeral':
+      return '#424242'
+    case 'thanksgiving':
+      return '#FF5722'
+    default:
+      return '#757575'
   }
 }
 
 onMounted(async () => {
   await loadMembers()
+})
+
+// Watch for filter changes and reset page
+watch([searchQuery, selectedRole], () => {
+  page.value = 1
 })
 </script>
 
@@ -350,7 +407,9 @@ onMounted(async () => {
       <v-container fluid class="pa-4 pa-md-8">
         <!-- Header Section -->
         <div class="glass-card pa-4 pa-md-6 mb-6">
-          <div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center ga-4">
+          <div
+            class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center ga-4"
+          >
             <div>
               <h1 class="header-gradient mb-2 text-h4 text-md-h3">Members Management</h1>
               <p class="text-subtitle-1 text-grey">
@@ -358,14 +417,17 @@ onMounted(async () => {
               </p>
             </div>
 
-            <v-btn
-              color="primary"
-              size="large"
-              @click="addMemberDialog = true"
-              prepend-icon="mdi-account-plus"
-            >
-              Add Member
-            </v-btn>
+            <div class="d-flex ga-2">
+              <v-btn
+                color="secondary"
+                variant="outlined"
+                @click="loadMembers"
+                :loading="loading"
+                prepend-icon="mdi-refresh"
+              >
+                Refresh
+              </v-btn>
+            </div>
           </div>
         </div>
 
@@ -377,7 +439,7 @@ onMounted(async () => {
                 <v-text-field
                   v-model="searchQuery"
                   prepend-inner-icon="mdi-magnify"
-                  placeholder="Search members..."
+                  placeholder="Search by name, email, or phone..."
                   variant="outlined"
                   density="compact"
                   clearable
@@ -404,7 +466,7 @@ onMounted(async () => {
               <v-col cols="12" md="3" class="d-flex justify-end">
                 <v-chip color="primary" variant="outlined" class="me-2">
                   <v-icon start>mdi-account-group</v-icon>
-                  {{ totalMembers }} Total Members
+                  {{ filteredMembers.length }} / {{ totalMembers }} Members
                 </v-chip>
               </v-col>
             </v-row>
@@ -417,16 +479,18 @@ onMounted(async () => {
             :items="paginatedMembers"
             :headers="[
               { title: 'Member', key: 'member', sortable: false },
-              { title: 'Email', key: 'email' },
-              { title: 'Role', key: 'role' },
-              { title: 'Total Bookings', key: 'bookings.total' },
-              { title: 'Last Sign In', key: 'last_sign_in' },
-              { title: 'Joined', key: 'created_at' },
-              { title: 'Actions', key: 'actions', sortable: false }
+              { title: 'Email', key: 'email', sortable: true },
+              { title: 'Role', key: 'role', sortable: true },
+              { title: 'Total Bookings', key: 'bookings.total', sortable: true },
+              { title: 'Last Sign In', key: 'last_sign_in', sortable: true },
+              { title: 'Joined', key: 'created_at', sortable: true },
+              { title: 'Actions', key: 'actions', sortable: false, align: 'center' },
             ]"
             class="members-table"
             :loading="loading"
+            loading-text="Loading members..."
             hide-default-footer
+            no-data-text="No members found"
           >
             <!-- Member Info -->
             <template #[`item.member`]="{ item }">
@@ -438,9 +502,7 @@ onMounted(async () => {
                   </span>
                 </v-avatar>
                 <div>
-                  <div class="font-weight-semibold">
-                    {{ item.first_name }} {{ item.last_name }}
-                  </div>
+                  <div class="font-weight-semibold">{{ item.first_name }} {{ item.last_name }}</div>
                   <div class="text-caption text-grey-darken-2" v-if="item.phone">
                     {{ item.phone }}
                   </div>
@@ -462,8 +524,13 @@ onMounted(async () => {
                 class="text-capitalize"
               >
                 <v-icon start size="14">
-                  {{ item.role === 'admin' ? 'mdi-shield-crown' :
-                     item.role === 'moderator' ? 'mdi-shield-check' : 'mdi-account' }}
+                  {{
+                    item.role === 'admin'
+                      ? 'mdi-shield-crown'
+                      : item.role === 'moderator'
+                        ? 'mdi-shield-check'
+                        : 'mdi-account'
+                  }}
                 </v-icon>
                 {{ item.role }}
               </v-chip>
@@ -492,32 +559,47 @@ onMounted(async () => {
 
             <!-- Actions -->
             <template #[`item.actions`]="{ item }">
-              <div class="d-flex ga-1">
-                <v-btn
-                  icon="mdi-eye"
-                  variant="text"
-                  size="small"
-                  color="primary"
-                  @click="viewMemberDetails(item)"
-                />
-                <v-menu>
+              <div class="d-flex ga-2 justify-center">
+                <v-tooltip text="View Details">
                   <template #activator="{ props }">
                     <v-btn
-                      icon="mdi-dots-vertical"
+                      v-bind="props"
+                      icon="mdi-eye"
                       variant="text"
                       size="small"
-                      v-bind="props"
+                      color="primary"
+                      @click="viewMemberDetails(item)"
                     />
                   </template>
+                </v-tooltip>
+
+                <v-menu>
+                  <template #activator="{ props }">
+                    <v-tooltip text="More Actions">
+                      <template #activator="{ props: tooltipProps }">
+                        <v-btn
+                          v-bind="{ ...props, ...tooltipProps }"
+                          icon="mdi-dots-vertical"
+                          variant="text"
+                          size="small"
+                        />
+                      </template>
+                    </v-tooltip>
+                  </template>
                   <v-list density="compact">
-                    <v-list-item @click="updateMemberRole(item.id, item.role === 'admin' ? 'user' : 'admin')">
+                    <v-list-item
+                      @click="updateMemberRole(item.id, item.role === 'admin' ? 'user' : 'admin')"
+                    >
                       <template #prepend>
-                        <v-icon>{{ item.role === 'admin' ? 'mdi-account-arrow-down' : 'mdi-account-arrow-up' }}</v-icon>
+                        <v-icon>{{
+                          item.role === 'admin' ? 'mdi-account-arrow-down' : 'mdi-account-arrow-up'
+                        }}</v-icon>
                       </template>
                       <v-list-item-title>
-                        {{ item.role === 'admin' ? 'Remove Admin' : 'Make Admin' }}
+                        {{ item.role === 'admin' ? 'Remove Admin Rights' : 'Grant Admin Rights' }}
                       </v-list-item-title>
                     </v-list-item>
+                    <v-divider />
                     <v-list-item @click="confirmDelete(item)" class="text-red">
                       <template #prepend>
                         <v-icon color="red">mdi-delete</v-icon>
@@ -530,8 +612,20 @@ onMounted(async () => {
             </template>
           </v-data-table>
 
-          <!-- Pagination -->
-          <v-card-actions class="justify-center pa-6">
+          <!-- Pagination and Empty State -->
+          <div v-if="filteredMembers.length === 0 && !loading" class="text-center pa-8">
+            <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-account-search</v-icon>
+            <h3 class="text-h6 text-grey">No members found</h3>
+            <p class="text-body-2 text-grey mb-4">
+              {{
+                searchQuery || selectedRole !== 'all'
+                  ? 'Try adjusting your search or filters'
+                  : 'No members found'
+              }}
+            </p>
+          </div>
+
+          <v-card-actions v-else class="justify-center pa-6">
             <v-pagination
               v-model="page"
               :length="totalPages"
@@ -550,14 +644,41 @@ onMounted(async () => {
                 <v-avatar size="60" :color="selectedMember.image_url ? undefined : 'primary'">
                   <v-img v-if="selectedMember.image_url" :src="selectedMember.image_url" />
                   <span v-else class="text-white text-h5">
-                    {{ (selectedMember.first_name?.[0] || '') + (selectedMember.last_name?.[0] || '') }}
+                    {{
+                      (selectedMember.first_name?.[0] || '') + (selectedMember.last_name?.[0] || '')
+                    }}
                   </span>
                 </v-avatar>
                 <div>
-                  <h2 class="text-h5">{{ selectedMember.first_name }} {{ selectedMember.last_name }}</h2>
-                  <v-chip :color="getRoleColor(selectedMember.role)" size="small" variant="tonal" class="text-capitalize">
-                    {{ selectedMember.role }}
-                  </v-chip>
+                  <h2 class="text-h5">
+                    {{ selectedMember.first_name }} {{ selectedMember.last_name }}
+                  </h2>
+                  <div class="d-flex ga-2 mt-2">
+                    <v-chip
+                      :color="getRoleColor(selectedMember.role)"
+                      size="small"
+                      variant="tonal"
+                      class="text-capitalize"
+                    >
+                      <v-icon start size="14">
+                        {{
+                          selectedMember.role === 'admin'
+                            ? 'mdi-shield-crown'
+                            : selectedMember.role === 'moderator'
+                              ? 'mdi-shield-check'
+                              : 'mdi-account'
+                        }}
+                      </v-icon>
+                      {{ selectedMember.role }}
+                    </v-chip>
+                    <v-chip
+                      :color="selectedMember.last_sign_in ? 'green' : 'orange'"
+                      size="small"
+                      variant="tonal"
+                    >
+                      {{ selectedMember.last_sign_in ? 'Active' : 'Never Signed In' }}
+                    </v-chip>
+                  </div>
                 </div>
               </div>
               <v-btn icon="mdi-close" variant="text" @click="memberDialog = false" />
@@ -581,12 +702,18 @@ onMounted(async () => {
                     </div>
                     <div>
                       <div class="text-caption text-grey-darken-1">Member Since</div>
-                      <div class="text-body-1">{{ new Date(selectedMember.created_at).toLocaleDateString() }}</div>
+                      <div class="text-body-1">
+                        {{ new Date(selectedMember.created_at).toLocaleDateString() }}
+                      </div>
                     </div>
                     <div>
                       <div class="text-caption text-grey-darken-1">Last Sign In</div>
                       <div class="text-body-1">
-                        {{ selectedMember.last_sign_in ? new Date(selectedMember.last_sign_in).toLocaleString() : 'Never' }}
+                        {{
+                          selectedMember.last_sign_in
+                            ? new Date(selectedMember.last_sign_in).toLocaleDateString()
+                            : 'Never'
+                        }}
                       </div>
                     </div>
                   </div>
@@ -596,12 +723,17 @@ onMounted(async () => {
                 <v-col cols="12" md="6">
                   <h3 class="text-h6 mb-4">Booking Statistics</h3>
                   <v-row>
-                    <v-col cols="6" sm="3" v-for="(count, type) in {
-                      wedding: selectedMember.bookings.wedding,
-                      baptism: selectedMember.bookings.baptism,
-                      funeral: selectedMember.bookings.funeral,
-                      thanksgiving: selectedMember.bookings.thanksgiving
-                    }" :key="type">
+                    <v-col
+                      cols="6"
+                      sm="3"
+                      v-for="(count, type) in {
+                        wedding: selectedMember.bookings.wedding,
+                        baptism: selectedMember.bookings.baptism,
+                        funeral: selectedMember.bookings.funeral,
+                        thanksgiving: selectedMember.bookings.thanksgiving,
+                      }"
+                      :key="type"
+                    >
                       <v-card variant="outlined" class="text-center pa-3">
                         <div class="text-h6" :style="{ color: getBookingTypeColor(type) }">
                           {{ count }}
@@ -678,11 +810,12 @@ onMounted(async () => {
             <v-divider />
 
             <v-card-text class="pa-6">
-              <v-form @submit.prevent="addMember">
+              <v-form v-model="formValid" @submit.prevent="addMember">
                 <v-row>
                   <v-col cols="12" sm="6">
                     <v-text-field
                       v-model="newMember.first_name"
+                      :rules="nameRules"
                       label="First Name"
                       variant="outlined"
                       required
@@ -691,6 +824,7 @@ onMounted(async () => {
                   <v-col cols="12" sm="6">
                     <v-text-field
                       v-model="newMember.last_name"
+                      :rules="nameRules"
                       label="Last Name"
                       variant="outlined"
                       required
@@ -699,6 +833,7 @@ onMounted(async () => {
                   <v-col cols="12">
                     <v-text-field
                       v-model="newMember.email"
+                      :rules="emailRules"
                       label="Email"
                       type="email"
                       variant="outlined"
@@ -708,6 +843,7 @@ onMounted(async () => {
                   <v-col cols="12">
                     <v-text-field
                       v-model="newMember.password"
+                      :rules="passwordRules"
                       label="Password"
                       type="password"
                       variant="outlined"
@@ -720,6 +856,7 @@ onMounted(async () => {
                       v-model="newMember.phone"
                       label="Phone (optional)"
                       variant="outlined"
+                      placeholder="+63 XXX XXX XXXX"
                     />
                   </v-col>
                   <v-col cols="12">
@@ -728,7 +865,7 @@ onMounted(async () => {
                       :items="[
                         { value: 'user', title: 'User' },
                         { value: 'moderator', title: 'Moderator' },
-                        { value: 'admin', title: 'Administrator' }
+                        { value: 'admin', title: 'Administrator' },
                       ]"
                       label="Role"
                       variant="outlined"
@@ -742,10 +879,21 @@ onMounted(async () => {
 
             <v-card-actions class="pa-6">
               <v-spacer />
-              <v-btn variant="outlined" @click="addMemberDialog = false; resetNewMemberForm()">
+              <v-btn
+                variant="outlined"
+                @click="
+                  addMemberDialog = false;
+                  resetNewMemberForm();
+                "
+              >
                 Cancel
               </v-btn>
-              <v-btn color="primary" @click="addMember" :loading="actionLoading">
+              <v-btn
+                color="primary"
+                @click="addMember"
+                :loading="actionLoading"
+                :disabled="!formValid"
+              >
                 Add Member
               </v-btn>
             </v-card-actions>
@@ -764,7 +912,9 @@ onMounted(async () => {
 
             <v-card-text class="pa-6">
               <p class="mb-4">
-                Are you sure you want to delete <strong>{{ memberToDelete.first_name }} {{ memberToDelete.last_name }}</strong>?
+                Are you sure you want to delete
+                <strong>{{ memberToDelete.first_name }} {{ memberToDelete.last_name }}</strong
+                >?
               </p>
               <v-alert type="warning" variant="tonal" class="mb-4">
                 <v-alert-title>Warning!</v-alert-title>
@@ -782,7 +932,13 @@ onMounted(async () => {
 
             <v-card-actions class="pa-6">
               <v-spacer />
-              <v-btn variant="outlined" @click="confirmDeleteDialog = false; memberToDelete = null">
+              <v-btn
+                variant="outlined"
+                @click="
+                  confirmDeleteDialog = false;
+                  memberToDelete = null;
+                "
+              >
                 Cancel
               </v-btn>
               <v-btn color="error" @click="deleteMember" :loading="deleteLoading">
@@ -942,5 +1098,4 @@ onMounted(async () => {
 .v-pagination :deep(.v-btn--active) {
   background: rgb(var(--v-theme-primary)) !important;
 }
-
 </style>

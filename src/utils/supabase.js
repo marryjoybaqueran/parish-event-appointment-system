@@ -82,6 +82,9 @@ export const signOutAndRedirect = async (router, formActionRef) => {
     return { error }
   }
 
+  // Clear the login mode from session storage
+  sessionStorage.removeItem('loginMode')
+
   if (formActionRef && 'value' in formActionRef) formActionRef.value.formProcess = false
 
   // Redirect if router is provided
