@@ -11,6 +11,7 @@ import TrialHeader from '@/views/TrialHeader.vue'
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
 import AdminBookingsView from '@/views/admin/AdminBookingsView.vue'
 import AdminMembersView from '@/views/admin/AdminMembersView.vue'
+import AdminEventsView from '@/views/admin/AdminEventsView.vue'
 import NotFoundView from '@/views/error/NotFoundView.vue'
 import FFBookingListView from '@/views/admin/FFBookingListView.vue'
 import BFBookingListView from '@/views/admin/BFBookingListView.vue'
@@ -132,7 +133,13 @@ const router = createRouter({
       component: AdminMembersView,
       meta: { requiresAdmin: true },
     },
-
+  {
+      //path: '/admin/admin-events-view',
+      path: '/admin-events-view',
+      name: 'admin-events-view',
+      component: AdminEventsView,
+      meta: { requiresAdmin: true },
+    },
     {
       path: '/trial-header',
       name: 'trial-header',
