@@ -35,16 +35,9 @@ const router = createRouter({
 
     {
       path: '/',
-      name: 'home',
-      // Add redirect since we handle this in beforeEach
-      redirect: '/homepage'
-    },
-    {
-      path: '/login',
-      name: 'login',
+       name: 'login',
       component: LoginView,
     },
-
     {
       path: '/homepage',
       name: 'homepage',
@@ -168,7 +161,7 @@ const router = createRouter({
     {
       path: '/:pathMatch(.*)*',
       name: 'catch-all',
-      redirect: '/page-not-found'
+      redirect: '/login'
     }
   ],
 })
