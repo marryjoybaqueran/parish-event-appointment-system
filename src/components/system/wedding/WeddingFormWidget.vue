@@ -99,17 +99,17 @@ const formData = computed({
         />
       </v-col>
     </v-row>
-    
-    <!-- Wedding Date -->
+
+    <!-- Wedding Date & Time -->
     <v-divider thickness="2" class="my-4">
       <v-chip color="purple" variant="outlined">
         <v-icon start>mdi-calendar-heart</v-icon>
-        Wedding Date
+        Wedding Date & Time
       </v-chip>
     </v-divider>
 
     <v-row class="mt-2">
-      <v-col cols="12" md="6">
+      <v-col cols="12" md="4">
         <v-text-field
           v-model="formData.wedding_date"
           :rules="dateRules"
@@ -120,19 +120,47 @@ const formData = computed({
           required
         />
       </v-col>
+      <v-col cols="12" md="4">
+        <v-text-field
+          v-model="formData.starting_time"
+          :rules="timeRules"
+          type="time"
+          label="Wedding start time"
+          prepend-inner-icon="mdi-clock-outline"
+          variant="outlined"
+          required
+        />
+      </v-col>
+      <v-col cols="12" md="4">
+        <v-text-field
+          v-model="formData.ending_time"
+          :rules="timeRules"
+          type="time"
+          label="Wedding end time"
+          prepend-inner-icon="mdi-clock-end"
+          variant="outlined"
+          required
+        />
+      </v-col>
     </v-row>
+
+    <!-- Optional Wedding Title -->
+    <v-divider thickness="2" class="my-4">
+      <v-chip color="teal" variant="outlined">
+        <v-icon start>mdi-format-title</v-icon>
+        Wedding Details (Optional)
+      </v-chip>
+    </v-divider>
+
     <v-row class="mt-2">
-      <v-col cols="12" md="6">
-      <!-- input para sa wedding time -->
-      <v-text-field
-        v-model="formData.starting_time"
-        :rules="timeRules"
-        type="time"
-        label="Select time for the wedding"
-        prepend-inner-icon="mdi-clock-outline"
-        variant="outlined"
-        required
-      />
+      <v-col cols="12">
+        <v-text-field
+          v-model="formData.title"
+          label="Wedding title/theme (optional)"
+          prepend-inner-icon="mdi-format-title"
+          variant="outlined"
+          hint="e.g., 'A Garden Wedding', 'Rustic Countryside Wedding', etc."
+        />
       </v-col>
     </v-row>
   </v-card>

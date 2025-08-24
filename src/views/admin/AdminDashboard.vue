@@ -43,28 +43,15 @@ const newEvent = ref({
   title: '',
   description: '',
   date: '',
-  time: '',
+  starting_time: '',
+  ending_time: '',
   type: 'announcement',
 })
-
-const quickActions = ref([
-  { icon: 'mdi-plus', label: 'Add Event', click: () => (eventDialog.value = true) },
-
-  { icon: 'mdi-cog', label: 'Settings', click: () => console.log('Settings clicked') },
-])
 
 let subscriptions = []
 
 const updateSelectedDateEvents = () => {
   selectedDateEvents.value = getSelectedDateEvents(selectedDate.value)
-}
-
-const showNotifications = () => {
-  notificationDialog.value = true
-}
-
-const handleNotificationClick = (notificationId) => {
-  authUser.markNotificationAsRead(notificationId)
 }
 
 const closeBookingDialog = () => {
@@ -77,30 +64,38 @@ const openBookingDetails = async (booking) => {
   selectedBooking.value = booking
   bookingDialog.value = true
 
-  // Check for conflicts when opening booking details
-  let bookingDate, bookingTime
+  // Check for conflicts when opening booking details with proper ending times
+  let bookingDate, bookingStartTime, bookingEndTime
 
   switch (booking.type) {
     case 'wedding':
       bookingDate = booking.wedding_date
-      bookingTime = '10:00'
+      bookingStartTime = booking.starting_time || '10:00'
+      bookingEndTime = booking.ending_time || '12:00'
       break
     case 'baptism':
       bookingDate = booking.baptism_date
-      bookingTime = '14:00'
+      bookingStartTime = booking.starting_time || '14:00'
+      bookingEndTime = booking.ending_time || '15:00'
       break
     case 'funeral':
       bookingDate = booking.funeral_date
-      bookingTime = booking.funeral_time || '09:00'
+      bookingStartTime = booking.starting_time || booking.funeral_time || '09:00'
+      bookingEndTime = booking.ending_time || '10:00'
       break
     case 'thanksgiving':
       bookingDate = booking.thanksgiving_date
-      bookingTime = '16:00'
+      bookingStartTime = booking.starting_time || '16:00'
+      bookingEndTime = booking.ending_time || '17:00'
       break
   }
 
-  if (bookingDate && bookingTime) {
-    bookingConflicts.value = await authUser.checkConflicts(bookingDate, bookingTime)
+  if (bookingDate && bookingStartTime && bookingEndTime) {
+    bookingConflicts.value = await authUser.checkConflicts(
+      bookingDate,
+      bookingStartTime,
+      bookingEndTime,
+    )
   }
 }
 const cancelConflictDialog = () => {
@@ -300,7 +295,8 @@ const resetEventForm = () => {
     title: '',
     description: '',
     date: '',
-    time: '',
+    starting_time: '',
+    ending_time: '',
     type: 'announcement',
   }
 }
@@ -359,19 +355,6 @@ onUnmounted(() => {
             </div>
 
             <div class="d-flex ga-2 ga-md-3 flex-wrap">
-              <!-- Notification Button -->
-              <v-btn
-                color="secondary"
-                variant="outlined"
-                @click="showNotifications"
-                :size="$vuetify.display.mobile ? 'default' : 'large'"
-                class="position-relative"
-              >
-                <v-icon class="me-1 me-md-2">mdi-bell</v-icon>
-                <span class="d-none d-sm-inline">Notifications</span>
-                <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
-              </v-btn>
-
               <!-- Create Event Button -->
               <v-btn
                 color="primary"
@@ -572,7 +555,9 @@ onUnmounted(() => {
                           <div class="font-weight-semibold">{{ event.title }}</div>
                           <div class="text-caption text-grey-darken-2">{{ event.location }}</div>
                         </div>
-                        <div class="text-caption text-grey-darken-2">{{ event.time }}</div>
+                        <div class="text-caption text-grey-darken-2">
+                          {{ event.starting_time }} - {{ event.ending_time }}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -709,7 +694,8 @@ onUnmounted(() => {
                       </template>
                       <v-list-item-title>{{ event.title }}</v-list-item-title>
                       <v-list-item-subtitle
-                        >{{ event.date }} - {{ event.time }}</v-list-item-subtitle
+                        >{{ event.date }} - {{ event.starting_time }} -
+                        {{ event.ending_time }}</v-list-item-subtitle
                       >
                     </v-list-item>
                   </v-list>
@@ -731,7 +717,8 @@ onUnmounted(() => {
                   { title: 'Type', key: 'type' },
                   { title: 'Details', key: 'details' },
                   { title: 'Date', key: 'date' },
-                  { title: 'Time', key: 'time' },
+                  { title: 'Starting Time', key: 'starting_time' },
+                  { title: 'Ending Time', key: 'ending_time' },
                   { title: 'Actions', key: 'actions', sortable: false },
                 ]"
                 class="booking-table"
@@ -749,8 +736,11 @@ onUnmounted(() => {
                 <template #[`item.date`]="{ item }">
                   {{ formatBookingDetails(item).date }}
                 </template>
-                <template #[`item.time`]="{ item }">
-                  {{ formatBookingDetails(item).time }}
+                <template #[`item.starting_time`]="{ item }">
+                  {{ formatBookingDetails(item).starting_time }}
+                </template>
+                <template #[`item.ending_time`]="{ item }">
+                  {{ formatBookingDetails(item).ending_time }}
                 </template>
                 <template #[`item.actions`]="{ item }">
                   <v-btn
@@ -843,13 +833,22 @@ onUnmounted(() => {
                 required
               />
               <v-text-field
-                v-model="newEvent.time"
-                label="Time"
+                v-model="newEvent.starting_time"
+                label="Starting Time"
                 type="time"
                 variant="outlined"
                 class="mb-3"
                 required
               />
+              <v-text-field
+                v-model="newEvent.ending_time"
+                label="Ending Time"
+                type="time"
+                variant="outlined"
+                class="mb-3"
+                required
+              />
+
               <v-select
                 v-model="newEvent.type"
                 :items="['announcement', 'mass', 'meeting', 'celebration']"
@@ -914,7 +913,9 @@ onUnmounted(() => {
                     <v-icon class="me-2" size="18">mdi-calendar</v-icon>
                     {{ formatBookingDetails(selectedBooking).date }}
                     <v-icon class="me-2 ms-4" size="18">mdi-clock</v-icon>
-                    {{ formatBookingDetails(selectedBooking).time }}
+                    {{ formatBookingDetails(selectedBooking).starting_time }}
+                    <v-icon class="me-2 ms-4" size="18">mdi-clock</v-icon>
+                    {{ formatBookingDetails(selectedBooking).ending_time }}
                   </div>
                 </div>
 
@@ -1106,7 +1107,8 @@ onUnmounted(() => {
                     {{ conflict.type }}
                   </v-chip>
                   <span class="text-body-2"
-                    >{{ conflict.name }} - {{ conflict.date }} at {{ conflict.time }}</span
+                    >{{ conflict.name }} - {{ conflict.date }} at {{ conflict.starting_time }} -
+                    {{ conflict.ending_time }}</span
                   >
                 </div>
                 <p class="mt-2 text-caption">
@@ -1169,7 +1171,7 @@ onUnmounted(() => {
                   {{ conflict.name }}
                 </v-list-item-title>
                 <v-list-item-subtitle>
-                  {{ conflict.date }} at {{ conflict.time }}
+                  {{ conflict.date }} at {{ conflict.starting_time }} - {{ conflict.ending_time }}
                 </v-list-item-subtitle>
               </v-list-item>
             </v-list>

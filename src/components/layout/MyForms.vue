@@ -8,8 +8,8 @@ import { useFuneralHeader } from './funeralHeaderLayout/funeralHeader'
 const { mobile } = useDisplay()
 // const router = useRouter()
 
-const { 
-  userBookings: weddingBookings, 
+const {
+  userBookings: weddingBookings,
   formatDate: formatWeddingDate,
   getStatusColor: getWeddingStatusColor,
   getStatusText: getWeddingStatusText,
@@ -17,7 +17,7 @@ const {
   isClickable: isWeddingClickable
 } = useWeddingHeader()
 
-const { 
+const {
   userBookings: funeralBookings,
   formatDate: formatFuneralDate,
   getStatusColor: getFuneralStatusColor,
@@ -29,7 +29,7 @@ const {
 // Merge all bookings into one array with type indicators
 const allBookings = computed(() => {
   const combined = []
-  
+
   // Add wedding bookings with type indicator
   weddingBookings.value.forEach(booking => {
     combined.push({
@@ -38,7 +38,7 @@ const allBookings = computed(() => {
       sortDate: booking.wedding_date || booking.created_at
     })
   })
-  
+
   // Add funeral bookings with type indicator
   funeralBookings.value.forEach(booking => {
     combined.push({
@@ -47,7 +47,7 @@ const allBookings = computed(() => {
       sortDate: booking.funeral_date || booking.created_at
     })
   })
-  
+
   // Sort by date (most recent first)
   return combined.sort((a, b) => new Date(b.sortDate) - new Date(a.sortDate))
 })
@@ -120,7 +120,7 @@ const getBookingTypeLabel = (booking) => {
 const getReferenceId = (booking) => {
   if (booking.bookingType === 'wedding' && booking.ref_number) {
     return `Ref: ${booking.ref_number}`
-  } 
+  }
   return null
 }
 </script>

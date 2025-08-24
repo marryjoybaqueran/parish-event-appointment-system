@@ -36,12 +36,6 @@ const router = createRouter({
 
     {
       path: '/',
-      name: 'home',
-      // Add redirect since we handle this in beforeEach
-      redirect: '/homepage'
-    },
-    {
-      path: '/login',
       name: 'login',
       component: LoginView,
     },
@@ -61,7 +55,7 @@ const router = createRouter({
       name: 'pending',
       component: Pending,
     },
-   /*   {
+    /*   {
       path: '/camera',
       name: 'camera',
       component: CameraView,
@@ -79,7 +73,7 @@ const router = createRouter({
       component: WeddingContinue,
       meta: { requiresAuth: true },
     },
-     {
+    {
       path: '/wedding-mass-continue-2',
       name: 'wedding-mass-continue-2',
       component: WeddingContinue2,
@@ -131,7 +125,7 @@ const router = createRouter({
       component: AdminBookingsView,
       meta: { requiresAdmin: true },
     },
- {
+    {
       //path: '/admin/admin-members-view',
       path: '/admin-members-view',
       name: 'admin-members-view',
@@ -176,8 +170,8 @@ const router = createRouter({
     {
       path: '/:pathMatch(.*)*',
       name: 'catch-all',
-      redirect: '/page-not-found'
-    }
+      redirect: '/page-not-found',
+    },
   ],
 })
 

@@ -4,13 +4,16 @@ import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import { useAuthUserStore } from '@/stores/authUser.js'
 
-const authStore = useAuthUserStore()
+const authUser = useAuthUserStore()
 
 const loading = ref(true)
 const currentView = ref('all')
 const selectedBooking = ref(null)
 const bookingDialog = ref(false)
 const bookingActionLoading = ref(false)
+const bookingConflicts = ref([])
+const conflictDialog = ref(false)
+const pendingApprovalBooking = ref(null)
 
 // Booking data
 const weddingBookings = ref([])
@@ -24,6 +27,10 @@ const searchQuery = ref('')
 const statusFilter = ref('all')
 const dateFilter = ref('')
 
+// Use store functions
+const formatBookingDetails = authUser.formatBookingDetails
+const getEventColor = authUser.getEventColor
+
 // Load all bookings
 const loadBookings = async () => {
   loading.value = true
@@ -36,13 +43,39 @@ const loadBookings = async () => {
       supabase.from('announcements').select('*').order('created_at', { ascending: false }),
     ])
 
-    weddingBookings.value = weddings.data?.map((booking) => ({ ...booking, type: 'wedding' })) || []
-    baptismBookings.value = baptisms.data?.map((booking) => ({ ...booking, type: 'baptism' })) || []
-    funeralBookings.value = funerals.data?.map((booking) => ({ ...booking, type: 'funeral' })) || []
-    thanksgivingBookings.value =
-      thanksgivings.data?.map((booking) => ({ ...booking, type: 'thanksgiving' })) || []
-    announcements.value =
-      events.data?.map((event) => ({ ...event, type: event.type || 'announcement' })) || []
+    weddingBookings.value = weddings.data?.map((booking) => ({
+      ...booking,
+      type: 'wedding',
+      table: 'wedding_bookings',
+      status: booking.is_approved ? 'approved' : 'pending'
+    })) || []
+
+    baptismBookings.value = baptisms.data?.map((booking) => ({
+      ...booking,
+      type: 'baptism',
+      table: 'baptism_bookings',
+      status: booking.is_approved ? 'approved' : 'pending'
+    })) || []
+
+    funeralBookings.value = funerals.data?.map((booking) => ({
+      ...booking,
+      type: 'funeral',
+      table: 'funeral_bookings',
+      status: booking.is_approved ? 'approved' : 'pending'
+    })) || []
+
+    thanksgivingBookings.value = thanksgivings.data?.map((booking) => ({
+      ...booking,
+      type: 'thanksgiving',
+      table: 'thanksgiving_bookings',
+      status: booking.is_approved ? 'approved' : 'pending'
+    })) || []
+
+    announcements.value = events.data?.map((event) => ({
+      ...event,
+      type: event.type || 'announcement',
+      status: 'confirmed'
+    })) || []
   } catch (error) {
     console.error('Error loading bookings:', error)
   } finally {
@@ -88,7 +121,7 @@ const filteredBookings = computed(() => {
   if (searchQuery.value) {
     bookings = bookings.filter((booking) => {
       const searchTerm = searchQuery.value.toLowerCase()
-      const details = authStore.formatBookingDetails(booking)
+      const details = formatBookingDetails(booking)
       return (
         details.title.toLowerCase().includes(searchTerm) ||
         details.subtitle.toLowerCase().includes(searchTerm)
@@ -99,7 +132,7 @@ const filteredBookings = computed(() => {
   // Apply status filter
   if (statusFilter.value !== 'all') {
     bookings = bookings.filter((booking) => {
-      const isApproved = booking.is_approved || booking.is_approved
+      const isApproved = booking.is_approved || booking.status === 'approved'
       return statusFilter.value === 'approved' ? isApproved : !isApproved
     })
   }
@@ -132,48 +165,90 @@ const getBookingDate = (booking) => {
   }
 }
 
-const getBookingTime = (booking) => {
-  switch (booking.type) {
-    case 'wedding':
-      return '10:00 AM'
-    case 'baptism':
-      return '2:00 PM'
-    case 'funeral':
-      return booking.funeral_time || '9:00 AM'
-    case 'thanksgiving':
-      return '4:00 PM'
-    case 'announcement':
-      return booking.time
-    default:
-      return 'TBD'
-  }
-}
-
-const openBookingDetails = (booking) => {
-  selectedBooking.value = booking
-  bookingDialog.value = true
-}
-
 const closeBookingDialog = () => {
   bookingDialog.value = false
   selectedBooking.value = null
+  bookingConflicts.value = []
+}
+
+const openBookingDetails = async (booking) => {
+  selectedBooking.value = booking
+  bookingDialog.value = true
+
+  // Check for conflicts when opening booking details
+  let bookingDate, bookingStartTime, bookingEndTime
+
+  switch (booking.type) {
+    case 'wedding':
+      bookingDate = booking.wedding_date
+      bookingStartTime = booking.starting_time || '10:00'
+      bookingEndTime = booking.ending_time || '12:00'
+      break
+    case 'baptism':
+      bookingDate = booking.baptism_date
+      bookingStartTime = booking.starting_time || '14:00'
+      bookingEndTime = booking.ending_time || '15:00'
+      break
+    case 'funeral':
+      bookingDate = booking.funeral_date
+      bookingStartTime = booking.starting_time || booking.funeral_time || '09:00'
+      bookingEndTime = booking.ending_time || '10:00'
+      break
+    case 'thanksgiving':
+      bookingDate = booking.thanksgiving_date
+      bookingStartTime = booking.starting_time || '16:00'
+      bookingEndTime = booking.ending_time || '17:00'
+      break
+  }
+
+  if (bookingDate && bookingStartTime && bookingEndTime) {
+    bookingConflicts.value = await authUser.checkConflicts(
+      bookingDate,
+      bookingStartTime,
+      bookingEndTime,
+    )
+  }
+}
+
+const cancelConflictDialog = () => {
+  conflictDialog.value = false
+  pendingApprovalBooking.value = null
+  bookingConflicts.value = []
 }
 
 const handleApproveBooking = async () => {
   if (!selectedBooking.value) return
 
   bookingActionLoading.value = true
+
   try {
-    const result = await authStore.approveBooking(selectedBooking.value)
+    const result = await authUser.approveBooking(selectedBooking.value)
+
     if (result.success) {
+      authUser.addNotification({
+        message: `${selectedBooking.value.type} booking approved successfully`,
+        type: 'success',
+      })
       await loadBookings()
       closeBookingDialog()
     } else if (result.conflicts) {
-      // Handle conflicts - you can add a conflict dialog here
-      console.log('Conflicts detected:', result.conflicts)
+      bookingConflicts.value = result.conflicts
+      pendingApprovalBooking.value = selectedBooking.value
+      conflictDialog.value = true
+      closeBookingDialog()
+    } else {
+      console.error('Error approving booking:', result.error)
+      authUser.addNotification({
+        message: `Failed to approve booking: ${result.error?.message || 'Unknown error'}`,
+        type: 'error',
+      })
     }
   } catch (error) {
-    console.error('Error approving booking:', error)
+    console.error('Error in approval process:', error)
+    authUser.addNotification({
+      message: 'An error occurred while approving the booking',
+      type: 'error',
+    })
   } finally {
     bookingActionLoading.value = false
   }
@@ -183,26 +258,77 @@ const handleDenyBooking = async () => {
   if (!selectedBooking.value) return
 
   bookingActionLoading.value = true
+
   try {
-    const result = await authStore.denyBooking(selectedBooking.value)
+    const result = await authUser.denyBooking(selectedBooking.value)
+
     if (result.success) {
+      authUser.addNotification({
+        message: `${selectedBooking.value.type} booking denied`,
+        type: 'info',
+      })
       await loadBookings()
       closeBookingDialog()
+    } else {
+      console.error('Error denying booking:', result.error)
+      authUser.addNotification({
+        message: `Failed to deny booking: ${result.error?.message || 'Unknown error'}`,
+        type: 'error',
+      })
     }
   } catch (error) {
-    console.error('Error denying booking:', error)
+    console.error('Error in denial process:', error)
+    authUser.addNotification({
+      message: 'An error occurred while denying the booking',
+      type: 'error',
+    })
+  } finally {
+    bookingActionLoading.value = false
+  }
+}
+
+const forceApproveBooking = async () => {
+  if (!pendingApprovalBooking.value) return
+
+  bookingActionLoading.value = true
+
+  try {
+    const result = await authUser.forceApproveBooking(pendingApprovalBooking.value)
+
+    if (result.success) {
+      authUser.addNotification({
+        message: `${pendingApprovalBooking.value.type} booking approved despite conflicts`,
+        type: 'warning',
+      })
+      await loadBookings()
+      conflictDialog.value = false
+      pendingApprovalBooking.value = null
+      bookingConflicts.value = []
+    } else {
+      console.error('Error force approving booking:', result.error)
+      authUser.addNotification({
+        message: 'Failed to force approve booking',
+        type: 'error',
+      })
+    }
+  } catch (error) {
+    console.error('Error force approving:', error)
+    authUser.addNotification({
+      message: 'An error occurred while force approving the booking',
+      type: 'error',
+    })
   } finally {
     bookingActionLoading.value = false
   }
 }
 
 const getStatusColor = (booking) => {
-  const isApproved = booking.is_approved || booking.is_approved
+  const isApproved = booking.is_approved || booking.status === 'approved'
   return isApproved ? 'success' : 'warning'
 }
 
 const getStatusText = (booking) => {
-  const isApproved = booking.is_approved || booking.is_approved
+  const isApproved = booking.is_approved || booking.status === 'approved'
   return isApproved ? 'Approved' : 'Pending'
 }
 
@@ -357,10 +483,10 @@ onMounted(async () => {
                   :key="index"
                   @click="openBookingDetails(booking)"
                   class="booking-item"
-                  :style="{ borderLeftColor: authStore.getEventColor(booking.type) }"
+                  :style="{ borderLeftColor: getEventColor(booking.type) }"
                 >
                   <template #prepend>
-                    <v-avatar :color="authStore.getEventColor(booking.type)" size="40">
+                    <v-avatar :color="getEventColor(booking.type)" size="40">
                       <v-icon color="white">
                         {{
                           booking.type === 'wedding'
@@ -378,19 +504,19 @@ onMounted(async () => {
                   </template>
 
                   <v-list-item-title class="font-weight-semibold">
-                    {{ authStore.formatBookingDetails(booking).title }}
+                    {{ formatBookingDetails(booking).title }}
                   </v-list-item-title>
                   <v-list-item-subtitle>
-                    {{ authStore.formatBookingDetails(booking).subtitle }}
+                    {{ formatBookingDetails(booking).subtitle }}
                   </v-list-item-subtitle>
 
                   <template #append>
                     <div class="text-right">
                       <div class="text-body-2 font-weight-medium">
-                        {{ authStore.formatBookingDetails(booking).date }}
+                        {{ formatBookingDetails(booking).date }}
                       </div>
                       <div class="text-caption text-grey">
-                        {{ getBookingTime(booking) }}
+                        {{ formatBookingDetails(booking).starting_time }} - {{ formatBookingDetails(booking).ending_time }}
                       </div>
                       <v-chip
                         :color="getStatusColor(booking)"
@@ -412,30 +538,26 @@ onMounted(async () => {
         </div>
       </v-container>
 
-      <!-- Booking Details Dialog -->
+      <!-- Use the same Booking Details Dialog from AdminDashboard -->
       <v-dialog v-model="bookingDialog" max-width="800" persistent>
         <v-card v-if="selectedBooking" class="glass-card">
           <v-card-title class="d-flex align-center justify-space-between pa-6">
             <div class="d-flex align-center">
-              <v-icon class="me-3" :color="authStore.getEventColor(selectedBooking.type)" size="32">
+              <v-icon class="me-3" :color="getEventColor(selectedBooking.type)" size="32">
                 {{
                   selectedBooking.type === 'wedding'
-                    ? 'mdi-heart'
+                    ? 'mdi-ring'
                     : selectedBooking.type === 'baptism'
                       ? 'mdi-water'
                       : selectedBooking.type === 'funeral'
                         ? 'mdi-cross'
-                        : selectedBooking.type === 'thanksgiving'
-                          ? 'mdi-hands-pray'
-                          : 'mdi-bullhorn'
+                        : 'mdi-hands-pray'
                 }}
               </v-icon>
               <div>
-                <h2 class="text-h5 mb-1">
-                  {{ authStore.formatBookingDetails(selectedBooking).title }}
-                </h2>
+                <h2 class="text-h5 mb-1">{{ formatBookingDetails(selectedBooking).title }}</h2>
                 <v-chip
-                  :color="authStore.getEventColor(selectedBooking.type)"
+                  :color="getEventColor(selectedBooking.type)"
                   size="small"
                   class="text-capitalize"
                 >
@@ -461,9 +583,9 @@ onMounted(async () => {
                   <div class="text-caption text-grey-darken-1 mb-1">Event Date & Time</div>
                   <div class="text-body-1 font-weight-medium">
                     <v-icon class="me-2" size="18">mdi-calendar</v-icon>
-                    {{ authStore.formatBookingDetails(selectedBooking).date }}
+                    {{ formatBookingDetails(selectedBooking).date }}
                     <v-icon class="me-2 ms-4" size="18">mdi-clock</v-icon>
-                    {{ getBookingTime(selectedBooking) }}
+                    {{ formatBookingDetails(selectedBooking).starting_time }} - {{ formatBookingDetails(selectedBooking).ending_time }}
                   </div>
                 </div>
 
@@ -482,7 +604,7 @@ onMounted(async () => {
                 </div>
               </v-col>
 
-              <!-- Detailed Information -->
+              <!-- Type-specific Details (same as AdminDashboard) -->
               <v-col cols="12" md="6">
                 <h3 class="text-h6 mb-4 d-flex align-center">
                   <v-icon class="me-2" color="secondary">mdi-account-details</v-icon>
@@ -548,6 +670,10 @@ onMounted(async () => {
                       {{ selectedBooking.godparent_lastname }}
                     </div>
                   </div>
+                  <div v-if="selectedBooking.additional_notes" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Additional Notes</div>
+                    <div class="text-body-2">{{ selectedBooking.additional_notes }}</div>
+                  </div>
                 </div>
 
                 <!-- Funeral Details -->
@@ -576,6 +702,10 @@ onMounted(async () => {
                     <div class="text-body-1">
                       {{ selectedBooking.contact_firstname }} {{ selectedBooking.contact_lastname }}
                     </div>
+                  </div>
+                  <div v-if="selectedBooking.relationship_to_deceased" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Relationship</div>
+                    <div class="text-body-2">{{ selectedBooking.relationship_to_deceased }}</div>
                   </div>
                   <div v-if="selectedBooking.contact_phone" class="mb-3">
                     <div class="text-caption text-grey-darken-1 mb-1">Phone</div>
@@ -606,6 +736,10 @@ onMounted(async () => {
                     <div class="text-caption text-grey-darken-1 mb-1">Reason</div>
                     <div class="text-body-2">{{ selectedBooking.reason_for_thanksgiving }}</div>
                   </div>
+                  <div v-if="selectedBooking.family_members_count" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Family Members Count</div>
+                    <div class="text-body-2">{{ selectedBooking.family_members_count }}</div>
+                  </div>
                 </div>
 
                 <!-- Announcement Details -->
@@ -624,6 +758,40 @@ onMounted(async () => {
                 </div>
               </v-col>
             </v-row>
+
+            <!-- Conflict Warning -->
+            <v-alert
+              v-if="bookingConflicts && bookingConflicts.length > 0"
+              type="warning"
+              variant="tonal"
+              class="mt-4"
+              prominent
+            >
+              <v-alert-title class="d-flex align-center">
+                <v-icon class="me-2">mdi-alert</v-icon>
+                Schedule Conflict Detected!
+              </v-alert-title>
+              <div class="mt-2">
+                <p class="mb-2">This booking conflicts with:</p>
+                <div
+                  v-for="conflict in bookingConflicts"
+                  :key="conflict.id"
+                  class="d-flex align-center mb-1"
+                >
+                  <v-chip :color="getEventColor(conflict.type)" size="small" class="me-2">
+                    {{ conflict.type }}
+                  </v-chip>
+                  <span class="text-body-2"
+                    >{{ conflict.name }} - {{ conflict.date }} at {{ conflict.starting_time }} -
+                    {{ conflict.ending_time }}</span
+                  >
+                </div>
+                <p class="mt-2 text-caption">
+                  Please consider rescheduling or contact the conflicting party to resolve this
+                  issue.
+                </p>
+              </div>
+            </v-alert>
           </v-card-text>
 
           <v-divider />
@@ -636,7 +804,8 @@ onMounted(async () => {
                 selectedBooking.type !== 'announcement' &&
                 selectedBooking.type !== 'mass' &&
                 selectedBooking.type !== 'event' &&
-                selectedBooking.type !== 'celebration'
+                selectedBooking.type !== 'celebration' &&
+                !selectedBooking.is_approved
               "
             >
               <v-btn
@@ -645,7 +814,6 @@ onMounted(async () => {
                 @click="handleDenyBooking"
                 class="me-3"
                 :disabled="bookingActionLoading"
-                v-if="!selectedBooking.is_approved && !selectedBooking.is_approved"
               >
                 <v-icon class="me-1">mdi-close</v-icon>
                 Deny
@@ -654,7 +822,6 @@ onMounted(async () => {
                 color="success"
                 @click="handleApproveBooking"
                 :loading="bookingActionLoading"
-                v-if="!selectedBooking.is_approved && !selectedBooking.is_approved"
               >
                 <v-icon class="me-1">mdi-check</v-icon>
                 Approve
@@ -663,11 +830,70 @@ onMounted(async () => {
           </v-card-actions>
         </v-card>
       </v-dialog>
+
+      <!-- Conflict Dialog (same as AdminDashboard) -->
+      <v-dialog v-model="conflictDialog" max-width="600" persistent>
+        <v-card class="glass-card">
+          <v-card-title class="d-flex align-center text-warning">
+            <v-icon class="me-2" color="warning" size="32">mdi-alert-circle</v-icon>
+            Schedule Conflict Detected
+          </v-card-title>
+
+          <v-card-text class="pa-6">
+            <p class="mb-4">
+              The booking you're trying to approve conflicts with existing scheduled events:
+            </p>
+
+            <v-list class="mb-4">
+              <v-list-item
+                v-for="conflict in bookingConflicts"
+                :key="conflict.id"
+                class="conflict-item pa-3 mb-2"
+                :style="{ borderLeft: `4px solid ${getEventColor(conflict.type)}` }"
+              >
+                <template #prepend>
+                  <v-chip :color="getEventColor(conflict.type)" size="small" class="me-3">
+                    {{ conflict.type }}
+                  </v-chip>
+                </template>
+
+                <v-list-item-title class="font-weight-semibold">
+                  {{ conflict.name }}
+                </v-list-item-title>
+                <v-list-item-subtitle>
+                  {{ conflict.date }} at {{ conflict.starting_time }} - {{ conflict.ending_time }}
+                </v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
+
+            <p class="text-body-2 text-grey-darken-1">
+              You can either reschedule one of the events or proceed with approval if you believe
+              the conflict can be managed.
+            </p>
+          </v-card-text>
+
+          <v-card-actions class="pa-6">
+            <v-spacer />
+            <v-btn variant="outlined" @click="cancelConflictDialog" class="me-3"> Cancel </v-btn>
+            <v-btn color="warning" @click="forceApproveBooking" :loading="bookingActionLoading">
+              <v-icon class="me-1">mdi-check-bold</v-icon>
+              Approve Anyway
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </template>
   </AdminHeader>
 </template>
 
 <style scoped>
+.conflict-item {
+  background: rgba(var(--v-theme-surface), 0.8);
+  border-radius: 8px;
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
 .animated-bg {
   position: fixed;
   top: 0;
@@ -679,6 +905,18 @@ onMounted(async () => {
   animation: gradientShift 15s ease infinite;
   z-index: -2;
   opacity: 0.05;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .glass-card {
@@ -718,17 +956,5 @@ onMounted(async () => {
 .booking-item:hover {
   background: rgba(var(--v-theme-primary), 0.05);
   transform: translateX(4px);
-}
-
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
 }
 </style>
