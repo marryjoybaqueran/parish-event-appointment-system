@@ -37,13 +37,13 @@ export const useNotificationStore = defineStore('notifications', () => {
       wedding: {
         approved: {
           title: 'Wedding Request Approved',
-          message: `Ang inyong wedding request kay ${bookingData.groom_firstname} ug ${bookingData.bride_firstname} na-approve na! Schedule: ${new Date(bookingData.wedding_date).toLocaleDateString()}`,
+          message: `Ang inyong wedding request kay ${bookingData.groom_firstname} ug ${bookingData.bride_firstname} na-approve na! Schedule: ${new Date(bookingData.wedding_date).toLocaleDateString()} on ${bookingData.starting_time}`,
           icon: 'mdi-ring',
           color: 'success'
         },
         denied: {
           title: 'Wedding Request Denied',
-          message: `Ang inyong wedding request kay ${bookingData.groom_firstname} ug ${bookingData.bride_firstname} na-deny. Please contact sa parish office para sa details.`,
+          message: `Ang inyong wedding request kay ${bookingData.groom_firstname} ug ${bookingData.bride_firstname} on ${bookingData.starting_time} na-deny.  Reasons: ${bookingData.comments}`,
           icon: 'mdi-cancel',
           color: 'error'
         }
@@ -51,13 +51,13 @@ export const useNotificationStore = defineStore('notifications', () => {
       funeral: {
         approved: {
           title: 'Funeral Mass Approved',
-          message: `Ang inyong funeral mass request para kay ${bookingData.deceased_firstname} na-approve na! Schedule: ${new Date(bookingData.funeral_date).toLocaleDateString()}`,
+          message: `Ang inyong funeral mass request para kay ${bookingData.deceased_firstname} na-approve na! Schedule: ${new Date(bookingData.funeral_date).toLocaleDateString()} on ${bookingData.starting_time}`,
           icon: 'mdi-cross',
           color: 'success'
         },
         denied: {
           title: 'Funeral Mass Denied',
-          message: `Ang inyong funeral mass request para kay ${bookingData.deceased_firstname} na-deny. Please contact sa parish office para sa details.`,
+          message: `Ang inyong funeral mass request para kay ${bookingData.deceased_firstname} on ${bookingData.starting_time} na-deny. Reasons: ${bookingData.comments}`,
           icon: 'mdi-cancel',
           color: 'error'
         }

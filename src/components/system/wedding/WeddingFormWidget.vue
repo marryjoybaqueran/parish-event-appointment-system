@@ -14,6 +14,10 @@ const props = defineProps({
   dateRules: {
     type: Array,
     required: true
+  },
+  timeRules: {
+    type: Array,
+    required: true
   }
 })
 
@@ -95,7 +99,7 @@ const formData = computed({
         />
       </v-col>
     </v-row>
-
+    
     <!-- Wedding Date -->
     <v-divider thickness="2" class="my-4">
       <v-chip color="purple" variant="outlined">
@@ -115,6 +119,20 @@ const formData = computed({
           variant="outlined"
           required
         />
+      </v-col>
+    </v-row>
+    <v-row class="mt-2">
+      <v-col cols="12" md="6">
+      <!-- input para sa wedding time -->
+      <v-text-field
+        v-model="formData.starting_time"
+        :rules="timeRules"
+        type="time"
+        label="Select time for the wedding"
+        prepend-inner-icon="mdi-clock-outline"
+        variant="outlined"
+        required
+      />
       </v-col>
     </v-row>
   </v-card>
