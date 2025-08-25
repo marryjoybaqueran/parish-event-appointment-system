@@ -32,10 +32,7 @@ coverage
 .github
 .env
 .clinerules
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 # History files and folders
 .history
 *.history
+github_switcher
