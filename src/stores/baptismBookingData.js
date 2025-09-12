@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { supabase, formActionDefault } from '@/utils/supabase.js'
 
-export const useThanksGivingStore = defineStore('thanksGivingData', {
+export const useBaptismStore = defineStore('baptismData', {
   state: () => ({
     bookings: [],
     loading: false,
@@ -33,7 +33,7 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
       this.loading = true
       this.error = null
       try {
-        const { data, error } = await supabase.from('thanksgiving_bookings').select('*')
+        const { data, error } = await supabase.from('baptism_bookings').select('*')
 
         if (error) {
           this.error = error.message
@@ -47,9 +47,9 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
       }
     },
 
-    // Create a new thanksgiving booking (insert)
+    // Create a new baptism booking (insert)
     // payload should be an object with the booking fields
-    async createThanksGiving(payload = {}) {
+    async createBaptism(payload = {}) {
       // reset formAction
       this.formAction = { ...formActionDefault }
       this.formAction.formProcess = true
@@ -68,7 +68,7 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
         ...payload,
       }
 
-      const { error } = await supabase.from('thanksgiving_bookings').insert([insertPayload])
+      const { error } = await supabase.from('baptism_bookings').insert([insertPayload])
 
       if (error) {
         this.formAction.formErrorMessage = error.message
@@ -77,13 +77,13 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
         return false
       }
 
-      this.formAction.formSuccessMessage = 'Thanksgiving booking submitted successfully!'
+      this.formAction.formSuccessMessage = 'Baptism booking submitted successfully!'
       this.formAction.formProcess = false
       return true
     },
 
-    // Fetch thanksgiving bookings filtered by current user's ID
-    async fetchUserThanksGivingBookings() {
+    // Fetch baptism bookings filtered by current user's ID
+    async fetchUserBaptismBookings() {
       this.loading = true
       this.error = null
 
@@ -96,7 +96,7 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
 
       try {
         const { data, error } = await supabase
-          .from('thanksgiving_bookings')
+          .from('baptism_bookings')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -109,7 +109,7 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
 
         // Update bookings array with user-specific data
         this.bookings = data || []
-        console.log(`Naka-fetch na ang ${this.bookings.length} thanksgiving bookings para sa user`)
+        console.log(`Naka-fetch na ang ${this.bookings.length} baptism bookings para sa user`)
 
         this.loading = false
         return this.bookings
@@ -120,8 +120,8 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
       }
     },
 
-    // Fetch the most recent thanksgiving booking for current user
-    async fetchRecentThanksGivingBooking() {
+    // Fetch the most recent baptism booking for current user
+    async fetchRecentBaptismBooking() {
       const user = await this.getUser()
       if (!user) {
         this.error = 'User not authenticated'
@@ -130,7 +130,7 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
 
       try {
         const { data, error } = await supabase
-          .from('thanksgiving_bookings')
+          .from('baptism_bookings')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -143,7 +143,7 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
 
         const recentBooking = data && data[0] ? data[0] : null
         if (recentBooking) {
-          console.log('Recent thanksgiving booking fetched:', recentBooking)
+          console.log('Recent baptism booking fetched:', recentBooking)
           // optimistic update to bookings array
           const existingIndex = this.bookings.findIndex((b) => b.id === recentBooking.id)
           if (existingIndex === -1) {
@@ -173,7 +173,7 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
 
       try {
         const { data, error } = await supabase
-          .from('thanksgiving_bookings')
+          .from('baptism_bookings')
           .select('id')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
