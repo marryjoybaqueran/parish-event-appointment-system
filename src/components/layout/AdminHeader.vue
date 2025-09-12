@@ -81,7 +81,7 @@ onMounted(async () => {
               </v-btn>
             </RouterLink>
 
-            <RouterLink to="/admin-booking-view" class="router-link">
+            <!-- <RouterLink to="/admin-booking-view" class="router-link">
               <v-btn
                 class="mr-3 nav-btn bookings-btn"
                 variant="outlined"
@@ -92,7 +92,7 @@ onMounted(async () => {
                 <span class="nav-text">BOOKINGS</span>
                 <v-ripple />
               </v-btn>
-            </RouterLink>
+            </RouterLink> -->
 
             <!-- MEMBERS MANAGEMENT -->
             <RouterLink to="admin-members-view" class="router-link">
@@ -109,7 +109,7 @@ onMounted(async () => {
             </RouterLink>
 
             <!-- EVENTS MANAGEMENT -->
-            <RouterLink to="admin-events-view" class="router-link">
+           <!--  <RouterLink to="admin-events-view" class="router-link">
               <v-btn
                 class="mr-3 nav-btn events-btn"
                 variant="outlined"
@@ -120,10 +120,10 @@ onMounted(async () => {
                 <span class="nav-text">EVENTS</span>
                 <v-ripple />
               </v-btn>
-            </RouterLink>
+            </RouterLink> -->
 
             <!-- NOTIFICATIONS TAB -->
-            <RouterLink to="admin-alerts-view" class="router-link">
+          <!--   <RouterLink to="admin-alerts-view" class="router-link">
               <v-badge
                 :model-value="notificationStore.hasUnreadNotifications"
                 :content="notificationStore.unreadCount"
@@ -143,7 +143,7 @@ onMounted(async () => {
                   <v-ripple />
                 </v-btn>
               </v-badge>
-            </RouterLink>
+            </RouterLink> -->
 
 
           </div>

@@ -20,7 +20,7 @@ import {
   getBookingDetails,
   forceApproveBooking,
   getBookingAttachedImages,
-} from '@/views/admin/functions/adminDashboard'
+} from '@/views/adminOld/functions/adminDashboard'
 
 export const useAuthUserStore = defineStore('authUser', () => {
   const notifications = ref([])
