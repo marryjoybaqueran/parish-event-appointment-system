@@ -1,30 +1,34 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
-import { useAuthUserStore } from '@/stores/authUser.js'
+import EventCalendar from './components/Calendar.vue'
+import { useAdminDashboard } from './composables/adminDashboardCount.js'
 
-const authUser = useAuthUserStore()
+// Use admin dashboard composable
+const {
+  stats,
+  statsTrends,
+  loading,
+  error: dashboardError,
+  loadDashboardData
+} = useAdminDashboard()
 
-const loading = ref(true)
 const errorMessage = ref(null)
-
-// Computed store-driven data
-const stats = computed(() => authUser.stats)
-const statsTrends = computed(() => authUser.statsTrends)
 
 let subscriptions = []
 
 // Load dashboard data on component mount
 onMounted(async () => {
   try {
-    await authUser.loadDashboardData()
-  } catch (error) {
-    console.error('Error loading dashboard data:', error)
+    await loadDashboardData()
+    if (dashboardError.value) {
+      errorMessage.value = dashboardError.value
+    }
+  } catch (err) {
+    console.error('Error loading dashboard data:', err)
     errorMessage.value = 'Failed to load dashboard data. Please refresh the page.'
-  } finally {
-    loading.value = false
   }
 })
 
@@ -141,6 +145,13 @@ onUnmounted(() => {
                 ></div>
               </v-card-text>
             </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Calendar Section -->
+        <v-row class="mb-4">
+          <v-col cols="12">
+            <EventCalendar />
           </v-col>
         </v-row>
       </v-container>
