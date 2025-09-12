@@ -32,7 +32,7 @@ coverage
 .github
 .env
 .clinerules
-
 # History files and folders
 .history
 *.history
+github_switcher
