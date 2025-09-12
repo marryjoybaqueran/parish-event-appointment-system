@@ -4,6 +4,8 @@ import { useDisplay } from 'vuetify'
 // import { useRouter } from 'vue-router'
 import { useWeddingHeader } from './weddingHeaderLayout/weddingHeader'
 import { useFuneralHeader } from './funeralHeaderLayout/funeralHeader'
+import { useThanksGivingHeader } from './thanksGivingLayout/thanksGiving'
+import { useBaptismHeader } from './baptism/baptismHeader'
 
 const { mobile } = useDisplay()
 // const router = useRouter()
@@ -30,6 +32,24 @@ const {
   isClickable: isFuneralClickable
 } = useFuneralHeader()
 
+const {
+  userBookings: thanksGivingBookings,
+  formatDate: formatThanksGivingDate,
+  getStatusColor: getThanksGivingStatusColor,
+  getStatusText: getThanksGivingStatusText,
+  handleBookingClick: handleThanksGivingClick,
+  isClickable: isThanksGivingClickable
+} = useThanksGivingHeader()
+
+const {
+  userBookings: baptismBookings,
+  formatDate: formatBaptismDate,
+  getStatusColor: getBaptismStatusColor,
+  getStatusText: getBaptismStatusText,
+  handleBookingClick: handleBaptismClick,
+  isClickable: isBaptismClickable
+} = useBaptismHeader()
+
 // Merge all bookings into one array with type indicators
 const allBookings = computed(() => {
   const combined = []
@@ -52,6 +72,24 @@ const allBookings = computed(() => {
     })
   })
 
+  // Add thanksgiving bookings with type indicator
+  thanksGivingBookings.value.forEach(booking => {
+    combined.push({
+      ...booking,
+      bookingType: 'thanksgiving',
+      sortDate: booking.thanksgiving_date || booking.created_at
+    })
+  })
+
+  // Add baptism bookings with type indicator
+  baptismBookings.value.forEach(booking => {
+    combined.push({
+      ...booking,
+      bookingType: 'baptism',
+      sortDate: booking.baptism_date || booking.created_at
+    })
+  })
+
   // Sort by date (most recent first)
   return combined.sort((a, b) => new Date(b.sortDate) - new Date(a.sortDate))
 })
@@ -71,69 +109,113 @@ const paginatedBookings = computed(() => {
 const formatDate = (booking) => {
   if (booking.bookingType === 'wedding') {
     return formatWeddingDate(booking.wedding_date)
-  } else {
+  } else if (booking.bookingType === 'funeral') {
     return formatFuneralDate(booking.funeral_date)
+  } else if (booking.bookingType === 'baptism') {
+    return formatBaptismDate(booking.baptism_date)
+  } else {
+    return formatThanksGivingDate(booking.thanksgiving_date)
   }
 }
 
 const getStatusColor = (booking) => {
   if (booking.bookingType === 'wedding') {
     return getWeddingStatusColor(booking)
-  } else {
+  } else if (booking.bookingType === 'funeral') {
     return getFuneralStatusColor(booking)
+  } else if (booking.bookingType === 'baptism') {
+    return getBaptismStatusColor(booking)
+  } else {
+    return getThanksGivingStatusColor(booking)
   }
 }
 
 const getStatusText = (booking) => {
   if (booking.bookingType === 'wedding') {
     return getWeddingStatusText(booking)
-  } else {
+  } else if (booking.bookingType === 'funeral') {
     return getFuneralStatusText(booking)
+  } else if (booking.bookingType === 'baptism') {
+    return getBaptismStatusText(booking)
+  } else {
+    return getThanksGivingStatusText(booking)
   }
 }
 
 const handleBookingClick = (booking) => {
   if (booking.bookingType === 'wedding') {
     handleWeddingClick(booking)
-  } else {
+  } else if (booking.bookingType === 'funeral') {
     handleFuneralClick(booking)
+  } else if (booking.bookingType === 'baptism') {
+    handleBaptismClick(booking)
+  } else {
+    handleThanksGivingClick(booking)
   }
 }
 
 const isClickable = (booking) => {
   if (booking.bookingType === 'wedding') {
     return isWeddingClickable(booking)
-  } else {
+  } else if (booking.bookingType === 'funeral') {
     return isFuneralClickable(booking)
+  } else if (booking.bookingType === 'baptism') {
+    return isBaptismClickable(booking)
+  } else {
+    return isThanksGivingClickable(booking)
   }
 }
 
 const getBookingTitle = (booking) => {
   if (booking.bookingType === 'wedding') {
     return `${booking.bride_firstname} & ${booking.groom_firstname}`
-  } else {
+  } else if (booking.bookingType === 'funeral') {
     return `${booking.deceased_firstname} ${booking.deceased_lastname}`
+  } else if (booking.bookingType === 'baptism') {
+    return `${booking.child_firstname} ${booking.child_lastname}`
+  } else {
+    return booking.title || `${booking.participant_firstname} ${booking.participant_lastname}`
   }
 }
 
 const getBookingSubtitle = (booking) => {
   if (booking.bookingType === 'wedding') {
     return `${booking.bride_firstname} ${booking.bride_lastname} - ${booking.groom_firstname} ${booking.groom_lastname}`
-  } else {
+  } else if (booking.bookingType === 'funeral') {
     return 'Funeral Mass Booking'
+  } else if (booking.bookingType === 'baptism') {
+    return 'Baptism Mass Booking'
+  } else {
+    return 'Thanksgiving Mass Booking'
   }
 }
 
 const getBookingIcon = (booking) => {
-  return booking.bookingType === 'wedding' ? 'mdi-heart' : 'mdi-cross'
+  if (booking.bookingType === 'wedding') {
+    return 'mdi-heart'
+  } else if (booking.bookingType === 'funeral') {
+    return 'mdi-cross'
+  } else if (booking.bookingType === 'baptism') {
+    return 'mdi-water'
+  } else {
+    return 'mdi-bird'
+  }
 }
 
 const getBookingTypeLabel = (booking) => {
-  return booking.bookingType === 'wedding' ? 'Wedding Booking' : 'Funeral Booking'
+  if (booking.bookingType === 'wedding') {
+    return 'Wedding Booking'
+  } else if (booking.bookingType === 'funeral') {
+    return 'Funeral Booking'
+  } else if (booking.bookingType === 'baptism') {
+    return 'Baptism Booking'
+  } else {
+    return 'Thanksgiving Booking'
+  }
 }
 
 const getReferenceId = (booking) => {
-  if (booking.bookingType === 'wedding' && booking.ref_number) {
+  if ((booking.bookingType === 'wedding' || booking.bookingType === 'baptism') && booking.ref_number) {
     return `Ref: ${booking.ref_number}`
   }
   return null
@@ -265,7 +347,7 @@ const getReferenceId = (booking) => {
                 </v-avatar>
                 <div>
                   <h3 class="text-h6 font-weight-medium">
-                    {{ getBookingTitle(booking) }} {{ booking.bookingType === 'wedding' ? 'Wedding' : 'Funeral' }}
+                    {{ getBookingTitle(booking) }} {{ booking.bookingType === 'wedding' ? 'Wedding' : booking.bookingType === 'funeral' ? 'Funeral' : booking.bookingType === 'baptism' ? 'Baptism' : 'Thanksgiving' }}
                   </h3>
                   <p class="text-body-2 text-medium-emphasis ma-0">
                     {{ getBookingSubtitle(booking) }}
