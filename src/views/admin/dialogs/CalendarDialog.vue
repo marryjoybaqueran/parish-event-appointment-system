@@ -99,13 +99,14 @@ const getStatusColor = (booking) => {
       <v-card-text class="pa-0">
         <!-- No events message -->
         <div v-if="eventsForDate.length === 0" class="text-center pa-8">
-          <v-icon color="grey-lighten-1" size="64" class="mb-4">
-            mdi-calendar-blank
+          <v-icon color="primary" size="64" class="mb-4">
+            mdi-calendar-plus
           </v-icon>
-          <h4 class="text-h6 text-grey-darken-1 mb-2">No Events Scheduled</h4>
+          <h4 class="text-h6 text-primary mb-2">Add Events in This Day</h4>
           <p class="text-body-2 text-grey">
-            There are no events scheduled for this date.
+            Start scheduling events for {{ formattedDate }}. Click the button below to create your first event.
           </p>
+
         </div>
 
         <!-- Events list -->

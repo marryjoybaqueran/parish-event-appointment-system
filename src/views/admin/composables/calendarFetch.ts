@@ -23,34 +23,41 @@ export const useCalendarFetch = () => {
     let eventName = ''
     let eventDate = ''
     let eventTime = ''
+    let eventEndTime = ''
 
     switch (category) {
       case 'wedding':
         eventName = `Wedding Mass - ${booking.groom_firstname} ${booking.groom_lastname} & ${booking.bride_firstname} ${booking.bride_lastname}`
         eventDate = booking.wedding_date
-        eventTime = booking.wedding_time || '10:00'
+        eventTime = booking.starting_time
+        eventEndTime = booking.ending_time
         break
       case 'baptism':
         eventName = `Baptism Mass - ${booking.child_firstname} ${booking.child_lastname}`
         eventDate = booking.baptism_date
-        eventTime = booking.baptism_time || '09:00'
+        eventTime = booking.starting_time
+        eventEndTime = booking.ending_time
         break
       case 'funeral':
         eventName = `Funeral Service - ${booking.deceased_firstname} ${booking.deceased_lastname}`
         eventDate = booking.funeral_date
-        eventTime = booking.funeral_time || '14:00'
+        eventTime = booking.starting_time
+        eventEndTime = booking.ending_time
         break
       case 'thanksgiving':
         eventName = `Thanksgiving Mass - ${booking.title} ${booking.organizer}`
         eventDate = booking.thanksgiving_date
-        eventTime = booking.thanksgiving_time || '16:00'
+        eventTime = booking.starting_time
+        eventEndTime = booking.ending_time
         break
       default:
         eventName = 'Parish Event'
         eventDate = booking.created_at?.split('T')[0] || new Date().toISOString().split('T')[0]
         eventTime = '10:00'
+        eventEndTime = '11:00'
     }
 
+    console.warn('Processing booking:', { category, eventName, eventDate, eventTime, eventEndTime })
     // Ensure we have valid date
     if (!eventDate) {
       console.warn('No event date found for booking:', booking)
@@ -64,17 +71,57 @@ export const useCalendarFetch = () => {
       startDate.setHours(parseInt(hours), parseInt(minutes))
     }
 
-    // End date (same as start for most events)
+    // End date - use ending_time if available, otherwise default to 1 hour after start
     const endDate = new Date(startDate)
     if (!eventTime) {
       // All-day events
       endDate.setDate(endDate.getDate() + 1)
+    } else if (eventEndTime) {
+      // Use ending_time from booking if available
+      const [endHours, endMinutes] = eventEndTime.split(':')
+      endDate.setHours(parseInt(endHours), parseInt(endMinutes))
     } else {
-      // Add 1 hour duration for timed events
+      // Add 1 hour duration for timed events (fallback)
       endDate.setHours(endDate.getHours() + 1)
     }
 
-    console.log('Transforming booking:', { category, eventName, eventDate, eventTime, startDate, endDate })
+    // Determine status based on boolean fields
+    let status = 'pending'
+
+    console.log('Booking approval status:', {
+      is_approved: booking.is_approved,
+      is_denied: booking.is_denied
+    })
+    if (booking.is_approved) {
+      status = 'approved'
+    } else if (booking.is_denied) {
+      status = 'denied'
+    }
+
+    // Save transformation data to localStorage for debugging and dialog access
+    const transformationData = {
+      category,
+      eventName,
+      eventDate,
+      eventTime,
+      eventEndTime,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      status,
+      booking,
+      timestamp: new Date().toISOString()
+    }
+
+    // Store in localStorage with unique key based on booking id and category
+    const storageKey = `booking_transform_${category}_${booking.id}`
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(transformationData))
+      console.log('Saved transformation data to localStorage:', storageKey, transformationData)
+    } catch (error) {
+      console.warn('Failed to save transformation data to localStorage:', error)
+    }
+
+    console.error('Transforming booking:', { category, eventName, eventDate, eventTime, eventEndTime, startDate, endDate, status, booking })
 
     // vue-simple-calendar compatible event structure
     return {
@@ -91,6 +138,20 @@ export const useCalendarFetch = () => {
       color: categoryConfig?.color ,
       time: eventTime || null,
       allDay: !eventTime,
+      status: status, // Derived from is_approved and is_denied
+
+      // Pass detailed booking data for dialog access
+      eventName: eventName,
+      eventDate: eventDate,
+      eventTime: eventTime,
+      eventEndTime: eventEndTime,
+      bookingData: {
+        id: booking.id,
+        category: category,
+        is_approved: booking.is_approved,
+        is_denied: booking.is_denied,
+        status: status
+      },
 
       // Additional metadata
       details: eventName,

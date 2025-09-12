@@ -8,7 +8,7 @@ export const CALENDAR_TYPE_OPTIONS = [
 // Event categories and their colors
 export const EVENT_CATEGORIES = {
   WEDDING: { name: 'Wedding', color: '#4CAF50', icon: 'mdi-heart' },
-  BAPTISM: { name: 'Baptism', color: '#2196F3', icon: 'mdi-water' },
+  BAPTISM: { name: 'Baptism', color: '#2196F3', icon: 'mdi-baby-face' },
   FUNERAL: { name: 'Funeral', color: '#FF9800', icon: 'mdi-cross' },
   THANKSGIVING: { name: 'Thanksgiving', color: '#9C27B0', icon: 'mdi-hands-pray' },
   MASS: { name: 'Mass', color: '#795548', icon: 'mdi-church' },

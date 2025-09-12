@@ -1,8 +1,10 @@
 <script setup>
 import { ref, computed, onMounted, defineOptions } from 'vue'
 import CalendarDialog from '../dialogs/CalendarDialog.vue'
+import ViewEventDialog from '../dialogs/ViewEventDialog.vue'
 import { useCalendarFetch } from '../composables/calendarFetch'
 import { EVENT_LEGEND } from '../utils/constants'
+import { CalendarView } from 'vue-simple-calendar'
 import 'vue-simple-calendar/dist/vue-simple-calendar.css'
 import '../styles/calendar-theme.css'
 
@@ -18,6 +20,8 @@ const { loading, error, allEvents, fetchAllEvents } = useCalendarFetch()
 const calendarRef = ref(null)
 const selectedDate = ref(new Date().toISOString().split('T')[0])
 const showDateDialog = ref(false)
+const showEventDialog = ref(false)
+const selectedEvent = ref(null)
 const eventsForSelectedDate = ref([])
 const displayPeriodUom = ref('month')
 const displayPeriodCount = ref(1)
@@ -101,11 +105,25 @@ const handleDateClick = (clickedDate) => {
 }
 
 const handleEventClick = (event) => {
-  // Handle event click - could show event details dialog
+  // Handle event click - show detailed event dialog
   console.log('Event clicked:', event)
 
-  // For now, treat it like a date click to show the dialog
-  handleDateClick(new Date(event.startDate))
+  // Save clicked event data to localStorage for ViewEventDialog access
+  const clickedEventData = {
+    clickedEvent: event,
+    originalEvent: event?.originalEvent,
+    timestamp: new Date().toISOString()
+  }
+
+  try {
+    localStorage.setItem('clicked_event_data', JSON.stringify(clickedEventData))
+    console.log('Saved clicked event data to localStorage:', clickedEventData)
+  } catch (error) {
+    console.warn('Failed to save clicked event data to localStorage:', error)
+  }
+
+  selectedEvent.value = event
+  showEventDialog.value = true
 }
 
 const changeView = (view) => {
@@ -177,6 +195,20 @@ const handleAddEvent = (date) => {
   console.log('Add event for date:', date)
   // Implement add event functionality
   showDateDialog.value = false
+}
+
+const handleEditEventFromDialog = (event) => {
+  console.log('Edit event from dialog:', event)
+  // Implement edit event functionality
+  // You might want to redirect to edit form or show edit dialog
+  showEventDialog.value = false
+}
+
+const handleDeleteEventFromDialog = (event) => {
+  console.log('Delete event from dialog:', event)
+  // Implement delete event functionality
+  // You might want to show confirmation dialog
+  showEventDialog.value = false
 }
 
 // Lifecycle
@@ -351,6 +383,14 @@ onMounted(async () => {
     :events-for-date="eventsForSelectedDate"
     @edit-event="handleEditEvent"
     @add-event="handleAddEvent"
+  />
+
+  <!-- Event Details Dialog -->
+  <ViewEventDialog
+    v-model="showEventDialog"
+    :event="selectedEvent"
+    @edit-event="handleEditEventFromDialog"
+    @delete-event="handleDeleteEventFromDialog"
   />
 </template>
 
