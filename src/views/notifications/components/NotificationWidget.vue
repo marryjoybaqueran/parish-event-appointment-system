@@ -18,6 +18,7 @@ const emit = defineEmits(['markAsRead', 'click', 'delete'])
 // Computed properties para sa styling
 const cardClasses = computed(() => [
   'notification-card',
+  'mb-2',
   { 'notification-unread': !props.notification.isRead },
   { 'notification-read': props.notification.isRead }
 ])
@@ -54,7 +55,7 @@ const handleDelete = (event) => {
     :class="cardClasses"
     :elevation="notification.isRead ? 1 : 3"
     @click="handleClick"
-    style="cursor: pointer; height: 100%"
+    style="cursor: pointer"
   >
     <v-card-text class="pa-4">
       <v-row align="center" no-gutters>

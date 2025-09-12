@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useDisplay } from 'vuetify'
 // import { useRouter } from 'vue-router'
 import { useWeddingHeader } from './weddingHeaderLayout/weddingHeader'
@@ -7,6 +7,10 @@ import { useFuneralHeader } from './funeralHeaderLayout/funeralHeader'
 
 const { mobile } = useDisplay()
 // const router = useRouter()
+
+// Pagination state
+const currentPage = ref(1)
+const itemsPerPage = ref(5)
 
 const {
   userBookings: weddingBookings,
@@ -51,6 +55,17 @@ const allBookings = computed(() => {
   // Sort by date (most recent first)
   return combined.sort((a, b) => new Date(b.sortDate) - new Date(a.sortDate))
 })
+
+// Pagination logic
+const totalPages = computed(() => Math.ceil(allBookings.value.length / itemsPerPage.value))
+
+const paginatedBookings = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return allBookings.value.slice(start, end)
+})
+
+// Remove showPagination - pagination will always be visible
 
 // Helper functions for merged bookings
 const formatDate = (booking) => {
@@ -127,21 +142,78 @@ const getReferenceId = (booking) => {
 
 <template>
   <v-container :class="mobile ? 'pa-2' : 'pa-4'" fluid>
-    <div class="text-center">
-      <v-chip
-        color="primary"
-        variant="outlined"
-        size="small"
-        class="mb-3"
-        prepend-icon="mdi-information"
-      >
-        MY BOOKINGS
-      </v-chip>
+    <!-- Header with title and pagination controls -->
+    <div v-if="!mobile" class="d-flex align-center justify-space-between mb-4">
+      <div class="d-flex align-center">
+        <v-chip
+          color="primary"
+          variant="outlined"
+          size="small"
+          prepend-icon="mdi-information"
+        >
+          MY BOOKINGS
+        </v-chip>
+        <span v-if="allBookings.length" class="text-body-2 text-medium-emphasis ml-3">
+          ({{ allBookings.length }} total)
+        </span>
+      </div>
+
+      <!-- Pagination Controls - Desktop -->
+      <div v-if="allBookings.length" class="d-flex align-center">
+
+        <v-pagination
+          v-model="currentPage"
+          :length="totalPages"
+          :total-visible="5"
+          rounded="circle"
+          color="primary"
+          class="pagination-custom"
+          density="compact"
+        />
+      </div>
+    </div>
+
+    <!-- Mobile Header Layout -->
+    <div v-if="mobile" class="mb-3">
+      <!-- Title Row -->
+      <div class="d-flex align-center justify-center mb-3">
+        <v-chip
+          color="primary"
+          variant="outlined"
+          size="small"
+          prepend-icon="mdi-information"
+        >
+          MY BOOKINGS
+        </v-chip>
+
+      </div>
+
+      <!-- Mobile Pagination Controls -->
+      <div v-if="allBookings.length" class="d-flex flex-column align-center">
+        <!-- Pagination component -->
+        <v-pagination
+          v-model="currentPage"
+          :length="totalPages"
+          :total-visible="3"
+          rounded="circle"
+          color="primary"
+          class="pagination-custom"
+          density="compact"
+          size="small"
+        />
+
+        <!-- Page info -->
+        <div class="text-caption text-medium-emphasis mt-1">
+          {{ ((currentPage - 1) * itemsPerPage + 1) }} -
+          {{ Math.min(currentPage * itemsPerPage, allBookings.length) }}
+          of {{ allBookings.length }}
+        </div>
+      </div>
     </div>
 
     <div v-if="allBookings.length" class="booking-list">
       <v-card
-        v-for="booking in allBookings"
+        v-for="booking in paginatedBookings"
         :key="`${booking.bookingType}-${booking.id}`"
         :class="[
           mobile ? 'mb-3 pa-3' : 'mb-4 pa-4',
@@ -252,5 +324,39 @@ const getReferenceId = (booking) => {
 /* minimal styling; rely on Vuetify utilities */
 .cursor-pointer {
   cursor: pointer;
+}
+
+.pagination-custom :deep(.v-pagination__item) {
+  margin: 0 2px;
+  min-height: 36px;
+  min-width: 36px;
+}
+
+.pagination-custom :deep(.v-pagination__item--is-active) {
+  background-color: rgb(var(--v-theme-primary));
+  color: white;
+}
+
+/* Mobile-specific pagination styles */
+@media (max-width: 600px) {
+  .pagination-custom :deep(.v-pagination__item) {
+    margin: 0 1px;
+    min-height: 40px;
+    min-width: 40px;
+    font-size: 14px;
+  }
+
+  .pagination-custom :deep(.v-pagination__prev),
+  .pagination-custom :deep(.v-pagination__next) {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+/* Ensure proper spacing for mobile controls */
+@media (max-width: 960px) {
+  .mobile-pagination-container {
+    gap: 8px;
+  }
 }
 </style>

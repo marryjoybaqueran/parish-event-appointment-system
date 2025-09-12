@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 import NavBar2 from '@/components/layout/NavBar2.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
 import NotificationWidget from './components/NotificationWidget.vue'
@@ -9,6 +10,7 @@ import MyForms from '@/components/layout/MyForms.vue'
 import { useRealTimeNotifications } from '@/views/notifications/composables/useRealTimeNotifications.js'
 
 const router = useRouter()
+const { mdAndUp } = useDisplay()
 
 // Use real-time notifications composable
 const {
@@ -221,12 +223,25 @@ onMounted(() => {
               </p>
             </div>
 
+            <!-- Mobile layout (old single-column style) -->
+            <div v-if="!mdAndUp" class="notifications-list-mobile">
+              <NotificationWidget
+                v-for="notification in filteredNotifications"
+                :key="notification.id"
+                :notification="notification"
+                @mark-as-read="markAsRead"
+                @click="handleNotificationClick"
+                @delete="deleteNotification"
+                class="mb-2"
+              />
+            </div>
+
+            <!-- Desktop layout (grid style) -->
             <v-row v-else class="notifications-list">
               <v-col
                 v-for="notification in filteredNotifications"
                 :key="notification.id"
                 cols="12"
-                sm="6"
                 md="4"
                 lg="3"
                 xl="3"
