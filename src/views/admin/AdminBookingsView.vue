@@ -1,8 +1,23 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { supabase } from '@/utils/supabase.js'
 import AdminHeader from '@/components/layout/AdminHeader.vue'
 import { useAuthUserStore } from '@/stores/authUser.js'
+import BookingDetailsDialogs from './dialogs/BookingDetailsDialogs.vue'
+import ConflictDialog from './dialogs/ConflictDialog.vue'
+import DenialCommentDialog from './dialogs/DenialCommentDialog.vue'
+import ImageViewerDialog from './dialogs/ImageViewerDialog.vue'
+import BookingNavTabs from './components/BookingNavTabs.vue'
+import {
+  loadAllBookings,
+  getBookingsByView,
+  filterBookings,
+  getStatusColor,
+  getStatusText,
+  getEventIcon,
+  createDialogActions,
+  createBookingActions,
+  STATUS_FILTER_OPTIONS
+} from './utils/bookingHelpers'
 
 const authUser = useAuthUserStore()
 
@@ -36,56 +51,33 @@ const dateFilter = ref('')
 const formatBookingDetails = authUser.formatBookingDetails
 const getEventColor = authUser.getEventColor
 
+// Create dialog actions
+const dialogRefs = {
+  bookingDialog,
+  selectedBooking,
+  bookingConflicts,
+  conflictDialog,
+  pendingApprovalBooking,
+  denialDialog,
+  denialComment,
+  imageViewerDialog,
+  selectedImages,
+  currentImageIndex
+}
+
+const dialogActions = createDialogActions(dialogRefs)
+
 // Load all bookings
 const loadBookings = async () => {
   loading.value = true
   try {
-    const [weddings, baptisms, funerals, thanksgivings, events] = await Promise.all([
-      supabase.from('wedding_bookings').select('*').order('created_at', { ascending: false }),
-      supabase.from('baptism_bookings').select('*').order('created_at', { ascending: false }),
-      supabase.from('funeral_bookings').select('*').order('created_at', { ascending: false }),
-      supabase.from('thanksgiving_bookings').select('*').order('created_at', { ascending: false }),
-      supabase.from('announcements').select('*').order('created_at', { ascending: false }),
-    ])
+    const bookingsData = await loadAllBookings()
 
-    weddingBookings.value =
-      weddings.data?.map((booking) => ({
-        ...booking,
-        type: 'wedding',
-        table: 'wedding_bookings',
-        status: booking.is_approved ? 'approved' : 'pending',
-      })) || []
-
-    baptismBookings.value =
-      baptisms.data?.map((booking) => ({
-        ...booking,
-        type: 'baptism',
-        table: 'baptism_bookings',
-        status: booking.is_approved ? 'approved' : 'pending',
-      })) || []
-
-    funeralBookings.value =
-      funerals.data?.map((booking) => ({
-        ...booking,
-        type: 'funeral',
-        table: 'funeral_bookings',
-        status: booking.is_approved ? 'approved' : 'pending',
-      })) || []
-
-    thanksgivingBookings.value =
-      thanksgivings.data?.map((booking) => ({
-        ...booking,
-        type: 'thanksgiving',
-        table: 'thanksgiving_bookings',
-        status: booking.is_approved ? 'approved' : 'pending',
-      })) || []
-
-    announcements.value =
-      events.data?.map((event) => ({
-        ...event,
-        type: event.type || 'announcement',
-        status: 'confirmed',
-      })) || []
+    weddingBookings.value = bookingsData.weddingBookings
+    baptismBookings.value = bookingsData.baptismBookings
+    funeralBookings.value = bookingsData.funeralBookings
+    thanksgivingBookings.value = bookingsData.thanksgivingBookings
+    announcements.value = bookingsData.announcements
   } catch (error) {
     console.error('Error loading bookings:', error)
   } finally {
@@ -93,297 +85,54 @@ const loadBookings = async () => {
   }
 }
 
-// Combined bookings list
-const allBookings = computed(() => {
-  return [
-    ...weddingBookings.value,
-    ...baptismBookings.value,
-    ...funeralBookings.value,
-    ...thanksgivingBookings.value,
-  ]
-})
-
 // Filtered bookings based on current view
 const filteredBookings = computed(() => {
-  let bookings = []
-
-  switch (currentView.value) {
-    case 'wedding':
-      bookings = weddingBookings.value
-      break
-    case 'baptism':
-      bookings = baptismBookings.value
-      break
-    case 'funeral':
-      bookings = funeralBookings.value
-      break
-    case 'thanksgiving':
-      bookings = thanksgivingBookings.value
-      break
-    case 'announcements':
-      bookings = announcements.value
-      break
-    default:
-      bookings = allBookings.value
+  const bookingsData = {
+    weddingBookings: weddingBookings.value,
+    baptismBookings: baptismBookings.value,
+    funeralBookings: funeralBookings.value,
+    thanksgivingBookings: thanksgivingBookings.value,
+    announcements: announcements.value
   }
 
-  // Apply search filter
-  if (searchQuery.value) {
-    bookings = bookings.filter((booking) => {
-      const searchTerm = searchQuery.value.toLowerCase()
-      const details = formatBookingDetails(booking)
-      return (
-        details.title.toLowerCase().includes(searchTerm) ||
-        details.subtitle.toLowerCase().includes(searchTerm)
-      )
-    })
-  }
+  const viewBookings = getBookingsByView(currentView.value, bookingsData)
 
-  // Apply status filter
-  if (statusFilter.value !== 'all') {
-    bookings = bookings.filter((booking) => {
-      const isApproved = booking.is_approved || booking.status === 'approved'
-      return statusFilter.value === 'approved' ? isApproved : !isApproved
-    })
-  }
-
-  // Apply date filter
-  if (dateFilter.value) {
-    bookings = bookings.filter((booking) => {
-      const bookingDate = getBookingDate(booking)
-      return bookingDate === dateFilter.value
-    })
-  }
-
-  return bookings
+  return filterBookings(
+    viewBookings,
+    searchQuery.value,
+    statusFilter.value,
+    dateFilter.value,
+    formatBookingDetails
+  )
 })
 
-const getBookingDate = (booking) => {
-  switch (booking.type) {
-    case 'wedding':
-      return booking.wedding_date
-    case 'baptism':
-      return booking.baptism_date
-    case 'funeral':
-      return booking.funeral_date
-    case 'thanksgiving':
-      return booking.thanksgiving_date
-    case 'announcement':
-      return booking.date
-    default:
-      return null
-  }
+// Create booking actions
+const bookingActionRefs = {
+  selectedBooking,
+  bookingActionLoading,
+  bookingConflicts,
+  pendingApprovalBooking,
+  conflictDialog,
+  denialDialog,
+  denialComment
 }
 
-const closeBookingDialog = () => {
-  bookingDialog.value = false
-  selectedBooking.value = null
-  bookingConflicts.value = []
-}
+const bookingActions = createBookingActions(
+  bookingActionRefs,
+  authUser,
+  loadBookings,
+  dialogActions
+)
 
 const openBookingDetails = async (booking) => {
   selectedBooking.value = booking
   bookingDialog.value = true
-
-  // Check for conflicts when opening booking details
-  let bookingDate, bookingStartTime, bookingEndTime
-
-  switch (booking.type) {
-    case 'wedding':
-      bookingDate = booking.wedding_date
-      bookingStartTime = booking.starting_time || '10:00'
-      bookingEndTime = booking.ending_time || '12:00'
-      break
-    case 'baptism':
-      bookingDate = booking.baptism_date
-      bookingStartTime = booking.starting_time || '14:00'
-      bookingEndTime = booking.ending_time || '15:00'
-      break
-    case 'funeral':
-      bookingDate = booking.funeral_date
-      bookingStartTime = booking.starting_time || booking.funeral_time || '09:00'
-      bookingEndTime = booking.ending_time || '10:00'
-      break
-    case 'thanksgiving':
-      bookingDate = booking.thanksgiving_date
-      bookingStartTime = booking.starting_time || '16:00'
-      bookingEndTime = booking.ending_time || '17:00'
-      break
-  }
-
-  if (bookingDate && bookingStartTime && bookingEndTime) {
-    bookingConflicts.value = await authUser.checkConflicts(
-      bookingDate,
-      bookingStartTime,
-      bookingEndTime,
-    )
-  }
+  await bookingActions.openBookingDetails(booking)
 }
 
-const cancelConflictDialog = () => {
-  conflictDialog.value = false
-  pendingApprovalBooking.value = null
-  bookingConflicts.value = []
-}
-
-const handleApproveBooking = async () => {
-  if (!selectedBooking.value) return
-
-  bookingActionLoading.value = true
-
-  try {
-    const result = await authUser.approveBooking(selectedBooking.value)
-
-    if (result.success) {
-      authUser.addNotification({
-        message: `${selectedBooking.value.type} booking approved successfully`,
-        type: 'success',
-      })
-      await loadBookings()
-      closeBookingDialog()
-    } else if (result.conflicts) {
-      bookingConflicts.value = result.conflicts
-      pendingApprovalBooking.value = selectedBooking.value
-      conflictDialog.value = true
-      closeBookingDialog()
-    } else {
-      console.error('Error approving booking:', result.error)
-      authUser.addNotification({
-        message: `Failed to approve booking: ${result.error?.message || 'Unknown error'}`,
-        type: 'error',
-      })
-    }
-  } catch (error) {
-    console.error('Error in approval process:', error)
-    authUser.addNotification({
-      message: 'An error occurred while approving the booking',
-      type: 'error',
-    })
-  } finally {
-    bookingActionLoading.value = false
-  }
-}
-
-const handleDenyBooking = async () => {
-  if (!selectedBooking.value) return
-
-  // Open denial dialog to get comment
-  denialDialog.value = true
-}
-
-const confirmDenyBooking = async () => {
-  if (!selectedBooking.value || !denialComment.value.trim()) return
-
-  bookingActionLoading.value = true
-
-  try {
-    const result = await authUser.denyBookingWithComment(
-      selectedBooking.value,
-      denialComment.value.trim(),
-    )
-
-    if (result.success) {
-      authUser.addNotification({
-        message: `${selectedBooking.value.type} booking denied`,
-        type: 'info',
-      })
-      denialDialog.value = false
-      denialComment.value = ''
-      await loadBookings()
-      closeBookingDialog()
-    } else {
-      console.error('Error denying booking:', result.error)
-      authUser.addNotification({
-        message: `Failed to deny booking: ${result.error?.message || 'Unknown error'}`,
-        type: 'error',
-      })
-    }
-  } catch (error) {
-    console.error('Error in denial process:', error)
-    authUser.addNotification({
-      message: 'An error occurred while denying the booking',
-      type: 'error',
-    })
-  } finally {
-    bookingActionLoading.value = false
-  }
-}
-
-const cancelDenialDialog = () => {
-  denialDialog.value = false
-  denialComment.value = ''
-}
-
+// Image actions using dialog actions
 const viewImages = (booking) => {
-  const images = authUser.getBookingAttachedImages(booking)
-  if (images.length > 0) {
-    selectedImages.value = images
-    currentImageIndex.value = 0
-    imageViewerDialog.value = true
-  }
-}
-
-const closeImageViewer = () => {
-  imageViewerDialog.value = false
-  selectedImages.value = []
-  currentImageIndex.value = 0
-}
-
-const previousImage = () => {
-  if (currentImageIndex.value > 0) {
-    currentImageIndex.value--
-  }
-}
-
-const nextImage = () => {
-  if (currentImageIndex.value < selectedImages.value.length - 1) {
-    currentImageIndex.value++
-  }
-}
-
-const forceApproveBooking = async () => {
-  if (!pendingApprovalBooking.value) return
-
-  bookingActionLoading.value = true
-
-  try {
-    const result = await authUser.forceApproveBooking(pendingApprovalBooking.value)
-
-    if (result.success) {
-      authUser.addNotification({
-        message: `${pendingApprovalBooking.value.type} booking approved despite conflicts`,
-        type: 'warning',
-      })
-      await loadBookings()
-      conflictDialog.value = false
-      pendingApprovalBooking.value = null
-      bookingConflicts.value = []
-    } else {
-      console.error('Error force approving booking:', result.error)
-      authUser.addNotification({
-        message: 'Failed to force approve booking',
-        type: 'error',
-      })
-    }
-  } catch (error) {
-    console.error('Error force approving:', error)
-    authUser.addNotification({
-      message: 'An error occurred while force approving the booking',
-      type: 'error',
-    })
-  } finally {
-    bookingActionLoading.value = false
-  }
-}
-
-const getStatusColor = (booking) => {
-  const isApproved = booking.is_approved || booking.status === 'approved'
-  return isApproved ? 'success' : 'warning'
-}
-
-const getStatusText = (booking) => {
-  const isApproved = booking.is_approved || booking.status === 'approved'
-  return isApproved ? 'Approved' : 'Pending'
+  dialogActions.viewImages(booking, authUser)
 }
 
 onMounted(async () => {
@@ -416,56 +165,9 @@ onMounted(async () => {
           </div>
 
           <!-- Navigation Tabs -->
-          <div class="d-flex ga-2 mt-6 overflow-x-auto">
-            <v-btn
-              :class="['nav-tab', currentView === 'all' ? 'active' : '']"
-              @click="currentView = 'all'"
-              variant="text"
-            >
-              <v-icon class="me-2">mdi-view-list</v-icon>
-              All Bookings
-            </v-btn>
-            <v-btn
-              :class="['nav-tab', currentView === 'wedding' ? 'active' : '']"
-              @click="currentView = 'wedding'"
-              variant="text"
-            >
-              <v-icon class="me-2">mdi-heart</v-icon>
-              Weddings
-            </v-btn>
-            <v-btn
-              :class="['nav-tab', currentView === 'baptism' ? 'active' : '']"
-              @click="currentView = 'baptism'"
-              variant="text"
-            >
-              <v-icon class="me-2">mdi-water</v-icon>
-              Baptisms
-            </v-btn>
-            <v-btn
-              :class="['nav-tab', currentView === 'funeral' ? 'active' : '']"
-              @click="currentView = 'funeral'"
-              variant="text"
-            >
-              <v-icon class="me-2">mdi-cross</v-icon>
-              Funerals
-            </v-btn>
-            <v-btn
-              :class="['nav-tab', currentView === 'thanksgiving' ? 'active' : '']"
-              @click="currentView = 'thanksgiving'"
-              variant="text"
-            >
-              <v-icon class="me-2">mdi-hands-pray</v-icon>
-              Thanksgiving
-            </v-btn>
-            <v-btn
-              :class="['nav-tab', currentView === 'announcements' ? 'active' : '']"
-              @click="currentView = 'announcements'"
-              variant="text"
-            >
-              <v-icon class="me-2">mdi-bullhorn</v-icon>
-              Announcements
-            </v-btn>
-          </div>
+          <BookingNavTabs
+            v-model:currentView="currentView"
+          />
         </div>
 
         <!-- Filters Section -->
@@ -483,11 +185,7 @@ onMounted(async () => {
             <v-col cols="12" md="4">
               <v-select
                 v-model="statusFilter"
-                :items="[
-                  { title: 'All Status', value: 'all' },
-                  { title: 'Pending', value: 'pending' },
-                  { title: 'Approved', value: 'approved' },
-                ]"
+                :items="STATUS_FILTER_OPTIONS"
                 label="Filter by Status"
                 variant="outlined"
               />
@@ -542,17 +240,7 @@ onMounted(async () => {
                   <template #prepend>
                     <v-avatar :color="getEventColor(booking.type)" size="40">
                       <v-icon color="white">
-                        {{
-                          booking.type === 'wedding'
-                            ? 'mdi-heart'
-                            : booking.type === 'baptism'
-                              ? 'mdi-water'
-                              : booking.type === 'funeral'
-                                ? 'mdi-cross'
-                                : booking.type === 'thanksgiving'
-                                  ? 'mdi-hands-pray'
-                                  : 'mdi-bullhorn'
-                        }}
+                        {{ getEventIcon(booking.type) }}
                       </v-icon>
                     </v-avatar>
                   </template>
@@ -593,472 +281,49 @@ onMounted(async () => {
         </div>
       </v-container>
 
-      <!-- Use the same Booking Details Dialog from AdminDashboard -->
-      <v-dialog v-model="bookingDialog" max-width="800" persistent>
-        <v-card v-if="selectedBooking" class="glass-card">
-          <v-card-title class="d-flex align-center justify-space-between pa-6">
-            <div class="d-flex align-center">
-              <v-icon class="me-3" :color="getEventColor(selectedBooking.type)" size="32">
-                {{
-                  selectedBooking.type === 'wedding'
-                    ? 'mdi-ring'
-                    : selectedBooking.type === 'baptism'
-                      ? 'mdi-water'
-                      : selectedBooking.type === 'funeral'
-                        ? 'mdi-cross'
-                        : 'mdi-hands-pray'
-                }}
-              </v-icon>
-              <div>
-                <h2 class="text-h5 mb-1">{{ formatBookingDetails(selectedBooking).title }}</h2>
-                <v-chip
-                  :color="getEventColor(selectedBooking.type)"
-                  size="small"
-                  class="text-capitalize"
-                >
-                  {{ selectedBooking.type }}
-                </v-chip>
-              </div>
-            </div>
-            <v-btn icon="mdi-close" variant="text" @click="closeBookingDialog" />
-          </v-card-title>
+      <!-- Dialog Components -->
+      <BookingDetailsDialogs
+        v-model:bookingDialog="bookingDialog"
+        v-model:selectedBooking="selectedBooking"
+        :bookingConflicts="bookingConflicts"
+        :bookingActionLoading="bookingActionLoading"
+        :authUser="authUser"
+        :formatBookingDetails="formatBookingDetails"
+        :getEventColor="getEventColor"
+        :getStatusColor="getStatusColor"
+        :getStatusText="getStatusText"
+        @close="dialogActions.closeBookingDialog"
+        @approve="bookingActions.handleApproveBooking"
+        @deny="bookingActions.handleDenyBooking"
+        @viewImages="viewImages"
+      />
 
-          <v-divider />
+      <ConflictDialog
+        v-model:conflictDialog="conflictDialog"
+        :bookingConflicts="bookingConflicts"
+        :bookingActionLoading="bookingActionLoading"
+        :getEventColor="getEventColor"
+        @cancel="dialogActions.cancelConflictDialog"
+        @forceApprove="bookingActions.forceApproveBooking"
+      />
 
-          <v-card-text class="pa-6">
-            <v-row>
-              <!-- Basic Information -->
-              <v-col cols="12" md="6">
-                <h3 class="text-h6 mb-4 d-flex align-center">
-                  <v-icon class="me-2" color="primary">mdi-information</v-icon>
-                  Basic Information
-                </h3>
+      <DenialCommentDialog
+        v-model:denialDialog="denialDialog"
+        v-model:denialComment="denialComment"
+        :selectedBooking="selectedBooking"
+        :bookingActionLoading="bookingActionLoading"
+        @cancel="dialogActions.cancelDenialDialog"
+        @confirm="bookingActions.confirmDenyBooking"
+      />
 
-                <div class="mb-4">
-                  <div class="text-caption text-grey-darken-1 mb-1">Event Date & Time</div>
-                  <div class="text-body-1 font-weight-medium">
-                    <v-icon class="me-2" size="18">mdi-calendar</v-icon>
-                    {{ formatBookingDetails(selectedBooking).date }}
-                    <v-icon class="me-2 ms-4" size="18">mdi-clock</v-icon>
-                    {{ formatBookingDetails(selectedBooking).starting_time }} -
-                    {{ formatBookingDetails(selectedBooking).ending_time }}
-                  </div>
-                </div>
-
-                <div class="mb-4">
-                  <div class="text-caption text-grey-darken-1 mb-1">Created On</div>
-                  <div class="text-body-2">
-                    {{ new Date(selectedBooking.created_at).toLocaleDateString() }}
-                  </div>
-                </div>
-
-                <div class="mb-4">
-                  <div class="text-caption text-grey-darken-1 mb-1">Status</div>
-                  <v-chip :color="getStatusColor(selectedBooking)" size="small" variant="tonal">
-                    {{ getStatusText(selectedBooking) }}
-                  </v-chip>
-                </div>
-
-                <!-- Denial Reason (if booking was denied) -->
-                <div v-if="selectedBooking.is_denied && selectedBooking.comment" class="mb-4">
-                  <div class="text-caption text-grey-darken-1 mb-1">Denial Reason</div>
-                  <v-alert
-                    type="error"
-                    variant="tonal"
-                    density="compact"
-                    :text="selectedBooking.comment"
-                  />
-                </div>
-              </v-col>
-
-              <!-- Type-specific Details (same as AdminDashboard) -->
-              <v-col cols="12" md="6">
-                <h3 class="text-h6 mb-4 d-flex align-center">
-                  <v-icon class="me-2" color="secondary">mdi-account-details</v-icon>
-                  Details
-                </h3>
-
-                <!-- Wedding Details -->
-                <div v-if="selectedBooking.type === 'wedding'">
-                  <div class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Bride</div>
-                    <div class="text-body-1">
-                      {{ selectedBooking.bride_firstname }} {{ selectedBooking.bride_lastname }}
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Groom</div>
-                    <div class="text-body-1">
-                      {{ selectedBooking.groom_firstname }} {{ selectedBooking.groom_lastname }}
-                    </div>
-                  </div>
-                  <div v-if="selectedBooking.title" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Event Title</div>
-                    <div class="text-body-1">{{ selectedBooking.title }}</div>
-                  </div>
-                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
-                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
-                  </div>
-                </div>
-
-                <!-- Baptism Details -->
-                <div v-if="selectedBooking.type === 'baptism'">
-                  <div class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Child</div>
-                    <div class="text-body-1">
-                      {{ selectedBooking.child_firstname }} {{ selectedBooking.child_lastname }}
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Date of Birth</div>
-                    <div class="text-body-2">
-                      {{ new Date(selectedBooking.child_dob).toLocaleDateString() }}
-                    </div>
-                  </div>
-                  <div v-if="selectedBooking.parent_father_firstname" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Father</div>
-                    <div class="text-body-2">
-                      {{ selectedBooking.parent_father_firstname }}
-                      {{ selectedBooking.parent_father_lastname }}
-                    </div>
-                  </div>
-                  <div v-if="selectedBooking.parent_mother_firstname" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Mother</div>
-                    <div class="text-body-2">
-                      {{ selectedBooking.parent_mother_firstname }}
-                      {{ selectedBooking.parent_mother_lastname }}
-                    </div>
-                  </div>
-                  <div v-if="selectedBooking.godparent_firstname" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Godparent</div>
-                    <div class="text-body-2">
-                      {{ selectedBooking.godparent_firstname }}
-                      {{ selectedBooking.godparent_lastname }}
-                    </div>
-                  </div>
-                  <div v-if="selectedBooking.additional_notes" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Additional Notes</div>
-                    <div class="text-body-2">{{ selectedBooking.additional_notes }}</div>
-                  </div>
-                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
-                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
-                  </div>
-                </div>
-
-                <!-- Funeral Details -->
-                <div v-if="selectedBooking.type === 'funeral'">
-                  <div class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Deceased</div>
-                    <div class="text-body-1">
-                      {{ selectedBooking.deceased_firstname }}
-                      {{ selectedBooking.deceased_lastname }}
-                    </div>
-                  </div>
-                  <div v-if="selectedBooking.deceased_dob" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Date of Birth</div>
-                    <div class="text-body-2">
-                      {{ new Date(selectedBooking.deceased_dob).toLocaleDateString() }}
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Date of Death</div>
-                    <div class="text-body-2">
-                      {{ new Date(selectedBooking.deceased_dod).toLocaleDateString() }}
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Contact Person</div>
-                    <div class="text-body-1">
-                      {{ selectedBooking.contact_firstname }} {{ selectedBooking.contact_lastname }}
-                    </div>
-                  </div>
-                  <div v-if="selectedBooking.relationship_to_deceased" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Relationship</div>
-                    <div class="text-body-2">{{ selectedBooking.relationship_to_deceased }}</div>
-                  </div>
-                  <div v-if="selectedBooking.contact_phone" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Phone</div>
-                    <div class="text-body-2">{{ selectedBooking.contact_phone }}</div>
-                  </div>
-                  <div v-if="selectedBooking.contact_email" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Email</div>
-                    <div class="text-body-2">{{ selectedBooking.contact_email }}</div>
-                  </div>
-                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
-                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
-                  </div>
-                </div>
-
-                <!-- Thanksgiving Details -->
-                <div v-if="selectedBooking.type === 'thanksgiving'">
-                  <div class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Participant</div>
-                    <div class="text-body-1">
-                      {{ selectedBooking.participant_firstname }}
-                      {{ selectedBooking.participant_lastname }}
-                    </div>
-                  </div>
-                  <div v-if="selectedBooking.type_of_thanksgiving" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Type of Thanksgiving</div>
-                    <div class="text-body-2 text-capitalize">
-                      {{ selectedBooking.type_of_thanksgiving }}
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Reason</div>
-                    <div class="text-body-2">{{ selectedBooking.reason_for_thanksgiving }}</div>
-                  </div>
-                  <div v-if="selectedBooking.family_members_count" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Family Members Count</div>
-                    <div class="text-body-2">{{ selectedBooking.family_members_count }}</div>
-                  </div>
-                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
-                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
-                  </div>
-                </div>
-
-                <!-- Announcement Details -->
-                <div
-                  v-if="
-                    selectedBooking.type === 'announcement' ||
-                    selectedBooking.type === 'mass' ||
-                    selectedBooking.type === 'event' ||
-                    selectedBooking.type === 'celebration'
-                  "
-                >
-                  <div v-if="selectedBooking.description" class="mb-3">
-                    <div class="text-caption text-grey-darken-1 mb-1">Description</div>
-                    <div class="text-body-2">{{ selectedBooking.description }}</div>
-                  </div>
-                </div>
-              </v-col>
-            </v-row>
-
-            <!-- Conflict Warning -->
-            <v-alert
-              v-if="bookingConflicts && bookingConflicts.length > 0"
-              type="warning"
-              variant="tonal"
-              class="mt-4"
-              prominent
-            >
-              <v-alert-title class="d-flex align-center">
-                <v-icon class="me-2">mdi-alert</v-icon>
-                Schedule Conflict Detected!
-              </v-alert-title>
-              <div class="mt-2">
-                <p class="mb-2">This booking conflicts with:</p>
-                <div
-                  v-for="conflict in bookingConflicts"
-                  :key="conflict.id"
-                  class="d-flex align-center mb-1"
-                >
-                  <v-chip :color="getEventColor(conflict.type)" size="small" class="me-2">
-                    {{ conflict.type }}
-                  </v-chip>
-                  <span class="text-body-2"
-                    >{{ conflict.name }} - {{ conflict.date }} at {{ conflict.starting_time }} -
-                    {{ conflict.ending_time }}</span
-                  >
-                </div>
-                <p class="mt-2 text-caption">
-                  Please consider rescheduling or contact the conflicting party to resolve this
-                  issue.
-                </p>
-              </div>
-            </v-alert>
-          </v-card-text>
-
-          <v-divider />
-
-          <v-card-actions class="pa-6">
-            <v-btn
-              v-if="authUser.getBookingAttachedImages(selectedBooking).length > 0"
-              color="info"
-              variant="outlined"
-              @click="viewImages(selectedBooking)"
-              class="me-3"
-            >
-              <v-icon class="me-1">mdi-image-multiple</v-icon>
-              View Images ({{ authUser.getBookingAttachedImages(selectedBooking).length }})
-            </v-btn>
-            <v-spacer />
-            <v-btn variant="outlined" @click="closeBookingDialog" class="me-3"> Close </v-btn>
-            <template
-              v-if="
-                selectedBooking.type !== 'announcement' &&
-                selectedBooking.type !== 'mass' &&
-                selectedBooking.type !== 'event' &&
-                selectedBooking.type !== 'celebration' &&
-                !selectedBooking.is_approved
-              "
-            >
-              <v-btn
-                color="error"
-                variant="outlined"
-                @click="handleDenyBooking"
-                class="me-3"
-                :disabled="bookingActionLoading"
-              >
-                <v-icon class="me-1">mdi-close</v-icon>
-                Deny
-              </v-btn>
-              <v-btn color="success" @click="handleApproveBooking" :loading="bookingActionLoading">
-                <v-icon class="me-1">mdi-check</v-icon>
-                Approve
-              </v-btn>
-            </template>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-      <!-- Conflict Dialog (same as AdminDashboard) -->
-      <v-dialog v-model="conflictDialog" max-width="600" persistent>
-        <v-card class="glass-card">
-          <v-card-title class="d-flex align-center text-warning">
-            <v-icon class="me-2" color="warning" size="32">mdi-alert-circle</v-icon>
-            Schedule Conflict Detected
-          </v-card-title>
-
-          <v-card-text class="pa-6">
-            <p class="mb-4">
-              The booking you're trying to approve conflicts with existing scheduled events:
-            </p>
-
-            <v-list class="mb-4">
-              <v-list-item
-                v-for="conflict in bookingConflicts"
-                :key="conflict.id"
-                class="conflict-item pa-3 mb-2"
-                :style="{ borderLeft: `4px solid ${getEventColor(conflict.type)}` }"
-              >
-                <template #prepend>
-                  <v-chip :color="getEventColor(conflict.type)" size="small" class="me-3">
-                    {{ conflict.type }}
-                  </v-chip>
-                </template>
-
-                <v-list-item-title class="font-weight-semibold">
-                  {{ conflict.name }}
-                </v-list-item-title>
-                <v-list-item-subtitle>
-                  {{ conflict.date }} at {{ conflict.starting_time }} - {{ conflict.ending_time }}
-                </v-list-item-subtitle>
-              </v-list-item>
-            </v-list>
-
-            <p class="text-body-2 text-grey-darken-1">
-              You can either reschedule one of the events or proceed with approval if you believe
-              the conflict can be managed.
-            </p>
-          </v-card-text>
-
-          <v-card-actions class="pa-6">
-            <v-spacer />
-            <v-btn variant="outlined" @click="cancelConflictDialog" class="me-3"> Cancel </v-btn>
-            <v-btn color="warning" @click="forceApproveBooking" :loading="bookingActionLoading">
-              <v-icon class="me-1">mdi-check-bold</v-icon>
-              Approve Anyway
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-      <!-- Denial Comment Dialog -->
-      <v-dialog v-model="denialDialog" max-width="500" persistent>
-        <v-card class="glass-card">
-          <v-card-title class="d-flex align-center text-error">
-            <v-icon class="me-2" color="error" size="32">mdi-close-circle</v-icon>
-            Deny Booking
-          </v-card-title>
-
-          <v-card-text class="pa-6">
-            <p class="mb-4">
-              Please provide a reason for denying this {{ selectedBooking?.type }} booking:
-            </p>
-
-            <v-textarea
-              v-model="denialComment"
-              label="Reason for denial"
-              placeholder="Enter the reason why this booking is being denied..."
-              rows="4"
-              required
-              :rules="[(v) => !!v || 'Reason is required']"
-              variant="outlined"
-            />
-          </v-card-text>
-
-          <v-card-actions class="pa-6">
-            <v-spacer />
-            <v-btn variant="outlined" @click="cancelDenialDialog" class="me-3"> Cancel </v-btn>
-            <v-btn
-              color="error"
-              @click="confirmDenyBooking"
-              :loading="bookingActionLoading"
-              :disabled="!denialComment.trim()"
-            >
-              <v-icon class="me-1">mdi-close</v-icon>
-              Confirm Denial
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-      <!-- Image Viewer Dialog -->
-      <v-dialog v-model="imageViewerDialog" max-width="800">
-        <v-card class="glass-card">
-          <v-card-title class="d-flex align-center justify-space-between pa-4">
-            <div class="d-flex align-center">
-              <v-icon class="me-2" color="primary">mdi-image-multiple</v-icon>
-              Attached Images ({{ currentImageIndex + 1 }} of {{ selectedImages.length }})
-            </div>
-            <v-btn icon="mdi-close" variant="text" @click="closeImageViewer" />
-          </v-card-title>
-
-          <v-card-text class="pa-0">
-            <div class="d-flex justify-center align-center" style="min-height: 400px">
-              <v-img
-                v-if="selectedImages[currentImageIndex]"
-                :src="selectedImages[currentImageIndex]"
-                :alt="`Attached image ${currentImageIndex + 1}`"
-                contain
-                max-height="500"
-                class="mx-auto"
-              />
-            </div>
-          </v-card-text>
-
-          <v-card-actions class="pa-4" v-if="selectedImages.length > 1">
-            <v-btn @click="previousImage" :disabled="currentImageIndex === 0" variant="outlined">
-              <v-icon>mdi-chevron-left</v-icon>
-              Previous
-            </v-btn>
-            <v-spacer />
-            <div class="text-center">
-              <v-pagination
-                v-model="currentImageIndex"
-                :length="selectedImages.length"
-                :total-visible="3"
-                density="compact"
-                @update:model-value="(val) => (currentImageIndex = val - 1)"
-              />
-            </div>
-            <v-spacer />
-            <v-btn
-              @click="nextImage"
-              :disabled="currentImageIndex === selectedImages.length - 1"
-              variant="outlined"
-            >
-              Next
-              <v-icon>mdi-chevron-right</v-icon>
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      <ImageViewerDialog
+        v-model:imageViewerDialog="imageViewerDialog"
+        v-model:currentImageIndex="currentImageIndex"
+        :selectedImages="selectedImages"
+        @close="dialogActions.closeImageViewer"
+        @previous="dialogActions.previousImage"
+        @next="dialogActions.nextImage"
+      />
     </template>
   </AdminHeader>
 </template>
