@@ -8,8 +8,8 @@ import { useFuneralHeader } from './funeralHeaderLayout/funeralHeader'
 const { mobile } = useDisplay()
 // const router = useRouter()
 
-const { 
-  userBookings: weddingBookings, 
+const {
+  userBookings: weddingBookings,
   formatDate: formatWeddingDate,
   getStatusColor: getWeddingStatusColor,
   getStatusText: getWeddingStatusText,
@@ -17,7 +17,7 @@ const {
   isClickable: isWeddingClickable
 } = useWeddingHeader()
 
-const { 
+const {
   userBookings: funeralBookings,
   formatDate: formatFuneralDate,
   getStatusColor: getFuneralStatusColor,
@@ -29,7 +29,7 @@ const {
 // Merge all bookings into one array with type indicators
 const allBookings = computed(() => {
   const combined = []
-  
+
   // Add wedding bookings with type indicator
   weddingBookings.value.forEach(booking => {
     combined.push({
@@ -38,7 +38,7 @@ const allBookings = computed(() => {
       sortDate: booking.wedding_date || booking.created_at
     })
   })
-  
+
   // Add funeral bookings with type indicator
   funeralBookings.value.forEach(booking => {
     combined.push({
@@ -47,7 +47,7 @@ const allBookings = computed(() => {
       sortDate: booking.funeral_date || booking.created_at
     })
   })
-  
+
   // Sort by date (most recent first)
   return combined.sort((a, b) => new Date(b.sortDate) - new Date(a.sortDate))
 })
@@ -120,7 +120,7 @@ const getBookingTypeLabel = (booking) => {
 const getReferenceId = (booking) => {
   if (booking.bookingType === 'wedding' && booking.ref_number) {
     return `Ref: ${booking.ref_number}`
-  } 
+  }
   return null
 }
 </script>
@@ -164,7 +164,7 @@ const getReferenceId = (booking) => {
               </h4>
               <p class="text-caption text-medium-emphasis ma-0">{{ getBookingTypeLabel(booking) }}</p>
               <p v-if="getReferenceId(booking)" class="text-caption primary--text ma-0">{{ getReferenceId(booking) }}</p>
-              <p v-if="booking.comments" class="text-caption grey--text ma-0">{{ booking.comments }}</p>
+              <p v-if="booking.comment" class="text-caption grey--text ma-0">{{ booking.comment }}</p>
             </div>
             <v-chip
               :color="getStatusColor(booking)"
@@ -214,7 +214,7 @@ const getReferenceId = (booking) => {
                 {{ getStatusText(booking) }}
               </v-chip>
               <div v-if="getReferenceId(booking)" class="text-caption mt-2">{{ getReferenceId(booking) }}</div>
-              <div v-if="booking.comments" class="text-caption grey--text mt-1">{{ booking.comments }}</div>
+              <div v-if="booking.comment" class="text-caption grey--text mt-1">{{ booking.comment }}</div>
             </v-col>
           </v-row>
         </template>

@@ -21,6 +21,25 @@ const bookingActionLoading = ref(false)
 const bookingConflicts = ref([])
 const conflictDialog = ref(false)
 const pendingApprovalBooking = ref(null)
+const denialDialog = ref(false)
+const denialComment = ref('')
+const imageViewerDialog = ref(false)
+const selectedImages = ref([])
+const currentImageIndex = ref(0)
+
+const activitiesPage = ref(1)
+const activitiesPerPage = ref(5)
+const paginatedRecentActivities = computed(() => {
+  const start = (activitiesPage.value - 1) * activitiesPerPage.value
+  const end = start + activitiesPerPage.value
+  return recentActivities.value.slice(start, end)
+})
+const activitiesTotalPages = computed(() => {
+  return Math.ceil(recentActivities.value.length / activitiesPerPage.value)
+})
+const resetActivitiesPagination = () => {
+  activitiesPage.value = 1
+}
 
 // Computed store-driven data
 const stats = computed(() => authUser.stats)
@@ -30,6 +49,17 @@ const calendarEvents = computed(() => authUser.calendarEvents)
 const pendingBookings = computed(() => authUser.pendingBookings)
 const notifications = computed(() => authUser.notifications)
 const unreadCount = computed(() => authUser.unreadNotificationsCount)
+const eventCategories = ref([
+  { name: 'announcement', label: 'Announcement', color: '#9C27B0', icon: 'mdi-bullhorn' },
+  { name: 'meeting', label: 'Meeting', color: '#9C27B0', icon: 'mdi-bullhorn' },
+  { name: 'mass', label: 'Holy Mass', color: '#f093fb', icon: 'mdi-church' },
+  { name: 'event', label: 'Parish Event', color: '#43e97b', icon: 'mdi-calendar-star' },
+  { name: 'celebration', label: 'Celebration', color: '#FF9800', icon: 'mdi-party-popper' },
+  { name: 'wedding', label: 'Wedding', color: '#667eea', icon: 'mdi-heart' },
+  { name: 'baptism', label: 'Baptism', color: '#4facfe', icon: 'mdi-water' },
+  { name: 'funeral', label: 'Funeral', color: '#424242', icon: 'mdi-cross' },
+  { name: 'thanksgiving', label: 'Thanksgiving', color: '#FF5722', icon: 'mdi-hands-pray' },
+])
 
 // Store functions
 const hasEvent = authUser.hasEvent
@@ -37,35 +67,21 @@ const hasMultipleEvents = authUser.hasMultipleEvents
 const getSelectedDateEvents = authUser.getSelectedDateEvents
 const formatBookingDetails = authUser.formatBookingDetails
 const getEventColor = authUser.getEventColor
-const eventDates = authUser.eventDates // This is the getter function for date => color|false
+const eventDates = authUser.eventDates
 
 const newEvent = ref({
   title: '',
   description: '',
   date: '',
-  time: '',
+  starting_time: '',
+  ending_time: '',
   type: 'announcement',
 })
-
-const quickActions = ref([
-  { icon: 'mdi-plus', label: 'Add Event', click: () => (eventDialog.value = true) },
-  { icon: 'mdi-file-document', label: 'Reports', click: () => console.log('Reports clicked') },
-  { icon: 'mdi-email', label: 'Messages', click: () => console.log('Messages clicked') },
-  { icon: 'mdi-cog', label: 'Settings', click: () => console.log('Settings clicked') },
-])
 
 let subscriptions = []
 
 const updateSelectedDateEvents = () => {
   selectedDateEvents.value = getSelectedDateEvents(selectedDate.value)
-}
-
-const showNotifications = () => {
-  notificationDialog.value = true
-}
-
-const handleNotificationClick = (notificationId) => {
-  authUser.markNotificationAsRead(notificationId)
 }
 
 const closeBookingDialog = () => {
@@ -78,30 +94,38 @@ const openBookingDetails = async (booking) => {
   selectedBooking.value = booking
   bookingDialog.value = true
 
-  // Check for conflicts when opening booking details
-  let bookingDate, bookingTime
+  // Check for conflicts when opening booking details with proper ending times
+  let bookingDate, bookingStartTime, bookingEndTime
 
   switch (booking.type) {
     case 'wedding':
       bookingDate = booking.wedding_date
-      bookingTime = '10:00'
+      bookingStartTime = booking.starting_time || '10:00'
+      bookingEndTime = booking.ending_time || '12:00'
       break
     case 'baptism':
       bookingDate = booking.baptism_date
-      bookingTime = '14:00'
+      bookingStartTime = booking.starting_time || '14:00'
+      bookingEndTime = booking.ending_time || '15:00'
       break
     case 'funeral':
       bookingDate = booking.funeral_date
-      bookingTime = booking.funeral_time || '09:00'
+      bookingStartTime = booking.starting_time || booking.funeral_time || '09:00'
+      bookingEndTime = booking.ending_time || '10:00'
       break
     case 'thanksgiving':
       bookingDate = booking.thanksgiving_date
-      bookingTime = '16:00'
+      bookingStartTime = booking.starting_time || '16:00'
+      bookingEndTime = booking.ending_time || '17:00'
       break
   }
 
-  if (bookingDate && bookingTime) {
-    bookingConflicts.value = await authUser.checkConflicts(bookingDate, bookingTime)
+  if (bookingDate && bookingStartTime && bookingEndTime) {
+    bookingConflicts.value = await authUser.checkConflicts(
+      bookingDate,
+      bookingStartTime,
+      bookingEndTime,
+    )
   }
 }
 const cancelConflictDialog = () => {
@@ -157,10 +181,20 @@ const handleApproveBooking = async () => {
 const handleDenyBooking = async () => {
   if (!selectedBooking.value) return
 
+  // Open denial dialog to get comment
+  denialDialog.value = true
+}
+
+const confirmDenyBooking = async () => {
+  if (!selectedBooking.value || !denialComment.value.trim()) return
+
   bookingActionLoading.value = true
 
   try {
-    const result = await authUser.denyBooking(selectedBooking.value)
+    const result = await authUser.denyBookingWithComment(
+      selectedBooking.value,
+      denialComment.value.trim(),
+    )
 
     if (result.success) {
       authUser.addNotification({
@@ -168,6 +202,8 @@ const handleDenyBooking = async () => {
         type: 'info',
       })
 
+      denialDialog.value = false
+      denialComment.value = ''
       closeBookingDialog()
       console.log('Booking denied successfully!')
     } else {
@@ -185,6 +221,38 @@ const handleDenyBooking = async () => {
     })
   } finally {
     bookingActionLoading.value = false
+  }
+}
+
+const cancelDenialDialog = () => {
+  denialDialog.value = false
+  denialComment.value = ''
+}
+
+const viewImages = (booking) => {
+  const images = authUser.getBookingAttachedImages(booking)
+  if (images.length > 0) {
+    selectedImages.value = images
+    currentImageIndex.value = 0
+    imageViewerDialog.value = true
+  }
+}
+
+const closeImageViewer = () => {
+  imageViewerDialog.value = false
+  selectedImages.value = []
+  currentImageIndex.value = 0
+}
+
+const previousImage = () => {
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--
+  }
+}
+
+const nextImage = () => {
+  if (currentImageIndex.value < selectedImages.value.length - 1) {
+    currentImageIndex.value++
   }
 }
 
@@ -301,32 +369,9 @@ const resetEventForm = () => {
     title: '',
     description: '',
     date: '',
-    time: '',
+    starting_time: '',
+    ending_time: '',
     type: 'announcement',
-  }
-}
-
-const approveBooking = async (booking) => {
-  const result = await authUser.approveBooking(booking)
-
-  if (result.success) {
-    bookingDialog.value = false
-    // TODO: Add success feedback
-  } else {
-    console.error('Error approving booking:', result.error)
-    // TODO: Add error feedback
-  }
-}
-
-const denyBooking = async (booking) => {
-  const result = await authUser.denyBooking(booking)
-
-  if (result.success) {
-    bookingDialog.value = false
-    // TODO: Add success feedback
-  } else {
-    console.error('Error denying booking:', result.error)
-    // TODO: Add error feedback
   }
 }
 
@@ -384,19 +429,6 @@ onUnmounted(() => {
             </div>
 
             <div class="d-flex ga-2 ga-md-3 flex-wrap">
-              <!-- Notification Button -->
-              <v-btn
-                color="secondary"
-                variant="outlined"
-                @click="showNotifications"
-                :size="$vuetify.display.mobile ? 'default' : 'large'"
-                class="position-relative"
-              >
-                <v-icon class="me-1 me-md-2">mdi-bell</v-icon>
-                <span class="d-none d-sm-inline">Notifications</span>
-                <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
-              </v-btn>
-
               <!-- Create Event Button -->
               <v-btn
                 color="primary"
@@ -597,7 +629,9 @@ onUnmounted(() => {
                           <div class="font-weight-semibold">{{ event.title }}</div>
                           <div class="text-caption text-grey-darken-2">{{ event.location }}</div>
                         </div>
-                        <div class="text-caption text-grey-darken-2">{{ event.time }}</div>
+                        <div class="text-caption text-grey-darken-2">
+                          {{ event.starting_time }} - {{ event.ending_time }}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -661,26 +695,72 @@ onUnmounted(() => {
 
               <!-- Recent Activities Section -->
               <v-card class="glass-card mb-4">
-                <v-card-title class="d-flex align-center">
-                  <v-icon class="me-2 text-green">mdi-history</v-icon>
-                  Recent Activity
+                <v-card-title class="d-flex align-center justify-space-between">
+                  <div class="d-flex align-center">
+                    <v-icon class="me-2 text-green">mdi-history</v-icon>
+                    Recent Activity
+                  </div>
+                  <v-chip color="primary" variant="outlined" size="small">
+                    {{ recentActivities.length }} total
+                  </v-chip>
                 </v-card-title>
                 <v-card-text>
-                  <div class="space-y-3">
-                    <div
-                      v-for="(activity, index) in recentActivities"
-                      :key="index"
-                      class="d-flex gap-3"
-                    >
-                      <div class="activity-icon" :class="`bg-${activity.color}-lighten-4`">
-                        <v-icon :color="activity.color">{{ activity.icon }}</v-icon>
-                      </div>
-                      <div class="flex-1 mx-2">
-                        <div class="text-caption">{{ activity.action }}</div>
-                        <div class="text-caption text-grey-darken-2">
-                          {{ new Date(activity.changed_at).toLocaleString() }}
+                  <div
+                    v-if="recentActivities.length === 0"
+                    class="text-center py-8 text-grey-darken-1"
+                  >
+                    <v-icon size="64" color="grey-lighten-2">mdi-history</v-icon>
+                    <p class="mt-3">No recent activities</p>
+                  </div>
+                  <div v-else>
+                    <div class="space-y-3">
+                      <div
+                        v-for="(activity, index) in paginatedRecentActivities"
+                        :key="index"
+                        class="d-flex gap-3 activity-item pa-3"
+                      >
+                        <div class="activity-icon" :class="`bg-${activity.color}-lighten-4`">
+                          <v-icon :color="activity.color" size="18">{{ activity.icon }}</v-icon>
+                        </div>
+                        <div class="flex-1 mx-2">
+                          <div class="text-body-2 font-weight-medium">{{ activity.action }}</div>
+                          <div class="text-caption text-grey-darken-2">
+                            {{ new Date(activity.changed_at).toLocaleString() }}
+                          </div>
                         </div>
                       </div>
+                    </div>
+
+                    <!-- Activities Pagination -->
+                    <div v-if="activitiesTotalPages > 1" class="d-flex justify-center mt-4">
+                      <v-pagination
+                        v-model="activitiesPage"
+                        :length="activitiesTotalPages"
+                        :total-visible="3"
+                        size="small"
+                        color="primary"
+                        variant="flat"
+                      />
+                    </div>
+
+                    <!-- Show more/less buttons alternative -->
+                    <div
+                      v-if="recentActivities.length > activitiesPerPage"
+                      class="text-center mt-4"
+                    >
+                      <v-btn
+                        variant="text"
+                        color="primary"
+                        size="small"
+                        @click="
+                          () => {
+                            activitiesPerPage = activitiesPerPage === 3 ? 5 : 3
+                            resetActivitiesPagination()
+                          }
+                        "
+                      >
+                        {{ activitiesPerPage === 3 ? 'Show More' : 'Show Less' }}
+                      </v-btn>
                     </div>
                   </div>
                 </v-card-text>
@@ -734,7 +814,8 @@ onUnmounted(() => {
                       </template>
                       <v-list-item-title>{{ event.title }}</v-list-item-title>
                       <v-list-item-subtitle
-                        >{{ event.date }} - {{ event.time }}</v-list-item-subtitle
+                        >{{ event.date }} - {{ event.starting_time }} -
+                        {{ event.ending_time }}</v-list-item-subtitle
                       >
                     </v-list-item>
                   </v-list>
@@ -755,10 +836,13 @@ onUnmounted(() => {
                   { title: 'Type', key: 'type' },
                   { title: 'Details', key: 'details' },
                   { title: 'Date', key: 'date' },
-                  { title: 'Time', key: 'time' },
+                  { title: 'Starting Time', key: 'starting_time' },
+                  { title: 'Ending Time', key: 'ending_time' },
                   { title: 'Actions', key: 'actions', sortable: false },
                 ]"
                 class="booking-table"
+                @click:row="(_, { item }) => openBookingDetails(item)"
+                hover
               >
                 <template #[`item.type`]="{ item }">
                   <v-chip :color="getEventColor(item.type)" size="small">
@@ -771,21 +855,20 @@ onUnmounted(() => {
                 <template #[`item.date`]="{ item }">
                   {{ formatBookingDetails(item).date }}
                 </template>
-                <template #[`item.time`]="{ item }">
-                  {{ formatBookingDetails(item).time }}
+                <template #[`item.starting_time`]="{ item }">
+                  {{ formatBookingDetails(item).starting_time }}
+                </template>
+                <template #[`item.ending_time`]="{ item }">
+                  {{ formatBookingDetails(item).ending_time }}
                 </template>
                 <template #[`item.actions`]="{ item }">
                   <v-btn
-                    color="green"
+                    color="primary"
                     size="small"
-                    variant="outlined"
-                    class="me-2"
-                    @click="approveBooking(item)"
+                    variant="text"
+                    @click.stop="openBookingDetails(item)"
                   >
-                    Approve
-                  </v-btn>
-                  <v-btn color="red" size="small" variant="outlined" @click="denyBooking(item)">
-                    Deny
+                    View Details
                   </v-btn>
                 </template>
               </v-data-table>
@@ -869,16 +952,27 @@ onUnmounted(() => {
                 required
               />
               <v-text-field
-                v-model="newEvent.time"
-                label="Time"
+                v-model="newEvent.starting_time"
+                label="Starting Time"
                 type="time"
                 variant="outlined"
                 class="mb-3"
                 required
               />
+              <v-text-field
+                v-model="newEvent.ending_time"
+                label="Ending Time"
+                type="time"
+                variant="outlined"
+                class="mb-3"
+                required
+              />
+
               <v-select
                 v-model="newEvent.type"
-                :items="['announcement', 'mass', 'meeting', 'celebration']"
+                :items="eventCategories"
+                item-title="label"
+                item-value="name"
                 label="Event Type"
                 variant="outlined"
                 class="mb-3"
@@ -940,7 +1034,9 @@ onUnmounted(() => {
                     <v-icon class="me-2" size="18">mdi-calendar</v-icon>
                     {{ formatBookingDetails(selectedBooking).date }}
                     <v-icon class="me-2 ms-4" size="18">mdi-clock</v-icon>
-                    {{ formatBookingDetails(selectedBooking).time }}
+                    {{ formatBookingDetails(selectedBooking).starting_time }}
+                    <v-icon class="me-2 ms-4" size="18">mdi-clock</v-icon>
+                    {{ formatBookingDetails(selectedBooking).ending_time }}
                   </div>
                 </div>
 
@@ -966,6 +1062,17 @@ onUnmounted(() => {
                   >
                     {{ selectedBooking.status || 'pending' }}
                   </v-chip>
+                </div>
+
+                <!-- Denial Reason (if booking was denied) -->
+                <div v-if="selectedBooking.is_denied && selectedBooking.comment" class="mb-4">
+                  <div class="text-caption text-grey-darken-1 mb-1">Denial Reason</div>
+                  <v-alert
+                    type="error"
+                    variant="tonal"
+                    density="compact"
+                    :text="selectedBooking.comment"
+                  />
                 </div>
               </v-col>
 
@@ -994,9 +1101,9 @@ onUnmounted(() => {
                     <div class="text-caption text-grey-darken-1 mb-1">Event Title</div>
                     <div class="text-body-1">{{ selectedBooking.title }}</div>
                   </div>
-                  <div v-if="selectedBooking.comments" class="mb-3">
+                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
                     <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
-                    <div class="text-body-2">{{ selectedBooking.comments }}</div>
+                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
                   </div>
                 </div>
 
@@ -1039,6 +1146,10 @@ onUnmounted(() => {
                     <div class="text-caption text-grey-darken-1 mb-1">Additional Notes</div>
                     <div class="text-body-2">{{ selectedBooking.additional_notes }}</div>
                   </div>
+                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
+                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
+                  </div>
                 </div>
 
                 <!-- Funeral Details -->
@@ -1080,6 +1191,10 @@ onUnmounted(() => {
                     <div class="text-caption text-grey-darken-1 mb-1">Email</div>
                     <div class="text-body-2">{{ selectedBooking.contact_email }}</div>
                   </div>
+                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
+                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
+                  </div>
                 </div>
 
                 <!-- Thanksgiving Details -->
@@ -1104,6 +1219,10 @@ onUnmounted(() => {
                   <div v-if="selectedBooking.family_members_count" class="mb-3">
                     <div class="text-caption text-grey-darken-1 mb-1">Family Members Count</div>
                     <div class="text-body-2">{{ selectedBooking.family_members_count }}</div>
+                  </div>
+                  <div v-if="selectedBooking.comment && !selectedBooking.is_denied" class="mb-3">
+                    <div class="text-caption text-grey-darken-1 mb-1">Comments</div>
+                    <div class="text-body-2">{{ selectedBooking.comment }}</div>
                   </div>
                 </div>
               </v-col>
@@ -1132,7 +1251,8 @@ onUnmounted(() => {
                     {{ conflict.type }}
                   </v-chip>
                   <span class="text-body-2"
-                    >{{ conflict.name }} - {{ conflict.date }} at {{ conflict.time }}</span
+                    >{{ conflict.name }} - {{ conflict.date }} at {{ conflict.starting_time }} -
+                    {{ conflict.ending_time }}</span
                   >
                 </div>
                 <p class="mt-2 text-caption">
@@ -1146,6 +1266,16 @@ onUnmounted(() => {
           <v-divider />
 
           <v-card-actions class="pa-6">
+            <v-btn
+              v-if="authUser.getBookingAttachedImages(selectedBooking).length > 0"
+              color="info"
+              variant="outlined"
+              @click="viewImages(selectedBooking)"
+              class="me-3"
+            >
+              <v-icon class="me-1">mdi-image-multiple</v-icon>
+              View Images ({{ authUser.getBookingAttachedImages(selectedBooking).length }})
+            </v-btn>
             <v-spacer />
             <v-btn variant="outlined" @click="closeBookingDialog" class="me-3"> Close </v-btn>
             <v-btn
@@ -1195,7 +1325,7 @@ onUnmounted(() => {
                   {{ conflict.name }}
                 </v-list-item-title>
                 <v-list-item-subtitle>
-                  {{ conflict.date }} at {{ conflict.time }}
+                  {{ conflict.date }} at {{ conflict.starting_time }} - {{ conflict.ending_time }}
                 </v-list-item-subtitle>
               </v-list-item>
             </v-list>
@@ -1216,11 +1346,124 @@ onUnmounted(() => {
           </v-card-actions>
         </v-card>
       </v-dialog>
+
+      <!-- Denial Comment Dialog -->
+      <v-dialog v-model="denialDialog" max-width="500" persistent>
+        <v-card class="glass-card">
+          <v-card-title class="d-flex align-center text-error">
+            <v-icon class="me-2" color="error" size="32">mdi-close-circle</v-icon>
+            Deny Booking
+          </v-card-title>
+
+          <v-card-text class="pa-6">
+            <p class="mb-4">
+              Please provide a reason for denying this {{ selectedBooking?.type }} booking:
+            </p>
+
+            <v-textarea
+              v-model="denialComment"
+              label="Reason for denial"
+              placeholder="Enter the reason why this booking is being denied..."
+              rows="4"
+              required
+              :rules="[(v) => !!v || 'Reason is required']"
+              variant="outlined"
+            />
+          </v-card-text>
+
+          <v-card-actions class="pa-6">
+            <v-spacer />
+            <v-btn variant="outlined" @click="cancelDenialDialog" class="me-3"> Cancel </v-btn>
+            <v-btn
+              color="error"
+              @click="confirmDenyBooking"
+              :loading="bookingActionLoading"
+              :disabled="!denialComment.trim()"
+            >
+              <v-icon class="me-1">mdi-close</v-icon>
+              Confirm Denial
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- Image Viewer Dialog -->
+      <v-dialog v-model="imageViewerDialog" max-width="800">
+        <v-card class="glass-card">
+          <v-card-title class="d-flex align-center justify-space-between pa-4">
+            <div class="d-flex align-center">
+              <v-icon class="me-2" color="primary">mdi-image-multiple</v-icon>
+              Attached Images ({{ currentImageIndex + 1 }} of {{ selectedImages.length }})
+            </div>
+            <v-btn icon="mdi-close" variant="text" @click="closeImageViewer" />
+          </v-card-title>
+
+          <v-card-text class="pa-0">
+            <div class="d-flex justify-center align-center" style="min-height: 400px">
+              <v-img
+                v-if="selectedImages[currentImageIndex]"
+                :src="selectedImages[currentImageIndex]"
+                :alt="`Attached image ${currentImageIndex + 1}`"
+                contain
+                max-height="500"
+                class="mx-auto"
+              />
+            </div>
+          </v-card-text>
+
+          <v-card-actions class="pa-4" v-if="selectedImages.length > 1">
+            <v-btn @click="previousImage" :disabled="currentImageIndex === 0" variant="outlined">
+              <v-icon>mdi-chevron-left</v-icon>
+              Previous
+            </v-btn>
+            <v-spacer />
+            <div class="text-center">
+              <v-pagination
+                v-model="currentImageIndex"
+                :length="selectedImages.length"
+                :total-visible="3"
+                density="compact"
+                @update:model-value="(val) => (currentImageIndex = val - 1)"
+              />
+            </div>
+            <v-spacer />
+            <v-btn
+              @click="nextImage"
+              :disabled="currentImageIndex === selectedImages.length - 1"
+              variant="outlined"
+            >
+              Next
+              <v-icon>mdi-chevron-right</v-icon>
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </template>
   </AdminHeader>
 </template>
 
 <style scoped>
+.activity-item {
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(var(--v-theme-outline), 0.1);
+}
+
+.activity-item:hover {
+  background: rgba(var(--v-theme-surface-variant), 0.5);
+  transform: translateX(2px);
+}
+
+.activity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .conflict-item {
   background: rgba(var(--v-theme-surface), 0.8);
   border-radius: 8px;
@@ -1597,5 +1840,11 @@ onUnmounted(() => {
 
 .notification-item:hover {
   background: rgba(var(--v-theme-surface-variant), 0.5);
+}
+
+@media (max-width: 600px) {
+  .v-pagination {
+    scale: 0.8;
+  }
 }
 </style>

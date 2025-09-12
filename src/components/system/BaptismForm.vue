@@ -33,7 +33,6 @@ const requirements = ref([
   'Pre-Baptism Class Certificate',
 ])
 
-const isHovering = ref(false)
 // Validation
 const valid = ref(false)
 const nameRules = [(v) => !!v || 'This field is required']
@@ -74,7 +73,8 @@ const onSubmit = async () => {
       place_of_birth: formData.value.place_of_birth,
       birthdate: formData.value.birthdate,
       date_selected: formData.value.date_selected,
-      time_selected: formData.value.time_selected,
+      starting_time: formData.value.starting_time,
+      ending_time: formData.value.ending_time,
       mother_fullname: formData.value.mother_fullname,
       father_fullname: formData.value.father_fullname,
       sponsor1_fullname: formData.value.sponsor1_fullname,
@@ -179,12 +179,25 @@ const onFormSubmit = () => {
 
         <v-col cols="12" md="6">
           <v-text-field
-            v-model="formData.time_selected"
+            v-model="formData.starting_time"
             :items="items"
             :item-props="itemProps"
             type="time"
             :rules="timeRules"
-            label="Select time for baptism"
+            label="Select starting time for baptism"
+            outlined
+            dense
+          >
+          </v-text-field>
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-text-field
+            v-model="formData.ending_time"
+            :items="items"
+            :item-props="itemProps"
+            type="time"
+            :rules="timeRules"
+            label="Select ending time for baptism"
             outlined
             dense
           >
