@@ -18,7 +18,6 @@ const emit = defineEmits(['markAsRead', 'click', 'delete'])
 // Computed properties para sa styling
 const cardClasses = computed(() => [
   'notification-card',
-  'mb-2',
   { 'notification-unread': !props.notification.isRead },
   { 'notification-read': props.notification.isRead }
 ])
@@ -55,7 +54,7 @@ const handleDelete = (event) => {
     :class="cardClasses"
     :elevation="notification.isRead ? 1 : 3"
     @click="handleClick"
-    style="cursor: pointer"
+    style="cursor: pointer; height: 100%"
   >
     <v-card-text class="pa-4">
       <v-row align="center" no-gutters>
@@ -76,7 +75,7 @@ const handleDelete = (event) => {
         <!-- Notification Content -->
         <v-col>
           <div class="d-flex justify-space-between align-start mb-1">
-            <h3 
+            <h3
               :class="[
                 'text-subtitle-1 font-weight-medium mb-1',
                 { 'text-primary': !notification.isRead }
@@ -84,7 +83,7 @@ const handleDelete = (event) => {
             >
               {{ notification.title }}
             </h3>
-            
+
             <div class="d-flex align-center gap-2">
               <!-- Unread indicator -->
               <v-chip
@@ -94,7 +93,7 @@ const handleDelete = (event) => {
               >
                 New
               </v-chip>
-              
+
               <!-- Delete button -->
               <v-btn
                 icon
@@ -110,7 +109,7 @@ const handleDelete = (event) => {
             </div>
           </div>
 
-          <p 
+          <p
             :class="[
               'text-body-2 mb-2',
               { 'text-medium-emphasis': notification.isRead },
@@ -124,7 +123,7 @@ const handleDelete = (event) => {
             <span class="text-caption text-medium-emphasis">
               {{ timeAgo }}
             </span>
-            
+
             <!-- Action button if actionUrl exists -->
             <v-btn
               v-if="notification.actionUrl"
