@@ -144,25 +144,7 @@ const formData = computed({
       </v-col>
     </v-row>
 
-    <!-- Optional Wedding Title -->
-    <v-divider thickness="2" class="my-4">
-      <v-chip color="teal" variant="outlined">
-        <v-icon start>mdi-format-title</v-icon>
-        Wedding Details (Optional)
-      </v-chip>
-    </v-divider>
 
-    <v-row class="mt-2">
-      <v-col cols="12">
-        <v-text-field
-          v-model="formData.title"
-          label="Wedding title/theme (optional)"
-          prepend-inner-icon="mdi-format-title"
-          variant="outlined"
-          hint="e.g., 'A Garden Wedding', 'Rustic Countryside Wedding', etc."
-        />
-      </v-col>
-    </v-row>
   </v-card>
 </template>
 

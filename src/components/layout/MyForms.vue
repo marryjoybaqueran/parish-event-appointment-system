@@ -189,7 +189,7 @@ const getReferenceId = (booking) => {
       </div>
 
       <!-- Mobile Pagination Controls -->
-      <div v-if="allBookings.length" class="d-flex flex-column align-center">
+      <div v-if="allBookings.length" class="d-flex ms-2 flex-column align-center">
         <!-- Pagination component -->
         <v-pagination
           v-model="currentPage"

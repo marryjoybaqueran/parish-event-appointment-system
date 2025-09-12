@@ -3,9 +3,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/auth/LoginView.vue'
 import HomePage from '@/views/auth/HomePage.vue'
 import BookEvent from '@/views/bookingEvents/BookEvent.vue'
-import WeddingMassForm from '@/views/auth/WeddingMassForm.vue'
+import WeddingMassForm from '@/views/auth/WeddingMassView.vue'
 import BaptismMass from '@/views/auth/BaptismMass.vue'
-import FuneralMass from '@/views/auth/FuneralMass.vue'
+import FuneralMass from '@/views/auth/FuneralMassView.vue'
 import ThanksGivingMass from '@/views/auth/ThanksGivingMass.vue'
 import TrialHeader from '@/views/TrialHeader.vue'
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
@@ -13,11 +13,7 @@ import AdminBookingsView from '@/views/admin/AdminBookingsView.vue'
 import AdminMembersView from '@/views/admin/AdminMembersView.vue'
 import AdminEventsView from '@/views/admin/AdminEventsView.vue'
 import AdminAlertsView from '@/views/admin/AdminAlertsView.vue'
-
 import NotFoundView from '@/views/error/NotFoundView.vue'
-import FFBookingListView from '@/views/admin/FFBookingListView.vue'
-import BFBookingListView from '@/views/admin/BFBookingListView.vue'
-import TGBookingListView from '@/views/admin/TGBookingListView.vue'
 import ForbiddenView from '@/views/error/ForbiddenView.vue'
 import TrialPage from '@/views/error/TrialPage.vue'
 // import CameraView from '@/views/camera/CameraView.vue'
@@ -165,24 +161,7 @@ const router = createRouter({
       name: 'page-not-found',
       component: NotFoundView,
     },
-    {
-      path: '/funeral-mass-form-bookinglist-view',
-      name: 'funeral-mass-form-bookinglist-view',
-      component: FFBookingListView,
-      meta: { requiresAdmin: true },
-    },
-    {
-      path: '/baptism-mass-form-bookinglist-view',
-      name: 'baptism-mass-form-bookinglist-view',
-      component: BFBookingListView,
-      meta: { requiresAdmin: true },
-    },
-    {
-      path: '/thanksgiving-mass-form-bookinglist-view',
-      name: 'thanksgiving-mass-form-bookinglist-view',
-      component: TGBookingListView,
-      meta: { requiresAdmin: true },
-    },
+
 
     {
       path: '/forbidden',
