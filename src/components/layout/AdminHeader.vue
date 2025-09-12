@@ -31,7 +31,7 @@ const { mobile, mdAndDown } = useDisplay()
 // Load Functions during component rendering
 onMounted(async () => {
   isLoggedIn.value = await authStore.isAuthenticated()
-  await notificationStore.fetchNotifications()
+  await notificationStore.loadStoredNotifications()
 })
 </script>
 
