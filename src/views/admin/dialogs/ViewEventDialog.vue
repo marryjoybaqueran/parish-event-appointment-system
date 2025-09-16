@@ -160,13 +160,13 @@ const eventDetails = computed(() => {
     },
     {
       label: 'End Time',
-      value: getFieldValue('eventEndTime', 
-        fallbackEventData?.eventEndTime || 
-        props.event?.originalItem?.originalEvent?.eventEndTime || 
+      value: getFieldValue('eventEndTime',
+        fallbackEventData?.eventEndTime ||
+        props.event?.originalItem?.originalEvent?.eventEndTime ||
         props.event?.originalEvent?.eventEndTime ||
         props.event?.eventEndTime ||
-        formatTime(fallbackEventData?.endDate) || 
-        'N/A', 
+        formatTime(fallbackEventData?.endDate) ||
+        'N/A',
         (time) => {
           if (!time || time === 'N/A') return 'N/A'
           // If time is in HH:MM:SS format, format it to AM/PM
