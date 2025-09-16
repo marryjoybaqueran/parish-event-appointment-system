@@ -249,7 +249,7 @@ const getReferenceId = (booking) => {
           :total-visible="5"
           rounded="circle"
           color="primary"
-          class="pagination-custom"
+
           density="compact"
         />
       </div>

@@ -113,13 +113,7 @@ const onRegisterSubmit = async () => {
   formAction.value.formProcess = false
 }
 
-const openTermsDialog = () => {
-  termsDialog.value = { isOpen: true, contentType: 'terms' }
-}
 
-const openPrivacyDialog = () => {
-  privacyDialog.value = { isOpen: true, contentType: 'privacy' }
-}
 
 const openHelpDialog = () => {
   helpDialog.value = { isOpen: true, contentType: 'help' }
@@ -256,7 +250,7 @@ const onFormSubmit = () => {
               class="text-caption"
             >
               <v-icon size="small" class="mr-1">mdi-information</v-icon>
-              Admin accounts have full system privileges
+              Admin accounts have access to user management and system settings
             </v-alert>
             <v-alert
               v-else
@@ -271,22 +265,7 @@ const onFormSubmit = () => {
           </v-col>
         </v-row>
 
-        <!-- Terms and Conditions -->
-        <v-card class="mt-2 mb-4" variant="tonal" color="primary">
-          <v-card-text class="text-center pa-4">
-            <v-icon size="24" color="primary" class="mb-2">mdi-information</v-icon>
-            <p class="text-body-2 mb-0">
-              By creating an account, you agree to our
-              <a @click="openTermsDialog(termsDialog)" class="text-primary cursor-pointer"
-                >Terms of Service</a
-              >
-              and
-              <a @click="openPrivacyDialog(privacyDialog)" class="text-primary cursor-pointer"
-                >Privacy Policy</a
-              >
-            </p>
-          </v-card-text>
-        </v-card>
+
 
         <!-- Enhanced Submit Button -->
         <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
