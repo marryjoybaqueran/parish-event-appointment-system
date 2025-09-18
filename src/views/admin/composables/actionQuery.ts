@@ -333,8 +333,9 @@ export const useActionQuery = () => {
   /**
    * Deny a booking in Supabase database
    * @param eventData - Event data from ViewEventDialog
+   * @param denialComment - Comment/reason for denial
    */
-  const denyEvent = async (eventData: any): Promise<{ success: boolean; error?: any }> => {
+  const denyEvent = async (eventData: any, denialComment?: string): Promise<{ success: boolean; error?: any }> => {
     /* console.log('=== DENY EVENT SUPABASE QUERY ===')
     console.log('Event data received:', eventData) */
 
@@ -363,14 +364,27 @@ export const useActionQuery = () => {
         return { success: false, error: error.value }
       }
 
+      // Get current user for audit trail
+      const { data: userData } = await supabase.auth.getUser()
+      const currentUser = userData?.user
+
+      // Prepare update data
+      const updateData = {
+        [typeInfo.denialColumn]: true,
+        [typeInfo.approvalColumn]: false, // Reset approval if previously approved
+        denied_at: new Date().toISOString(),
+       // denied_by: currentUser?.id || null
+      }
+
+      // Add comment if provided
+      if (denialComment && denialComment.trim()) {
+        updateData.comment = denialComment.trim()
+      }
+
       // Execute Supabase update query
       const { data, error: updateError } = await supabase
         .from(typeInfo.tableName)
-        .update({
-          [typeInfo.denialColumn]: true,
-          [typeInfo.approvalColumn]: false, // Reset approval if previously approved
-
-        })
+        .update(updateData)
         .eq('id', bookingData.id)
         .select()
 
@@ -383,8 +397,39 @@ export const useActionQuery = () => {
       //console.log('BOOKING DENIED SUCCESSFULLY:', data)
       success.value = true
 
-      // Optional: Log the action to audit logs
+      // Log the action to audit logs if comment was provided
+      if (denialComment && denialComment.trim() && currentUser) {
+        try {
+          await supabase.from('audit_logs').insert([
+            {
+              action: `Denied ${typeInfo.displayName} booking with comment: "${denialComment.trim()}"`,
+              user_id: currentUser.id,
+              table_name: typeInfo.tableName,
+              record_id: bookingData.id,
+              old_data: { is_approved: false, is_denied: false },
+              new_data: { is_approved: false, is_denied: true, comment: denialComment.trim() },
+              changed_at: new Date().toISOString(),
+            },
+          ])
 
+          // Send notification to user about denial
+          if (bookingData.user_id) {
+            await supabase.from('notifications').insert([
+              {
+                user_id: bookingData.user_id,
+                title: `${typeInfo.displayName} Booking Denied`,
+                message: `Your ${typeInfo.displayName.toLowerCase()} booking has been denied. Reason: ${denialComment.trim()}`,
+                color: 'error',
+                icon: 'mdi-close-circle',
+                is_read: false,
+              },
+            ])
+          }
+        } catch (auditError) {
+          console.warn('Failed to create audit log or notification:', auditError)
+          // Don't fail the main operation for audit logging issues
+        }
+      }
 
       return { success: true }
 

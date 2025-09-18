@@ -244,9 +244,9 @@ const handleApproveEventFromDialog = async (event) => {
   await fetchAllEvents()
 }
 
-const handleDenyEventFromDialog = async (event) => {
-  console.log('Deny event from dialog:', event)
-  await denyEvent(event)
+const handleDenyEventFromDialog = async (event, comment) => {
+  console.log('Deny event from dialog:', event, 'with comment:', comment)
+  await denyEvent(event, comment)
   showEventDialog.value = false
   // Refresh calendar events after denial
   await fetchAllEvents()

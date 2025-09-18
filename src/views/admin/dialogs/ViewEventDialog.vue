@@ -12,6 +12,7 @@ import {
   getEventStatus
 } from '../utils/helpers'
 import { extractNumericIdFromCalendarEvent } from '../composables/helpers'
+import DenialCommentDialog from './DenialCommentDialog.vue'
 
 // Component name for ESLint multi-word rule
 defineOptions({
@@ -35,6 +36,10 @@ const emit = defineEmits(['update:modelValue', 'approve-event', 'deny-event', 'd
 
 // Add Events composable for handling other_events deletion
 const { deleteEvent: deleteOtherEvent } = useAddEvents()
+
+// Denial comment dialog state
+const showDenialDialog = ref(false)
+const denialLoading = ref(false)
 
 // Reactive data for localStorage
 const transformationData = ref(null)
@@ -237,8 +242,20 @@ const handleApprove = () => {
 }
 
 const handleDeny = () => {
-  emit('deny-event', eventData.value)
+  // Show denial comment dialog instead of directly denying
+  showDenialDialog.value = true
+}
+
+const handleDenyWithComment = (comment) => {
+  denialLoading.value = true
+  emit('deny-event', eventData.value, comment)
+  showDenialDialog.value = false
   dialog.value = false
+  denialLoading.value = false
+}
+
+const handleDenialCancel = () => {
+  showDenialDialog.value = false
 }
 
 const handleDelete = async () => {
@@ -376,6 +393,29 @@ watch(() => props.event, () => {
           </v-col>
         </v-row>
 
+        <!-- Denial Comment Section -->
+        <v-alert
+          v-if="(eventData?.booking?.comment && eventData?.booking?.is_denied) ||
+                (transformationData?.booking?.comment && transformationData?.booking?.is_denied)"
+          type="error"
+          variant="tonal"
+          class="mb-4"
+        >
+          <v-icon icon="mdi-message-alert" class="me-2"></v-icon>
+          <div>
+            <strong>Denial Reason:</strong>
+            <p class="mb-0 mt-1" style="white-space: pre-wrap;">
+              {{ transformationData?.booking?.comment || eventData?.booking?.comment }}
+            </p>
+            <small
+              v-if="transformationData?.booking?.denied_at || eventData?.booking?.denied_at"
+              class="text-grey-darken-1"
+            >
+              Denied on {{ formatDate(transformationData?.booking?.denied_at || eventData?.booking?.denied_at) }}
+            </small>
+          </div>
+        </v-alert>
+
         <!-- Additional event info -->
         <v-divider class="my-4"></v-divider>
 
@@ -465,6 +505,15 @@ watch(() => props.event, () => {
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <!-- Denial Comment Dialog -->
+  <DenialCommentDialog
+    v-model="showDenialDialog"
+    :event-title="eventDetails?.eventName || eventDetails?.title || 'Event'"
+    :loading="denialLoading"
+    @deny-with-comment="handleDenyWithComment"
+    @cancel="handleDenialCancel"
+  />
 </template>
 
 <style scoped>

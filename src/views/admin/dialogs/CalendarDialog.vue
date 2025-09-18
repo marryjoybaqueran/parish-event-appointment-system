@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { format } from 'date-fns'
 import { EVENT_CATEGORIES } from '../utils/constants'
 import { useAddEvents } from '../composables/addEvents'
+import { formatDate } from '../utils/helpers'
 
 // Component name for ESLint multi-word rule
 defineOptions({
@@ -126,10 +127,15 @@ const handleEditEvent = (event) => {
 }
 
 const getStatusColor = (booking) => {
-  // You can customize this based on your booking status field
+  // Check boolean fields first
+  if (booking.is_approved) return 'success'
+  if (booking.is_denied) return 'error'
+
+  // Fallback to status string
   const status = booking.status || 'pending'
   switch (status.toLowerCase()) {
     case 'approved': return 'success'
+    case 'denied':
     case 'rejected': return 'error'
     case 'pending': return 'warning'
     default: return 'info'
@@ -221,6 +227,26 @@ const getStatusColor = (booking) => {
                   >
                     {{ event.booking.status || 'Pending' }}
                   </v-chip>
+                </div>
+
+                <!-- Denial Comment Display -->
+                <div
+                  v-if="event.booking?.comment && event.booking?.is_denied"
+                  class="mt-2 pa-2 rounded bg-error-lighten-5 border border-error"
+                >
+                  <div class="d-flex align-center mb-1">
+                    <v-icon icon="mdi-message-alert" size="16" color="error" class="me-1"></v-icon>
+                    <small class="text-error font-weight-bold">Denial Reason:</small>
+                  </div>
+                  <p class="text-caption text-error ma-0" style="white-space: pre-wrap;">
+                    {{ event.booking.comment }}
+                  </p>
+                  <small
+                    v-if="event.booking.denied_at"
+                    class="text-error-darken-1 text-caption"
+                  >
+                    Denied on {{ formatDate(event.booking.denied_at) }}
+                  </small>
                 </div>
               </v-list-item-subtitle>
 
