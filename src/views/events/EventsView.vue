@@ -42,6 +42,26 @@ onMounted(() => {
             </v-col>
           </v-row>
 
+        <!-- Notice about date conflicts -->
+        <v-row>
+          <v-col cols="12">
+            <v-alert
+              type="info"
+              variant="tonal"
+              color="primary"
+              icon="mdi-information-outline"
+              class="mb-4"
+            >
+              <v-alert-title class="text-body-1 font-weight-medium">
+                Important Notice
+              </v-alert-title>
+              <div class="text-body-2 mt-2">
+                Please pay attention to the dates below for avoiding conflicts with existing events and church activities.
+              </div>
+            </v-alert>
+          </v-col>
+        </v-row>
+
         <!-- Calendar component -->
         <v-row>
           <v-col cols="12">

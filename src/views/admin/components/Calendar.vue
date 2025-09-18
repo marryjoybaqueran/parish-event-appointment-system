@@ -99,13 +99,29 @@ const getContrastYIQ = (hexcolor) => {
 
 // Methods
 const handleDateClick = (clickedDate) => {
-  const dateStr = clickedDate.toISOString().split('T')[0]
+  // Fix timezone issue: use local date formatting instead of ISO string
+  const year = clickedDate.getFullYear()
+  const month = String(clickedDate.getMonth() + 1).padStart(2, '0')
+  const day = String(clickedDate.getDate()).padStart(2, '0')
+  const dateStr = `${year}-${month}-${day}`
+
   selectedDate.value = dateStr
 
-  // Get events for the clicked date
+  // Get events for the clicked date - fix comparison with Date objects
   eventsForSelectedDate.value = allEvents.value.filter(event => {
-    const eventDate = event.startDate
-    return eventDate === dateStr
+    // Compare using the eventDate string property or format the startDate
+    if (event.eventDate) {
+      return event.eventDate === dateStr
+    }
+    // Fallback: format the startDate to compare
+    if (event.startDate) {
+      const eventYear = event.startDate.getFullYear()
+      const eventMonth = String(event.startDate.getMonth() + 1).padStart(2, '0')
+      const eventDay = String(event.startDate.getDate()).padStart(2, '0')
+      const eventDateStr = `${eventYear}-${eventMonth}-${eventDay}`
+      return eventDateStr === dateStr
+    }
+    return false
   })
 
   showDateDialog.value = true

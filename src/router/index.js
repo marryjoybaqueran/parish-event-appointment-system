@@ -199,12 +199,18 @@ router.beforeEach(async (to) => {
 
   // Only call isAuthenticated once on app startup, then use reactive state
   if (!authInitialized) {
-    await authUserStore.isAuthenticated()
-    authInitialized = true
+    try {
+      await authUserStore.isAuthenticated()
+      authInitialized = true
+    } catch (error) {
+      console.error('Auth initialization error:', error)
+      // Fallback to logged out state
+      authInitialized = true
+    }
   }
 
-  // Use reactive state instead of async method
-  const isLoggedIn = authUserStore.user !== null
+  // Use reactive state instead of async method - with null safety
+  const isLoggedIn = authUserStore.user !== null && authUserStore.user !== undefined
 
   // Redirect to appropriate page if accessing home route
   if (to.name === 'home') {

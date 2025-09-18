@@ -72,21 +72,21 @@ app.use(Toast)
 import { useAuthUserStore } from '@/stores/authUser'
 import { supabase } from '@/utils/supabase'
 
-// Set up auth state listener
-supabase.auth.onAuthStateChange(async (event, session) => {
-  const authStore = useAuthUserStore()
-
-  if (event === 'SIGNED_IN' && session) {
-    const { id, email, user_metadata } = session.user
-    authStore.userData.value = { id, email, ...user_metadata }
-    // Load user role through the store's method
-    await authStore.isAuthenticated()
-  } else if (event === 'SIGNED_OUT') {
-    authStore.$reset()
-    router.push('/')
-  }
-})
-
 router.isReady().then(() => {
   app.mount('#app')
+
+  // Set up auth state listener after app is mounted
+  supabase.auth.onAuthStateChange(async (event) => {
+    try {
+      const authStore = useAuthUserStore()
+
+      if (event === 'SIGNED_OUT') {
+        authStore.$reset()
+        router.push('/')
+      }
+      // For SIGNED_IN, let the isAuthenticated method handle state setting
+    } catch (error) {
+      console.error('Auth state change error:', error)
+    }
+  })
 })
