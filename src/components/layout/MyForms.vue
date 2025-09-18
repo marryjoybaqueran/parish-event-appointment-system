@@ -277,9 +277,7 @@ const getReferenceId = (booking) => {
           v-model="currentPage"
           :length="totalPages"
           :total-visible="3"
-          rounded="circle"
-          color="primary"
-          class="pagination-custom"
+
           density="compact"
           size="small"
         />

@@ -1,9 +1,10 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { format } from 'date-fns'
 import { EVENT_CATEGORIES } from '../utils/constants'
+import { useAddEvents } from '../composables/addEvents'
 
-// Component name para sa ESLint multi-word rule
+// Component name for ESLint multi-word rule
 defineOptions({
   name: 'CalendarDialog'
 })
@@ -26,6 +27,18 @@ const props = defineProps({
 
 // Emits
 const emit = defineEmits(['update:modelValue', 'edit-event', 'add-event'])
+
+// Add Events composable
+const { loading, error, success, addEvent, clearMessages } = useAddEvents()
+
+// Form data
+const showAddEventForm = ref(false)
+const eventForm = ref({
+  title: '',
+  description: '',
+  starting_time: '',
+  ending_time: ''
+})
 
 // Computed
 const isOpen = computed({
@@ -52,6 +65,58 @@ const dayOfWeek = computed(() => {
 // Methods
 const getCategoryInfo = (category) => {
   return EVENT_CATEGORIES[category?.toUpperCase()] || EVENT_CATEGORIES.OTHERS
+}
+
+const toggleAddEventForm = () => {
+  showAddEventForm.value = !showAddEventForm.value
+  if (showAddEventForm.value) {
+    clearMessages()
+    // Reset form
+    eventForm.value = {
+      title: '',
+      description: '',
+      starting_time: '',
+      ending_time: ''
+    }
+  }
+}
+
+const handleSubmitEvent = async () => {
+  if (!eventForm.value.title.trim()) {
+    return
+  }
+
+  const result = await addEvent({
+    title: eventForm.value.title.trim(),
+    description: eventForm.value.description.trim(),
+    starting_time: eventForm.value.starting_time || null,
+    ending_time: eventForm.value.ending_time || null,
+    eventDate: props.selectedDate // Pass the selected date from calendar
+  })
+
+  if (result.success) {
+    // Reset form and close
+    eventForm.value = {
+      title: '',
+      description: '',
+      starting_time: '',
+      ending_time: ''
+    }
+    showAddEventForm.value = false
+    // Emit add-event to refresh calendar
+    emit('add-event', props.selectedDate)
+  }
+}
+
+const cancelAddEvent = () => {
+  showAddEventForm.value = false
+  clearMessages()
+  eventForm.value = {
+    title: '',
+    description: '',
+    starting_time: '',
+    ending_time: ''
+  }
 }
 
 
@@ -191,6 +256,117 @@ const getStatusColor = (booking) => {
             </v-list-item>
           </v-list>
         </div>
+
+        <!-- Add Event Form -->
+        <v-expand-transition>
+          <div v-if="showAddEventForm">
+            <v-divider></v-divider>
+            <div class="pa-6">
+              <h4 class="text-h6 font-weight-bold mb-4 text-primary">
+                <v-icon icon="mdi-plus-circle" class="me-2"></v-icon>
+                Add New Event
+              </h4>
+
+              <!-- Error/Success Messages -->
+              <v-alert
+                v-if="error"
+                type="error"
+                variant="tonal"
+                class="mb-4"
+                dismissible
+                @click:close="clearMessages"
+              >
+                {{ error }}
+              </v-alert>
+
+              <v-alert
+                v-if="success"
+                type="success"
+                variant="tonal"
+                class="mb-4"
+                dismissible
+                @click:close="clearMessages"
+              >
+                {{ success }}
+              </v-alert>
+
+              <v-form @submit.prevent="handleSubmitEvent">
+                <v-row>
+                  <v-col cols="12">
+                    <v-text-field
+                      v-model="eventForm.title"
+                      label="Event Title"
+                      placeholder="Enter event title"
+                      variant="outlined"
+                      density="comfortable"
+                      :rules="[(v) => !!v || 'Title is required']"
+                      required
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12">
+                    <v-textarea
+                      v-model="eventForm.description"
+                      label="Description (Optional)"
+                      placeholder="Enter event description"
+                      variant="outlined"
+                      density="comfortable"
+                      rows="3"
+                      no-resize
+                    ></v-textarea>
+                  </v-col>
+
+                  <v-col cols="12" sm="6">
+                    <v-text-field
+                      v-model="eventForm.starting_time"
+                      label="Start Time (Optional)"
+                      type="time"
+                      hint="Leave empty for all-day event"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-clock-outline"
+                      clearable
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" sm="6">
+                    <v-text-field
+                      v-model="eventForm.ending_time"
+                      label="End Time (Optional)"
+                      type="time"
+                      hint="Leave empty to default to 1 hour duration"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-clock-outline"
+                      clearable
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-end gap-2 mt-4">
+                  <v-btn
+                    variant="text"
+                    color="grey"
+                    @click="cancelAddEvent"
+                    :disabled="loading"
+                  >
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    type="submit"
+                    color="primary"
+                    variant="elevated"
+                    :loading="loading"
+                    :disabled="!eventForm.title.trim()"
+                  >
+                    Add Event
+                  </v-btn>
+                </div>
+              </v-form>
+            </div>
+          </div>
+        </v-expand-transition>
       </v-card-text>
 
       <!-- Actions -->
@@ -204,10 +380,11 @@ const getStatusColor = (booking) => {
           Close
         </v-btn>
         <v-btn
+          v-if="!showAddEventForm"
           color="primary"
           variant="elevated"
           prepend-icon="mdi-plus"
-          @click="$emit('add-event', selectedDate)"
+          @click="toggleAddEventForm"
         >
           Add Event
         </v-btn>

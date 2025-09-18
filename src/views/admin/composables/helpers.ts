@@ -69,6 +69,50 @@ export const getTableNameForBookingType = (type: BookingType): string => {
 }
 
 /**
+ * Extract the numeric ID from calendar event IDs that have prefixes
+ * Calendar events have IDs like "wedding_123", "baptism_456", "other_789"
+ * This function extracts just the numeric part
+ * @param eventId - Event ID from calendar (e.g., "other_1", "wedding_123")
+ * @returns Numeric ID or the original value if no prefix found
+ */
+export const extractNumericIdFromCalendarEvent = (eventId: string | number): string | number => {
+  if (typeof eventId !== 'string') {
+    return eventId
+  }
+
+  // Check if it has a prefix pattern (category_number)
+  const match = eventId.match(/^(wedding|baptism|funeral|thanksgiving|other)_(\d+)$/)
+  if (match) {
+    // Return just the numeric part
+    return parseInt(match[2], 10)
+  }
+
+  // If no prefix pattern found, return as-is
+  return eventId
+}
+
+/**
+ * Get the booking type from a calendar event ID
+ * @param eventId - Event ID from calendar (e.g., "other_1", "wedding_123")
+ * @returns BookingType extracted from the prefix
+ */
+export const getBookingTypeFromEventId = (eventId: string): BookingType => {
+  if (typeof eventId !== 'string') {
+    return 'others'
+  }
+
+  const match = eventId.match(/^(wedding|baptism|funeral|thanksgiving|other)_\d+$/)
+  if (match) {
+    const prefix = match[1]
+    // Handle "other" vs "others"
+    if (prefix === 'other') return 'others'
+    return prefix as BookingType
+  }
+
+  return 'others'
+}
+
+/**
  * Composable para sa pag-handle ng event approval
  * Now uses the actionQuery.ts for actual Supabase operations
  * @deprecated Use useActionQuery from actionQuery.ts instead

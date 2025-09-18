@@ -25,8 +25,10 @@ import {
   type BookingType,
   type BookingTypeInfo,
   getBookingTypeFromCategory,
-  getTableNameForBookingType
+  getTableNameForBookingType,
+  extractNumericIdFromCalendarEvent
 } from './helpers'
+import { useAddEvents } from './addEvents'
 
 /**
  * Composable for handling Supabase queries for booking approval/denial/deletion
@@ -290,7 +292,7 @@ export const useActionQuery = () => {
       //console.log('BOOKING TYPE CLASSIFICATION:', typeInfo)
 
       if (typeInfo.type === 'others') {
-        error.value = 'Cannot approve: Unknown booking type'
+        error.value = 'Cannot approve: Other events are automatically approved when created'
         return { success: false, error: error.value }
       }
 
@@ -357,7 +359,7 @@ export const useActionQuery = () => {
      // console.log(' BOOKING TYPE CLASSIFICATION FOR DENIAL:', typeInfo)
 
       if (typeInfo.type === 'others') {
-        error.value = 'Cannot deny: Unknown booking type'
+        error.value = 'Cannot deny: Other events cannot be denied, only deleted'
         return { success: false, error: error.value }
       }
 
@@ -382,20 +384,7 @@ export const useActionQuery = () => {
       success.value = true
 
       // Optional: Log the action to audit logs
-      try {
-        await supabase.from('audit_logs').insert([
-          {
-            action: `Denied ${typeInfo.displayName} booking`,
-            table_name: typeInfo.tableName,
-            record_id: bookingData.id,
-            old_data: { [typeInfo.denialColumn]: false },
-            new_data: { [typeInfo.denialColumn]: true },
-            changed_at: new Date().toISOString()
-          }
-        ])
-      } catch (auditError) {
-        console.warn('Audit log failed (non-critical):', auditError)
-      }
+
 
       return { success: true }
 
@@ -437,12 +426,31 @@ export const useActionQuery = () => {
       const typeInfo = extractBookingType(eventData, bookingData)
      // console.log('BOOKING TYPE CLASSIFICATION FOR DELETION:', typeInfo)
 
+      // Handle "others" category events using the other_events table
       if (typeInfo.type === 'others') {
-        error.value = 'Cannot delete: Unknown booking type'
-        return { success: false, error: error.value }
-      }
+        try {
+          const { deleteEvent: deleteOtherEvent } = useAddEvents()
 
-      // Execute Supabase delete query
+          // Extract numeric ID from calendar event ID (e.g., "other_1" -> 1)
+          const numericId = extractNumericIdFromCalendarEvent(bookingData.id)
+
+          console.log('Deleting other event - Original ID:', bookingData.id, 'Numeric ID:', numericId)
+
+          const result = await deleteOtherEvent(numericId)
+
+          if (result.success) {
+            success.value = true
+            return { success: true }
+          } else {
+            error.value = result.error || 'Failed to delete other event'
+            return { success: false, error: error.value }
+          }
+        } catch (err) {
+          console.error('Error deleting other event:', err)
+          error.value = 'Failed to delete other event'
+          return { success: false, error: error.value }
+        }
+      }      // Execute Supabase delete query for regular bookings
       const { data, error: deleteError } = await supabase
         .from(typeInfo.tableName)
         .delete()
@@ -457,22 +465,6 @@ export const useActionQuery = () => {
 
       //console.log('BOOKING DELETED SUCCESSFULLY:', data)
       success.value = true
-
-      // Optional: Log the action to audit logs
-      try {
-        await supabase.from('audit_logs').insert([
-          {
-            action: `Deleted ${typeInfo.displayName} booking`,
-            table_name: typeInfo.tableName,
-            record_id: bookingData.id,
-            old_data: bookingData,
-            new_data: null,
-            changed_at: new Date().toISOString()
-          }
-        ])
-      } catch (auditError) {
-        console.warn('Audit log failed (non-critical):', auditError)
-      }
 
       return { success: true }
 

@@ -198,9 +198,9 @@ const handleEditEvent = (event) => {
   // You might want to emit an event to parent or show an edit dialog
 }
 
-const handleAddEvent = (date) => {
-  console.log('Add event for date:', date)
-  // Implement add event functionality
+const handleAddEvent = async () => {
+  // Refresh calendar events after new event is added
+  await fetchAllEvents()
   showDateDialog.value = false
 }
 

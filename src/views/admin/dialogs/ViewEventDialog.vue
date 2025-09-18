@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { EVENT_CATEGORIES } from '../utils/constants'
+import { useAddEvents } from '../composables/addEvents'
 import {
   formatDate,
   formatTime,
@@ -10,6 +11,7 @@ import {
   loadClickedEventData as loadClickedEventDataHelper,
   getEventStatus
 } from '../utils/helpers'
+import { extractNumericIdFromCalendarEvent } from '../composables/helpers'
 
 // Component name for ESLint multi-word rule
 defineOptions({
@@ -30,6 +32,9 @@ const props = defineProps({
 
 // Emits
 const emit = defineEmits(['update:modelValue', 'approve-event', 'deny-event', 'delete-event'])
+
+// Add Events composable for handling other_events deletion
+const { deleteEvent: deleteOtherEvent } = useAddEvents()
 
 // Reactive data for localStorage
 const transformationData = ref(null)
@@ -178,6 +183,21 @@ const eventDetails = computed(() => {
       ),
       source: storageData?.eventEndTime ? 'localStorage' : 'fallback'
     },
+    // Only show description for "others" category events
+    ...(category.toLowerCase() === 'others' || category.toLowerCase() === 'other' ? [{
+      label: 'Description',
+      value: getFieldValue('description',
+        fallbackEventData?.description ||
+        eventData.value?.description ||
+        eventData.value?.originalEvent?.description ||
+        props.event?.originalItem?.originalEvent?.description ||
+        props.event?.clickedEvent?.originalItem?.originalEvent?.description ||
+        props.event?.description ||
+        'No description provided'
+      ),
+      source: storageData?.description ? 'localStorage' : 'fallback',
+      isDescription: true
+    }] : []),
     {
       label: 'Status',
       value: eventStatus,
@@ -221,9 +241,53 @@ const handleDeny = () => {
   dialog.value = false
 }
 
-const handleDelete = () => {
-  emit('delete-event', eventData.value)
-  dialog.value = false
+const handleDelete = async () => {
+  try {
+    // Check if this is an "others" category event that should use other_events table
+    const eventCategory = eventData.value?.category?.toLowerCase()
+
+    if (eventCategory === 'others' || eventCategory === 'other') {
+      // Get the event ID from multiple possible locations
+      const eventId = eventData.value?.originalEvent?.id ||
+                     eventData.value?.bookingData?.id ||
+                     eventData.value?.bookingId ||
+                     eventData.value?.id
+
+      console.log('Attempting to delete other event with ID:', eventId, 'Event data:', eventData.value)
+
+      if (eventId) {
+        // Extract numeric ID from calendar event ID (e.g., "other_1" -> 1)
+        const numericId = extractNumericIdFromCalendarEvent(eventId)
+
+        console.log('Extracted numeric ID for deletion:', numericId, 'from original ID:', eventId)
+
+        // Use the addEvents composable to delete from other_events table
+        const result = await deleteOtherEvent(numericId)
+
+        if (result.success) {
+          console.log('Successfully deleted other event from database')
+          dialog.value = false
+          emit('delete-event', eventData.value) // Emit to refresh calendar
+          return
+        } else {
+          console.error('Failed to delete other event from database:', result.error)
+        }
+      } else {
+        console.error('Could not find event ID for other event deletion')
+      }
+    }
+
+    // For all other event types (wedding, baptism, funeral, thanksgiving)
+    // or if the other_events deletion failed, use the original delete handler
+    emit('delete-event', eventData.value)
+    dialog.value = false
+
+  } catch (error) {
+    console.error('Error in handleDelete:', error)
+    // Fallback to original delete handler
+    emit('delete-event', eventData.value)
+    dialog.value = false
+  }
 }
 
 // Lifecycle hooks
@@ -272,8 +336,8 @@ watch(() => props.event, () => {
           <v-col
             v-for="field in eventDetails.fields"
             :key="field.label"
-            cols="12"
-            sm="6"
+            :cols="field.isDescription ? '12' : '12'"
+            :sm="field.isDescription ? '12' : '6'"
             class="py-2"
           >
             <div class="mb-3" :class="field.isStatus ? `status-field status-${field.statusColor}` : ''">
@@ -286,8 +350,23 @@ watch(() => props.event, () => {
                   color="primary"
                   class="ms-1"
                 ></v-icon>
+                <v-icon
+                  v-if="field.isDescription"
+                  icon="mdi-text"
+                  size="14"
+                  color="info"
+                  class="ms-1"
+                ></v-icon>
               </p>
               <p
+                v-if="field.isDescription"
+                class="text-body-2 mb-0 text-grey-darken-2"
+                style="white-space: pre-wrap; word-break: break-word;"
+              >
+                {{ field.value }}
+              </p>
+              <p
+                v-else
                 class="text-body-1 mb-0"
                 :class="field.isStatus ? `font-weight-bold text-${field.statusColor}` : ''"
               >
