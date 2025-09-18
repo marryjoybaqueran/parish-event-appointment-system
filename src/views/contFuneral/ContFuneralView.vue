@@ -13,12 +13,11 @@ const goBack = () => {
 }
 function continueToNext() {
   // try named route first, fallback to path
-
-    router.push('/wedding-mass-continue-2')
+    router.push('/funeral-mass-continue-2')
 }
 
 // Key para sa localStorage
-const LOCAL_PDF_KEY = 'wedding_selected_pdf'
+const LOCAL_PDF_KEY = 'funeral_selected_pdf'
 
 // Track selected PDF title (show previous selection if available)
 const selectedPdf = ref(
@@ -72,33 +71,15 @@ const downloadDocument = async (format) => {
     document.body.removeChild(link)
     downloadingPdf.value = ''
   }, 300)
-}
-
-// Available PDFs para sa wedding with enhanced data
-const weddingPDFs = [
+}// Available PDFs para sa funeral with enhanced data
+const funeralPDFs = [
   {
-    name: 'Marriage Interview',
-    filename: 'marriage_interview.pdf',
-    description: 'Interview form para sa mag-asawa',
-    icon: 'mdi-account-heart',
+    name: 'Permission of Funeral',
+    filename: 'permission_of_funeral.pdf',
+    description: 'Permission form para sa funeral service',
+    icon: 'mdi-church',
     color: 'primary',
-    category: 'Interview',
-  },
-  {
-    name: 'Marriage Banns',
-    filename: 'marriage_banns.pdf',
-    description: 'Banns announcement form',
-    icon: 'mdi-bullhorn',
-    color: 'secondary',
-    category: 'Announcement',
-  },
-  {
-    name: 'Jurisdiction for Marriage',
-    filename: 'jurisdiction_for_marriage.pdf',
-    description: 'Jurisdiction requirements',
-    icon: 'mdi-gavel',
-    color: 'success',
-    category: 'Legal',
+    category: 'Permission',
   },
 ]
 
@@ -107,7 +88,7 @@ const cardVariant = computed(() => theme.global.current.value.dark ? 'tonal' : '
 const headerGradient = computed(() =>
   theme.global.current.value.dark
     ? 'linear-gradient(135deg, #1E1E1E 0%, #2C2C2C 100%)'
-    : 'linear-gradient(135deg, #1976D2 0%, #42A5F5 100%)'
+    : 'linear-gradient(135deg, #424242 0%, #616161 100%)'
 )
 </script>
 
@@ -129,14 +110,14 @@ const headerGradient = computed(() =>
               color="white"
               class="mb-4 elevation-4"
             >
-              <v-icon size="48" color="primary">mdi-heart</v-icon>
+              <v-icon size="48" color="grey-darken-2">mdi-church</v-icon>
             </v-avatar>
 
             <h1 class="text-h4 font-weight-bold text-white mb-2">
-              Wedding Documents
+              Funeral Documents
             </h1>
             <p class="text-h6 text-white opacity-90 mb-0">
-              Download and fill out ang required forms para sa inyong wedding appointment
+              Download and fill out ang required forms para sa inyong funeral appointment
             </p>
           </v-card-text>
         </v-card>
@@ -149,14 +130,14 @@ const headerGradient = computed(() =>
           prepend-icon="mdi-information-outline"
         >
           <v-alert-title class="text-h6 mb-2">Important Reminder</v-alert-title>
-          Please download and complete all required forms before your wedding appointment.
+          Please download and complete all required forms before your funeral appointment.
           All documents must be properly filled out and submitted.
         </v-alert>
 
         <!-- Document Grid -->
         <v-row>
           <v-col
-            v-for="pdf in weddingPDFs"
+            v-for="pdf in funeralPDFs"
             :key="pdf.filename"
             cols="12"
             sm="6"
@@ -172,65 +153,59 @@ const headerGradient = computed(() =>
               @click="openFormatDialog(pdf)"
             >
               <v-card-text class="text-center pa-6">
-                <!-- Category chip -->
+                <v-avatar
+                  size="60"
+                  :color="downloadingPdf === pdf.filename ? 'white' : pdf.color"
+                  class="mb-4"
+                  variant="tonal"
+                >
+                  <v-icon
+                    size="32"
+                    :color="downloadingPdf === pdf.filename ? pdf.color : 'white'"
+                  >
+                    {{ downloadingPdf === pdf.filename ? 'mdi-download' : pdf.icon }}
+                  </v-icon>
+                </v-avatar>
+
+                <h3 class="text-h6 font-weight-medium mb-2" :class="downloadingPdf === pdf.filename ? 'text-white' : ''">
+                  {{ pdf.name }}
+                </h3>
+
+                <p class="text-body-2 mb-3" :class="downloadingPdf === pdf.filename ? 'text-white text-opacity-90' : 'text-medium-emphasis'">
+                  {{ pdf.description }}
+                </p>
+
                 <v-chip
                   :color="pdf.color"
-                  variant="tonal"
                   size="small"
-                  class="mb-4"
+                  variant="tonal"
+                  class="text-caption font-weight-medium"
                 >
                   {{ pdf.category }}
                 </v-chip>
 
-                <!-- Icon -->
-                <v-avatar
-                  :color="pdf.color"
-                  size="64"
-                  class="mb-4"
-                  variant="tonal"
-                >
-                  <v-icon size="32" :color="pdf.color">{{ pdf.icon }}</v-icon>
-                </v-avatar>
-
-                <!-- Title -->
-                <h3 class="text-h6 font-weight-medium mb-2">
-                  {{ pdf.name }}
-                </h3>
-
-                <!-- Description -->
-                <p class="text-body-2 text-medium-emphasis mb-4">
-                  {{ pdf.description }}
-                </p>
-
-                <!-- Download indicator -->
-                <div class="d-flex align-center justify-center">
-                  <v-progress-circular
-                    v-if="downloadingPdf === pdf.filename"
-                    :color="pdf.color"
-                    indeterminate
-                    size="24"
-                    width="3"
-                  />
-                  <v-icon
-                    v-else
-                    :color="pdf.color"
-                    size="24"
+                <div class="mt-4">
+                  <v-btn
+                    :color="downloadingPdf === pdf.filename ? 'white' : pdf.color"
+                    :variant="downloadingPdf === pdf.filename ? 'flat' : 'tonal'"
+                    size="small"
+                    :loading="downloadingPdf === pdf.filename"
+                    block
                   >
-                    mdi-download
-                  </v-icon>
-                  <span class="ml-2 text-caption font-weight-medium">
+                    <v-icon left size="18">
+                      {{ downloadingPdf === pdf.filename ? 'mdi-download' : 'mdi-download-outline' }}
+                    </v-icon>
                     {{ downloadingPdf === pdf.filename ? 'Downloading...' : 'Choose Format' }}
-                  </span>
+                  </v-btn>
                 </div>
               </v-card-text>
 
               <!-- Ripple effect overlay -->
               <v-overlay
-                v-if="downloadingPdf === pdf.filename"
-                :model-value="true"
-                contained
-                opacity="0.1"
                 :color="pdf.color"
+                :model-value="downloadingPdf === pdf.filename"
+                opacity="0.1"
+                scrim="false"
               />
             </v-card>
           </v-col>
@@ -247,12 +222,8 @@ const headerGradient = computed(() =>
             <v-card-text class="d-flex align-center">
               <v-icon color="success" class="mr-3">mdi-check-circle</v-icon>
               <div>
-                <div class="text-subtitle-1 font-weight-medium">
-                  Document Downloaded
-                </div>
-                <div class="text-body-2 text-medium-emphasis">
-                  {{ selectedPdf }} has been downloaded successfully
-                </div>
+                <div class="font-weight-medium">Document Downloaded</div>
+                <div class="text-body-2 text-success">{{ selectedPdf }} has been downloaded successfully</div>
               </div>
             </v-card-text>
           </v-card>
@@ -330,30 +301,21 @@ const headerGradient = computed(() =>
               <v-btn
                 color="grey"
                 variant="outlined"
-                prepend-icon="mdi-arrow-left"
-                size="large"
-                @click="goBack"
                 class="mx-2"
+                @click="goBack"
               >
+                <v-icon left>mdi-arrow-left</v-icon>
                 Back
               </v-btn>
 
               <v-btn
+                @click="continueToNext"
                 color="primary"
                 variant="flat"
-                prepend-icon="mdi-arrow-right-circle"
-                size="large"
-
-                @click="continueToNext"
+                class="mx-2"
               >
                 Continue
-                <v-tooltip
-
-                  activator="parent"
-                  location="top"
-                >
-                  Upload all document images to continue
-                </v-tooltip>
+                <v-icon right>mdi-arrow-right</v-icon>
               </v-btn>
             </div>
           </v-card-text>

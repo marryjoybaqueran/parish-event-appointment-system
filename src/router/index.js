@@ -23,6 +23,8 @@ import Notifications from '@/views/notifications/NotificationsView.vue'
 import Pending from '@/views/PendingView.vue'
 import WeddingContinue from '@/views/contWedding/ContWeddingView.vue'
 import WeddingContinue2 from '@/views/contWedding/CameraWeddingView.vue'
+import FuneralContinue from '@/views/contFuneral/ContFuneralView.vue'
+import FuneralContinue2 from '@/views/contFuneral/CameraFunderalView.vue'
 import FinnishView from '@/views/FinnishView.vue'
 
 const router = createRouter({
@@ -79,6 +81,18 @@ const router = createRouter({
       path: '/wedding-mass-continue-2',
       name: 'wedding-mass-continue-2',
       component: WeddingContinue2,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/funeral-mass-continue',
+      name: 'funeral-mass-continue',
+      component: FuneralContinue,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/funeral-mass-continue-2',
+      name: 'funeral-mass-continue-2',
+      component: FuneralContinue2,
       meta: { requiresAuth: true, requiresUserMode: true },
     },
     {

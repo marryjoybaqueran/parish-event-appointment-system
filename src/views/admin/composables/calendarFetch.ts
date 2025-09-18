@@ -121,7 +121,7 @@ export const useCalendarFetch = () => {
       console.warn('Failed to save transformation data to localStorage:', error)
     }
 
-    console.error('Transforming booking:', { category, eventName, eventDate, eventTime, eventEndTime, startDate, endDate, status, booking })
+    console.log('Transforming booking:', { category, eventName, eventDate, eventTime, eventEndTime, startDate, endDate, status, booking })
 
     // vue-simple-calendar compatible event structure
     return {

@@ -163,7 +163,7 @@ export const useFuneralStore = defineStore('funeralData', {
       this.selectedBookingId = id
     },
 
-    // Get reference (id) of recent booking for display (funeral schema has no ref_number)
+    // Get reference number ng recent booking para sa FinnishView display
     async getRecentBookingReferenceNumber() {
       const user = await this.getUser()
       if (!user) {
@@ -174,7 +174,7 @@ export const useFuneralStore = defineStore('funeralData', {
       try {
         const { data, error } = await supabase
           .from('funeral_bookings')
-          .select('id')
+          .select('ref_number')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -184,9 +184,9 @@ export const useFuneralStore = defineStore('funeralData', {
           return null
         }
 
-        const id = data && data[0] ? data[0].id : null
-        console.log('Reference id nga na-fetch:', id)
-        return id
+        const refNumber = data && data[0] ? data[0].ref_number : null
+        console.log('Reference number nga na-fetch:', refNumber)
+        return refNumber
       } catch (err) {
         this.error = err.message
         return null

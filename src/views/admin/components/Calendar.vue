@@ -3,6 +3,7 @@ import { ref, computed, onMounted, defineOptions } from 'vue'
 import CalendarDialog from '../dialogs/CalendarDialog.vue'
 import ViewEventDialog from '../dialogs/ViewEventDialog.vue'
 import { useCalendarFetch } from '../composables/calendarFetch'
+import { useActionQuery } from '../composables/actionQuery'
 import { EVENT_LEGEND } from '../utils/constants'
 import { CalendarView } from 'vue-simple-calendar'
 import 'vue-simple-calendar/dist/vue-simple-calendar.css'
@@ -15,6 +16,12 @@ defineOptions({
 
 // Calendar composable
 const { loading, error, allEvents, fetchAllEvents } = useCalendarFetch()
+
+// Approval composable para sa booking actions (using new actionQuery)
+const { approveEvent, denyEvent, deleteEvent} = useActionQuery()
+
+// DEBUG: Call this function sa console to troubleshoot localStorage data
+// debugLocalStorage()
 
 // Calendar state
 const calendarRef = ref(null)
@@ -204,11 +211,29 @@ const handleEditEventFromDialog = (event) => {
   showEventDialog.value = false
 }
 
-const handleDeleteEventFromDialog = (event) => {
+const handleDeleteEventFromDialog = async (event) => {
   console.log('Delete event from dialog:', event)
-  // Implement delete event functionality
-  // You might want to show confirmation dialog
+  await deleteEvent(event)
   showEventDialog.value = false
+  // Refresh calendar events after deletion
+  await fetchAllEvents()
+}
+
+// New handlers para sa approve/deny events
+const handleApproveEventFromDialog = async (event) => {
+  console.log('Approve event from dialog:', event)
+  await approveEvent(event)
+  showEventDialog.value = false
+  // Refresh calendar events after approval
+  await fetchAllEvents()
+}
+
+const handleDenyEventFromDialog = async (event) => {
+  console.log('Deny event from dialog:', event)
+  await denyEvent(event)
+  showEventDialog.value = false
+  // Refresh calendar events after denial
+  await fetchAllEvents()
 }
 
 // Lifecycle
@@ -390,6 +415,8 @@ onMounted(async () => {
     v-model="showEventDialog"
     :event="selectedEvent"
     @edit-event="handleEditEventFromDialog"
+    @approve-event="handleApproveEventFromDialog"
+    @deny-event="handleDenyEventFromDialog"
     @delete-event="handleDeleteEventFromDialog"
   />
 </template>
