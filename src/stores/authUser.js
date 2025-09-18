@@ -75,6 +75,9 @@ export const useAuthUserStore = defineStore('authUser', () => {
   const authPages = ref([])
   const authBranchIds = ref([])
 
+  // Add a computed property for user state (for reactive UI components)
+  const user = computed(() => userData.value)
+
   // Getters
   // Computed Properties; Use for getting the state but not modifying its reactive state
   const userRole = computed(() => {
@@ -106,6 +109,19 @@ export const useAuthUserStore = defineStore('authUser', () => {
     userData.value = null
     authPages.value = []
     authBranchIds.value = []
+  }
+
+  // Logout function
+  async function logout() {
+    try {
+      await supabase.auth.signOut()
+      $reset()
+      // Router navigation will be handled by auth state change
+      return true
+    } catch (error) {
+      console.error('Logout error:', error)
+      return false
+    }
   }
 
   // Actions
@@ -412,10 +428,12 @@ export const useAuthUserStore = defineStore('authUser', () => {
 
   return {
     userData,
+    user,
     userRole,
     authPages,
     authBranchIds,
     $reset,
+    logout,
     isAuthenticated,
     getUserInformation,
     getAuthPages,

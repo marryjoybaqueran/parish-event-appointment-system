@@ -191,9 +191,20 @@ const router = createRouter({
   ],
 })
 
+// Initialize auth state on app startup
+let authInitialized = false
+
 router.beforeEach(async (to) => {
   const authUserStore = useAuthUserStore()
-  const isLoggedIn = await authUserStore.isAuthenticated()
+
+  // Only call isAuthenticated once on app startup, then use reactive state
+  if (!authInitialized) {
+    await authUserStore.isAuthenticated()
+    authInitialized = true
+  }
+
+  // Use reactive state instead of async method
+  const isLoggedIn = authUserStore.user !== null
 
   // Redirect to appropriate page if accessing home route
   if (to.name === 'home') {
