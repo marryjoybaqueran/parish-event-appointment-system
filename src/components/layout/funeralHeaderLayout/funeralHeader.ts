@@ -78,6 +78,21 @@ export function useFuneralHeader() {
 		return booking?.is_approved === true
 	}
 
+	const deleteBooking = async (booking: any) => {
+		try {
+			const result = await funeralStore.deleteBooking(booking.id)
+			return result
+		} catch (error) {
+			console.error('Error deleting funeral booking:', error)
+			return { success: false, error: error.message || 'Failed to delete booking' }
+		}
+	}
+
+	const canDelete = (booking: any) => {
+		// Allow deletion for all bookings regardless of status
+		return booking ? true : false
+	}
+
 	// Watch para sa mga changes sa bookings especially kung naa na'y completion status
 	watch(
 		() => funeralStore.bookings,
@@ -103,5 +118,7 @@ export function useFuneralHeader() {
 		getStatusText,
 		handleBookingClick,
 		isClickable,
+		deleteBooking,
+		canDelete,
 	}
 }
