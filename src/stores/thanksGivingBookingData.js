@@ -174,7 +174,7 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
       try {
         const { data, error } = await supabase
           .from('thanksgiving_bookings')
-          .select('id')
+          .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -184,7 +184,7 @@ export const useThanksGivingStore = defineStore('thanksGivingData', {
           return null
         }
 
-        const id = data && data[0] ? data[0].id : null
+        const id = data && data[0] ? data[0].ref_number : null
         console.log('Reference id nga na-fetch:', id)
         return id
       } catch (err) {

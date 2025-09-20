@@ -25,6 +25,10 @@ import WeddingContinue from '@/views/contWedding/ContWeddingView.vue'
 import WeddingContinue2 from '@/views/contWedding/CameraWeddingView.vue'
 import FuneralContinue from '@/views/contFuneral/ContFuneralView.vue'
 import FuneralContinue2 from '@/views/contFuneral/CameraFunderalView.vue'
+import ThanksGivingContinue from '@/views/contThanksGiving/ContThanksGivingView.vue'
+import ThanksGivingContinue2 from '@/views/contThanksGiving/CamerraThanksGivingView.vue'
+import BaptismContinue from '@/views/contBaptism/ContBaptismView.vue'
+import BaptismContinue2 from '@/views/contBaptism/CameraBaptismView.vue'
 import FinnishView from '@/views/FinnishView.vue'
 
 const router = createRouter({
@@ -93,6 +97,30 @@ const router = createRouter({
       path: '/funeral-mass-continue-2',
       name: 'funeral-mass-continue-2',
       component: FuneralContinue2,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/thanksgiving-mass-continue',
+      name: 'thanksgiving-mass-continue',
+      component: ThanksGivingContinue,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/thanksgiving-mass-continue-2',
+      name: 'thanksgiving-mass-continue-2',
+      component: ThanksGivingContinue2,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/baptism-mass-continue',
+      name: 'baptism-mass-continue',
+      component: BaptismContinue,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/baptism-mass-continue-2',
+      name: 'baptism-mass-continue-2',
+      component: BaptismContinue2,
       meta: { requiresAuth: true, requiresUserMode: true },
     },
     {

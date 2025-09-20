@@ -198,7 +198,7 @@ const getBookingIcon = (booking) => {
   } else if (booking.bookingType === 'baptism') {
     return 'mdi-water'
   } else {
-    return 'mdi-bird'
+    return 'mdi-church'
   }
 }
 
@@ -215,10 +215,31 @@ const getBookingTypeLabel = (booking) => {
 }
 
 const getReferenceId = (booking) => {
-  if ((booking.bookingType === 'wedding' || booking.bookingType === 'baptism') && booking.ref_number) {
+  if ((booking.bookingType === 'wedding' || booking.bookingType === 'baptism' || booking.bookingType === 'funeral' || booking.bookingType === 'thanksgiving') && booking.ref_number) {
     return `Ref: ${booking.ref_number}`
   }
   return null
+}
+
+const isBookingCompleted = (booking) => {
+  // Check if booking has reference number (indicates documents were submitted)
+  if (booking.ref_number) {
+    return true
+  }
+
+  // Additional status checks based on booking type
+  if (booking.bookingType === 'baptism') {
+    return booking.status === 'completed' || booking.status === 'approved' ||
+           (booking.attached_images_1 && booking.attached_images_2 && booking.attached_images_3)
+  } else if (booking.bookingType === 'funeral') {
+    return booking.status === 'completed' || booking.status === 'approved' || booking.attached_images_1
+  } else if (booking.bookingType === 'wedding') {
+    return booking.status === 'completed' || booking.status === 'approved'
+  } else if (booking.bookingType === 'thanksgiving') {
+    return booking.status === 'completed' || booking.status === 'approved'
+  }
+
+  return false
 }
 </script>
 
@@ -313,10 +334,23 @@ const getReferenceId = (booking) => {
             <div class="flex-grow-1">
               <h4 class="text-subtitle-1 font-weight-medium">
                 {{ getBookingTitle(booking) }}
+                <v-icon v-if="isBookingCompleted(booking)" color="success" size="small" class="ml-1">
+                  mdi-check-circle
+                </v-icon>
               </h4>
               <p class="text-caption text-medium-emphasis ma-0">{{ getBookingTypeLabel(booking) }}</p>
-              <p v-if="getReferenceId(booking)" class="text-caption primary--text ma-0">{{ getReferenceId(booking) }}</p>
-              <p v-if="booking.comment" class="text-caption grey--text ma-0">{{ booking.comment }}</p>
+              <div v-if="getReferenceId(booking)" class="d-flex align-center mt-1">
+                <v-chip
+                  color="success"
+                  variant="tonal"
+                  size="x-small"
+                  prepend-icon="mdi-identifier"
+                  class="text-caption"
+                >
+                  {{ getReferenceId(booking) }}
+                </v-chip>
+              </div>
+              <p v-if="booking.comment" class="text-caption grey--text ma-0 mt-1">{{ booking.comment }}</p>
             </div>
             <v-chip
               :color="getStatusColor(booking)"
@@ -344,12 +378,25 @@ const getReferenceId = (booking) => {
                   <v-icon color="white" size="24">{{ getBookingIcon(booking) }}</v-icon>
                 </v-avatar>
                 <div>
-                  <h3 class="text-h6 font-weight-medium">
+                  <h3 class="text-h6 font-weight-medium d-flex align-center">
                     {{ getBookingTitle(booking) }} {{ booking.bookingType === 'wedding' ? 'Wedding' : booking.bookingType === 'funeral' ? 'Funeral' : booking.bookingType === 'baptism' ? 'Baptism' : 'Thanksgiving' }}
+                    <v-icon v-if="isBookingCompleted(booking)" color="success" size="small" class="ml-2">
+                      mdi-check-circle
+                    </v-icon>
                   </h3>
                   <p class="text-body-2 text-medium-emphasis ma-0">
                     {{ getBookingSubtitle(booking) }}
                   </p>
+                  <div v-if="getReferenceId(booking)" class="mt-1">
+                    <v-chip
+                      color="success"
+                      variant="tonal"
+                      size="small"
+                      prepend-icon="mdi-identifier"
+                    >
+                      {{ getReferenceId(booking) }}
+                    </v-chip>
+                  </div>
                 </div>
               </div>
             </v-col>
@@ -365,8 +412,7 @@ const getReferenceId = (booking) => {
               <v-chip :color="getStatusColor(booking)" variant="flat" rounded="pill">
                 {{ getStatusText(booking) }}
               </v-chip>
-              <div v-if="getReferenceId(booking)" class="text-caption mt-2">{{ getReferenceId(booking) }}</div>
-              <div v-if="booking.comment" class="text-caption grey--text mt-1">{{ booking.comment }}</div>
+              <div v-if="booking.comment" class="text-caption grey--text mt-2">{{ booking.comment }}</div>
             </v-col>
           </v-row>
         </template>

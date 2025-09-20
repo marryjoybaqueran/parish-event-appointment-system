@@ -24,15 +24,15 @@ export function useThanksGivingHeader() {
 		// Completed bookings (have ref number) are success
 		if (booking?.ref_number) {
 			return 'success'
-		} 
+		}
 		// Explicit denied state should be shown as error (red)
 		else if (booking?.is_denied === true) {
 			return 'error'
-		} 
+		}
 		// Approved but not yet completed
 		else if (booking?.is_approved === true) {
 			return 'success'
-		} 
+		}
 		// Explicit pending/false approval
 		else if (booking?.is_approved === false) {
 			return 'warning'
@@ -56,13 +56,13 @@ export function useThanksGivingHeader() {
 	}
 
 	const handleBookingClick = (booking: any) => {
-		// Click lang kung approved ang booking ug dili pa kompleto (walay ref_number) - redirect to thanks giving form para ma-continue
+		// Click lang kung approved ang booking ug dili pa kompleto (walay ref_number) - redirect to thanksgiving form para ma-continue
 		// Use isClickable so the same rule is applied consistently
 		if (isClickable(booking)) {
 			// store the selected booking id sa store para magamit sa next view
 			thanksGivingStore.selectBooking(booking.id)
 			// navigate and pass booking id as a query param
-			router.push({ path: '/thanks-giving-continue', query: { bookingId: String(booking.id) } })
+			router.push({ path: '/thanksgiving-mass-continue', query: { bookingId: String(booking.id) } })
 		}
 	}
 
