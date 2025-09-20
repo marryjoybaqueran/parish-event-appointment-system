@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, defineOptions } from 'vue'
+import { ref, computed, onMounted, defineOptions, watch } from 'vue'
 import CalendarDialog from '../dialogs/CalendarDialog.vue'
 import ViewEventDialog from '../dialogs/ViewEventDialog.vue'
 import { useCalendarFetch } from '../composables/calendarFetch'
 import { useActionQuery } from '../composables/actionQuery'
+import { useConflictDetection } from '../composables/conflict'
 import { EVENT_LEGEND } from '../utils/constants'
 import { CalendarView } from 'vue-simple-calendar'
 import 'vue-simple-calendar/dist/vue-simple-calendar.css'
@@ -19,6 +20,9 @@ const { loading, error, allEvents, fetchAllEvents } = useCalendarFetch()
 
 // Approval composable para sa booking actions (using new actionQuery)
 const { approveEvent, denyEvent, deleteEvent} = useActionQuery()
+
+// Conflict detection composable
+const { detectConflicts, hasConflicts, getConflictSeverity, conflictsCount } = useConflictDetection()
 
 // DEBUG: Call this function sa console to troubleshoot localStorage data
 // debugLocalStorage()
@@ -46,7 +50,7 @@ const currentView = ref('month')
 
 // Computed properties
 const calendarEvents = computed(() => {
-  return allEvents.value.map(event => ({
+  const events = allEvents.value.map(event => ({
     id: event.id,
     title: event.title,
     startDate: new Date(event.startDate),
@@ -57,8 +61,39 @@ const calendarEvents = computed(() => {
       color: getContrastYIQ(event.color)
     },
     // Keep original event data for dialog
-    originalEvent: event
+    originalEvent: event,
+    // Add conflict data
+    category: event.category,
+    status: event.status,
+    time: event.time
   }))
+
+  // Detect conflicts whenever events change
+  detectConflicts(events)
+
+  // Add conflict indicators to events
+  return events.map(event => {
+    const hasConflict = hasConflicts(event.id)
+    const conflictSeverity = getConflictSeverity(event.id)
+
+    if (hasConflict) {
+      // Add conflict styling
+      const conflictColor = conflictSeverity === 'error' ? '#f44336' : '#ff9800'
+      return {
+        ...event,
+        hasConflict,
+        conflictSeverity,
+        classes: [...(event.classes || []), `conflict-${conflictSeverity}`],
+        style: {
+          ...event.style,
+          border: `2px solid ${conflictColor}`,
+          boxShadow: `0 0 8px ${conflictColor}40`
+        }
+      }
+    }
+
+    return event
+  })
 })
 
 const displayPeriodLabel = computed(() => {
@@ -256,6 +291,20 @@ const handleDenyEventFromDialog = async (event, comment) => {
 onMounted(async () => {
   await fetchAllEvents()
 })
+
+// Watch for changes in allEvents and re-detect conflicts
+watch(allEvents, () => {
+  const events = allEvents.value.map(event => ({
+    id: event.id,
+    title: event.title,
+    startDate: new Date(event.startDate),
+    endDate: event.endDate ? new Date(event.endDate) : new Date(event.startDate),
+    category: event.category,
+    status: event.status,
+    time: event.time
+  }))
+  detectConflicts(events)
+}, { deep: true })
 </script>
 
 <template>
@@ -346,6 +395,25 @@ onMounted(async () => {
           </v-chip>
         </div>
       </div>
+
+      <!-- Conflict Indicator -->
+      <v-alert
+        v-if="conflictsCount > 0"
+        type="warning"
+        variant="tonal"
+        class="mb-6"
+        density="compact"
+      >
+        <div class="d-flex align-center">
+          <v-icon icon="mdi-alert-circle" class="me-2"></v-icon>
+          <span class="text-subtitle-2">
+            {{ conflictsCount }} time conflict{{ conflictsCount > 1 ? 's' : '' }} detected
+          </span>
+        </div>
+        <div class="text-caption mt-1">
+          Events with red borders have scheduling conflicts. Click on conflicting events for details.
+        </div>
+      </v-alert>
     </v-card-text>
 
     <!-- Loading State -->
@@ -533,6 +601,43 @@ onMounted(async () => {
   font-size: 0.625rem;
   opacity: 0.9;
   margin-top: 2px;
+}
+
+/* Conflict styling */
+:deep(.conflict-error) {
+  border: 2px solid #f44336 !important;
+  box-shadow: 0 0 8px rgba(244, 67, 54, 0.4) !important;
+  animation: pulse-error 2s infinite;
+}
+
+:deep(.conflict-warning) {
+  border: 2px solid #ff9800 !important;
+  box-shadow: 0 0 8px rgba(255, 152, 0, 0.4) !important;
+  animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-error {
+  0% {
+    box-shadow: 0 0 8px rgba(244, 67, 54, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(244, 67, 54, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(244, 67, 54, 0.4);
+  }
+}
+
+@keyframes pulse-warning {
+  0% {
+    box-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(255, 152, 0, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
+  }
 }
 
 /* Responsive adjustments */

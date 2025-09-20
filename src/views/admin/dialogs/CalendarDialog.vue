@@ -246,6 +246,35 @@ const getStatusColor = (booking) => {
                     Denied on {{ formatDate(event.booking.denied_at) }}
                   </small>
                 </div>
+
+                <!-- Time Conflict Indicator -->
+                <div
+                  v-if="event.hasConflict"
+                  class="mt-2 pa-2 rounded border"
+                  :class="event.conflictSeverity === 'error'
+                    ? 'bg-error-lighten-5 border-error'
+                    : 'bg-warning-lighten-5 border-warning'"
+                >
+                  <div class="d-flex align-center mb-1">
+                    <v-icon
+                      :icon="event.conflictSeverity === 'error' ? 'mdi-alert-octagon' : 'mdi-alert-circle'"
+                      size="16"
+                      :color="event.conflictSeverity === 'error' ? 'error' : 'warning'"
+                      class="me-1"
+                    ></v-icon>
+                    <small
+                      :class="event.conflictSeverity === 'error' ? 'text-error font-weight-bold' : 'text-warning font-weight-bold'"
+                    >
+                      {{ event.conflictSeverity === 'error' ? 'Schedule Conflict' : 'Potential Conflict' }}
+                    </small>
+                  </div>
+                  <p
+                    class="text-caption ma-0"
+                    :class="event.conflictSeverity === 'error' ? 'text-error' : 'text-warning'"
+                  >
+                    Time conflict with other events on this date
+                  </p>
+                </div>
               </v-list-item-subtitle>
 
 

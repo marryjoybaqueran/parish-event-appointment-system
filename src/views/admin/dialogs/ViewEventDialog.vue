@@ -526,6 +526,35 @@ watch(() => props.event, () => {
           </div>
         </v-alert>
 
+        <!-- Time Conflict Warning -->
+        <v-alert
+          v-if="props.event?.hasConflict"
+          :type="props.event?.conflictSeverity === 'error' ? 'error' : 'warning'"
+          variant="tonal"
+          class="mb-4"
+        >
+          <div class="d-flex align-center">
+            <v-icon
+              :icon="props.event?.conflictSeverity === 'error' ? 'mdi-alert-octagon' : 'mdi-alert-circle'"
+              class="me-2"
+            ></v-icon>
+            <div>
+              <strong>
+                {{ props.event?.conflictSeverity === 'error' ? 'Schedule Conflict' : 'Potential Conflict' }}
+              </strong>
+              <p class="mb-0 mt-1">
+                This event has a time conflict with other scheduled events on the same date.
+                Please review the schedule to ensure proper coordination.
+              </p>
+              <small class="text-grey-darken-1">
+                {{ props.event?.conflictSeverity === 'error'
+                   ? 'This conflict must be resolved before approval.'
+                   : 'Consider adjusting the schedule if possible.' }}
+              </small>
+            </div>
+          </div>
+        </v-alert>
+
         <!-- Additional event info -->
         <v-divider class="my-4"></v-divider>
 
