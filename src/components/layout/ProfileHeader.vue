@@ -102,7 +102,7 @@ onMounted(() => {
       <v-card class="mt-1">
         <v-card-text>
           <v-list>
-            <v-list-item :subtitle="userData.email" :title="userData.fullname">
+            <v-list-item  :title="userData.email">
               <template #prepend>
                 <v-avatar color="orange-darken-3" size="large">
                   <span class="text-5">
