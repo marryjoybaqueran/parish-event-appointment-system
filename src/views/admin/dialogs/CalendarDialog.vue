@@ -122,9 +122,7 @@ const cancelAddEvent = () => {
 
 
 
-const handleEditEvent = (event) => {
-  emit('edit-event', event)
-}
+
 
 const getStatusColor = (booking) => {
   // Check boolean fields first
@@ -250,35 +248,7 @@ const getStatusColor = (booking) => {
                 </div>
               </v-list-item-subtitle>
 
-              <template #append>
-                <div class="d-flex gap-1">
-                  <v-btn
-                    icon="mdi-pencil"
-                    size="small"
-                    variant="text"
-                    color="primary"
-                    @click="handleEditEvent(event)"
-                  >
-                    <v-icon>mdi-pencil</v-icon>
-                    <v-tooltip activator="parent" location="top">
-                      Edit Event
-                    </v-tooltip>
-                  </v-btn>
 
-                  <v-btn
-                    icon="mdi-eye"
-                    size="small"
-                    variant="text"
-                    color="info"
-                    @click="handleEditEvent(event)"
-                  >
-                    <v-icon>mdi-eye</v-icon>
-                    <v-tooltip activator="parent" location="top">
-                      View Details
-                    </v-tooltip>
-                  </v-btn>
-                </div>
-              </template>
             </v-list-item>
           </v-list>
         </div>
