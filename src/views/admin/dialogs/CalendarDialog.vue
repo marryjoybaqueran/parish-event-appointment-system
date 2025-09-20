@@ -214,7 +214,13 @@ const getStatusColor = (booking) => {
 
                   <div class="d-flex align-center text-caption text-grey-darken-1">
                     <v-icon icon="mdi-clock" size="16" class="me-1"></v-icon>
-                    {{ event.time ? event.time : 'All Day' }}
+                    <span v-if="event.time">
+                      {{ event.time }}
+                      <span v-if="event.eventEndTime || event.ending_time || event.endTime">
+                        - {{ event.eventEndTime || event.ending_time || event.endTime }}
+                      </span>
+                    </span>
+                    <span v-else>All Day</span>
                   </div>
 
                   <v-chip
