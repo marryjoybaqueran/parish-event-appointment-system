@@ -96,7 +96,11 @@ export const useCalendarFetch = () => {
     //   is_approved: booking.is_approved,
     //   is_denied: booking.is_denied
     // })
-    if (booking.is_approved) {
+
+    // Check if booking has ref_number and set status to complete
+    if (booking.ref_number) {
+      status = 'complete'
+    } else if (booking.is_approved) {
       status = 'approved'
     } else if (booking.is_denied) {
       status = 'denied'

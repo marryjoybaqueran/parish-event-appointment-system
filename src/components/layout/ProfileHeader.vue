@@ -32,12 +32,10 @@ const getUser = async () => {
     const fullname = metadata.fname + ' ' + metadata.lname
     userData.value.email = metadata.email
     userData.value.fullname = fullname
-    userData.value.initials = getAvatarText(fullname)
+    userData.value.initials = getAvatarText(metadata.email)
 
     // Also update store
     authStore.userData = {
-      fname: metadata.fname,
-      lname: metadata.lname,
       email: metadata.email,
     }
   } else {
@@ -65,7 +63,7 @@ onMounted(() => {
           <template #prepend>
             <v-avatar color="orange-darken-3" size="small">
               <span class="text-5">
-                {{ getAvatarText(authStore.userData.fname + ' ' + authStore.userData.lname) }}
+                {{ getAvatarText(userData.email) }}
               </span>
             </v-avatar>
           </template>
@@ -108,7 +106,7 @@ onMounted(() => {
               <template #prepend>
                 <v-avatar color="orange-darken-3" size="large">
                   <span class="text-5">
-                    {{ getAvatarText(authStore.userData.fname + ' ' + authStore.userData.lname) }}
+                    {{ getAvatarText(userData.email) }}
                   </span>
                 </v-avatar>
               </template>

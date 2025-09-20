@@ -1,4 +1,5 @@
 import { supabase } from '@/utils/supabase'
+import { supabaseAdmin } from '@/utils/supabase'
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
@@ -197,6 +198,28 @@ export const useAuthUserStore = defineStore('authUser', () => {
       userData.value = { id, email, ...user_metadata }
 
       return { data: userData.value }
+    }
+  }
+
+  // Get user email by user ID using admin client
+  async function getUserEmailById(userId) {
+    try {
+      const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId)
+
+      if (error) {
+        console.error('Error fetching user by ID:', error)
+        return { error }
+      }
+
+      return {
+        data: {
+          email: data.user?.email,
+          user_metadata: data.user?.user_metadata
+        }
+      }
+    } catch (error) {
+      console.error('Error in getUserEmailById:', error)
+      return { error }
     }
   }
 
@@ -436,6 +459,7 @@ export const useAuthUserStore = defineStore('authUser', () => {
     logout,
     isAuthenticated,
     getUserInformation,
+    getUserEmailById,
     getAuthPages,
     getAuthBranchIds,
     updateUserInformation,
