@@ -35,11 +35,30 @@ export const useAnnouncementStore = defineStore('announcementData', {
       return state.announcements.find(announcement => announcement.id === id)
     },
 
-    // Get announcements sorted by date (newest first)
+    // Get announcements sorted by date (chronological order - earliest first)
     sortedAnnouncements: (state) => {
-      return [...state.announcements].sort((a, b) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      )
+      return [...state.announcements].sort((a, b) => {
+        const aDate = new Date(a.date)
+        const bDate = new Date(b.date)
+
+        // Primary sort: by date (chronological order - earliest first)
+        const dateComparison = aDate.getTime() - bDate.getTime()
+
+        // If dates are the same, sort by starting time if available
+        if (dateComparison === 0) {
+          if (a.starting_time && b.starting_time) {
+            return a.starting_time.localeCompare(b.starting_time)
+          }
+          // If only one has time, prioritize the one with time
+          if (a.starting_time && !b.starting_time) return -1
+          if (!a.starting_time && b.starting_time) return 1
+
+          // If both have no time or same time, sort by title
+          return (a.title || '').localeCompare(b.title || '')
+        }
+
+        return dateComparison
+      })
     },
 
     // Get upcoming announcements (future dates)
@@ -47,9 +66,28 @@ export const useAnnouncementStore = defineStore('announcementData', {
       const now = new Date()
       return state.announcements.filter(announcement =>
         new Date(announcement.date) >= now
-      ).sort((a, b) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-      )
+      ).sort((a, b) => {
+        const aDate = new Date(a.date)
+        const bDate = new Date(b.date)
+
+        // Primary sort: by date (chronological order - earliest first)
+        const dateComparison = aDate.getTime() - bDate.getTime()
+
+        // If dates are the same, sort by starting time if available
+        if (dateComparison === 0) {
+          if (a.starting_time && b.starting_time) {
+            return a.starting_time.localeCompare(b.starting_time)
+          }
+          // If only one has time, prioritize the one with time
+          if (a.starting_time && !b.starting_time) return -1
+          if (!a.starting_time && b.starting_time) return 1
+
+          // If both have no time or same time, sort by title
+          return (a.title || '').localeCompare(b.title || '')
+        }
+
+        return dateComparison
+      })
     }
   },
 
@@ -95,8 +133,29 @@ export const useAnnouncementStore = defineStore('announcementData', {
           return { success: false, error: error.message }
         }
 
-        // Add to local state
-        this.announcements.unshift(data)
+        // Add to local state in chronological order
+        const insertIndex = this.announcements.findIndex(announcement => {
+          const existingDate = new Date(announcement.date)
+          const newDate = new Date(data.date)
+
+          if (newDate < existingDate) {
+            return true
+          } else if (newDate.getTime() === existingDate.getTime()) {
+            // Same date, compare by time
+            if (data.starting_time && announcement.starting_time) {
+              return data.starting_time < announcement.starting_time
+            } else if (data.starting_time && !announcement.starting_time) {
+              return true
+            }
+          }
+          return false
+        })
+
+        if (insertIndex === -1) {
+          this.announcements.push(data)
+        } else {
+          this.announcements.splice(insertIndex, 0, data)
+        }
 
         this.formAction.formSuccessMessage = 'Announcement created successfully!'
         this.formAction.formProcess = false
@@ -119,7 +178,8 @@ export const useAnnouncementStore = defineStore('announcementData', {
         const { data, error } = await supabase
           .from('announcements')
           .select('*')
-          .order('date', { ascending: false })
+          .order('date', { ascending: true })
+          .order('starting_time', { ascending: true })
 
         if (error) {
           this.error = error.message
@@ -268,7 +328,8 @@ export const useAnnouncementStore = defineStore('announcementData', {
         const { data, error, count } = await supabase
           .from('announcements')
           .select('*', { count: 'exact' })
-          .order('date', { ascending: false })
+          .order('date', { ascending: true })
+          .order('starting_time', { ascending: true })
           .range(from, to)
 
         if (error) {

@@ -108,6 +108,20 @@ onMounted(async () => {
               </v-btn>
             </RouterLink>
 
+            <!-- ANNOUNCEMENTS MANAGEMENT -->
+            <RouterLink to="/admin/announcements" class="router-link">
+              <v-btn
+                class="mr-3 nav-btn announcements-btn"
+                variant="outlined"
+                size="large"
+                rounded="lg"
+              >
+                <v-icon class="nav-icon me-2">mdi-bullhorn</v-icon>
+                <span class="nav-text">ANNOUNCEMENTS</span>
+                <v-ripple />
+              </v-btn>
+            </RouterLink>
+
             <!-- EVENTS MANAGEMENT -->
            <!--  <RouterLink to="admin-events-view" class="router-link">
               <v-btn
@@ -265,6 +279,21 @@ onMounted(async () => {
                 <v-icon class="mobile-nav-icon">mdi-account-group</v-icon>
               </template>
               <v-list-item-title class="mobile-nav-text">MEMBERS</v-list-item-title>
+            </RouterLink>
+          </v-list-item>
+
+          <!-- ANNOUNCEMENTS MANAGEMENT -->
+          <v-list-item
+            @click="drawer = false"
+            class="mobile-nav-item"
+            rounded="lg"
+            color="primary"
+          >
+            <RouterLink to="/admin/announcements" class="router-link mobile-link">
+              <template v-slot:prepend>
+                <v-icon class="mobile-nav-icon">mdi-bullhorn</v-icon>
+              </template>
+              <v-list-item-title class="mobile-nav-text">ANNOUNCEMENTS</v-list-item-title>
             </RouterLink>
           </v-list-item>
 
@@ -447,6 +476,12 @@ onMounted(async () => {
   border-color: #9c27b0 !important;
   color: #9c27b0 !important;
   background: rgba(156, 39, 176, 0.1) !important;
+}
+
+.announcements-btn:hover {
+  border-color: #00bcd4 !important;
+  color: #00bcd4 !important;
+  background: rgba(0, 188, 212, 0.1) !important;
 }
 
 .events-btn:hover {

@@ -4,6 +4,14 @@ import { useAnnouncementStore, type Announcement, type AnnouncementPayload } fro
 /**
  * Composable for managing announcements with CRUD operations
  * Provides a clean interface for components to interact with announcement data
+ *
+ * Data Ordering: All announcements are organized in chronological order (earliest date first)
+ * - Primary sort: by date (ascending - earliest first)
+ * - Secondary sort: by starting_time (ascending - earliest time first)
+ * - Tertiary sort: by title (alphabetical)
+ *
+ * This ensures that upcoming events appear in the order they will occur,
+ * making it easier for users to see what's happening next.
  */
 export function useAnnouncementServices() {
   const announcementStore = useAnnouncementStore()
@@ -47,22 +55,28 @@ export function useAnnouncementServices() {
       )
     }
 
-    // Sort announcements: today's announcements first, then by date
-    const today = new Date()
-    const todayDateString = today.toDateString()
-
+    // Sort announcements in chronological order (earliest date first)
     filtered.sort((a, b) => {
       const aDate = new Date(a.date)
       const bDate = new Date(b.date)
-      const aIsToday = aDate.toDateString() === todayDateString
-      const bIsToday = bDate.toDateString() === todayDateString
 
-      // If one is today and other is not, today comes first
-      if (aIsToday && !bIsToday) return -1
-      if (!aIsToday && bIsToday) return 1
+      // Primary sort: by date (chronological order - earliest first)
+      const dateComparison = aDate.getTime() - bDate.getTime()
 
-      // If both are today or both are not today, sort by date (newest first)
-      return bDate.getTime() - aDate.getTime()
+      // If dates are the same, sort by starting time if available
+      if (dateComparison === 0) {
+        if (a.starting_time && b.starting_time) {
+          return a.starting_time.localeCompare(b.starting_time)
+        }
+        // If only one has time, prioritize the one with time
+        if (a.starting_time && !b.starting_time) return -1
+        if (!a.starting_time && b.starting_time) return 1
+
+        // If both have no time or same time, sort by title
+        return (a.title || '').localeCompare(b.title || '')
+      }
+
+      return dateComparison
     })
 
     return filtered
@@ -93,6 +107,17 @@ export function useAnnouncementServices() {
     return announcements.value.filter(announcement => {
       const announcementDate = new Date(announcement.date)
       return announcementDate.toDateString() === todayDateString
+    }).sort((a, b) => {
+      // Sort today's announcements by time
+      if (a.starting_time && b.starting_time) {
+        return a.starting_time.localeCompare(b.starting_time)
+      }
+      // If only one has time, prioritize the one with time
+      if (a.starting_time && !b.starting_time) return -1
+      if (!a.starting_time && b.starting_time) return 1
+
+      // If both have no time, sort by title
+      return (a.title || '').localeCompare(b.title || '')
     })
   })
 
