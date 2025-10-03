@@ -1,17 +1,332 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import AppLayout from '@/components/layout/AppLayout.vue'
+import PreloaderView from '@/components/layout/PreloaderView.vue'
+import AnnouncementGrid from '@/views/announcements/AnnouncementGrid.vue'
+import AnnouncementSearchBar from '@/views/announcements/AnnouncementSearchBar.vue'
+import AnnouncementPagination from '@/views/announcements/AnnouncementPagination.vue'
+import CalendarViewer from '@/views/announcements/CalendarViewer.vue'
+import CalendarDialog from '@/views/announcements/CalendarDialog.vue'
+import { useAnnouncementServices } from '@/views/announcements/announcementServices'
+
+// Router for navigation
+const router = useRouter()
+
+// Use the announcement services composable
+const {
+  paginatedAnnouncements,
+  loading,
+  searchQuery,
+  showPastAnnouncements,
+  currentPage,
+  itemsPerPage,
+  totalItems,
+  searchAnnouncements,
+  selectAnnouncement,
+  setCurrentPage,
+  setItemsPerPage
+} = useAnnouncementServices()
+
+// Calendar dialog state
+const showCalendarDialog = ref(false)
+
+// Computed property for announcements to display (always use paginated)
+const displayedAnnouncements = computed(() => {
+  return paginatedAnnouncements.value
+})
+
+// Event handlers
+const handleSearchUpdate = (query) => {
+  searchAnnouncements(query)
+  setCurrentPage(1) // Reset to first page when searching
+}
+
+const handlePastToggleUpdate = (showPast) => {
+  showPastAnnouncements.value = showPast
+  setCurrentPage(1) // Reset to first page when filtering
+}
+
+const handleAnnouncementSelect = (announcement) => {
+  selectAnnouncement(announcement.id)
+  // You can add navigation logic here, e.g., router.push to announcement details
+  console.log('Selected announcement:', announcement)
+}
+
+const handlePageChange = (page) => {
+  setCurrentPage(page)
+}
+
+const handleItemsPerPageChange = (items) => {
+  setItemsPerPage(items)
+}
+
+const handleShowSchedules = () => {
+  showCalendarDialog.value = true
+}
+
+const handleBookNow = () => {
+  router.push('/auth')
+}
 </script>
 
 <template>
-  <div class="landing-container">
-    <div class="overlay">
-      <h1 class="main-heading">Welcome to Our Parish Community</h1>
-      <p class="sub-heading">
-        Join us in faith, service, and unity. Together, we celebrate our spiritual journey.
-      </p>
-      <div class="cta-buttons">
-        <button class="cta-button primary">Join Us</button>
-        <button class="cta-button secondary">Learn More</button>
-      </div>
-    </div>
-  </div>
+  <PreloaderView></PreloaderView>
+  <AppLayout>
+    <template #content>
+      <!-- Hero Section with Contact Info -->
+      <v-container fluid class="pa-0">
+        <v-row no-gutters>
+          <v-col cols="12">
+            <v-sheet
+              :min-height="$vuetify.display.mobile ? '70vh' : '80vh'"
+              class="d-flex align-center"
+              style="
+                background-image:
+                  linear-gradient(rgba(25, 118, 210, 0.7), rgba(66, 165, 245, 0.7)),
+                  url('/bookevent-bg.jpg');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+              "
+            >
+              <v-container>
+                <v-row align="center" class="fill-height">
+                  <!-- Left Column - Hero Content -->
+                  <v-col cols="12" md="6" class="text-center text-md-left">
+                    <v-card
+                      flat
+                      color="transparent"
+                      class="pa-4"
+                    >
+                      <v-card-title
+                        class="text-white"
+                        :class="$vuetify.display.mobile ? 'text-h3 justify-center' : 'text-h4 justify-start'"
+                        style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); font-weight: 700; line-height: 1.2;"
+                      >
+                        Welcome to Our Parish Community
+                      </v-card-title>
+
+                      <v-card-text class="text-white text-h6 mt-4 px-0" style="opacity: 0.9; line-height: 1.6;">
+                        Join us in faith, service, and unity. Together, we celebrate our spiritual journey.
+                      </v-card-text>
+
+                      <v-card-actions class="px-0 mt-6" :class="$vuetify.display.mobile ? 'justify-center' : 'justify-start'">
+                        <v-btn
+                          size="large"
+                          variant="flat"
+                          color="white"
+                          class="text-primary mr-4"
+                          elevation="2"
+                          rounded
+                          @click="handleBookNow"
+                        >
+                          Book Now
+                        </v-btn>
+
+                        <v-btn
+                          size="large"
+                          variant="outlined"
+                          color="white"
+                          class="text-white"
+                          rounded
+                          @click="handleShowSchedules"
+                        >
+                          Show Schedules
+                        </v-btn>
+                      </v-card-actions>
+                    </v-card>
+                  </v-col>
+
+                  <!-- Right Column - Contact Information -->
+                  <v-col cols="12" md="6">
+                    <v-container class="pa-4">
+                      <!-- Contact Header -->
+                      <v-card flat color="transparent" class="mb-6">
+                        <v-card-title class="text-white text-h4 justify-center justify-md-start px-0" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">
+                          Contact Information
+                        </v-card-title>
+                      </v-card>
+
+                      <v-row>
+                        <!-- Address -->
+                        <v-col cols="12" sm="6">
+                          <v-card
+                            color="rgba(255, 255, 255, 0.15)"
+                            class="pa-4 mb-4"
+                            style="backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18);"
+                            elevation="0"
+                            rounded
+                            height="140"
+                          >
+                            <v-row no-gutters align="start">
+                              <v-col cols="auto" class="mr-3">
+                                <v-icon icon="mdi-map-marker" color="white" size="large"></v-icon>
+                              </v-col>
+                              <v-col>
+                                <v-card-title class="text-white text-body-1 pa-0 mb-2" style="font-weight: 600;">
+                                  Address
+                                </v-card-title>
+                                <v-card-text class="text-white pa-0" style="opacity: 0.9; font-size: 0.875rem; line-height: 1.5;">
+                                  123 Parish Street<br>
+                                  City, Province 1234<br>
+                                  Philippines
+                                </v-card-text>
+                              </v-col>
+                            </v-row>
+                          </v-card>
+                        </v-col>
+
+                        <!-- Phone -->
+                        <v-col cols="12" sm="6">
+                          <v-card
+                            color="rgba(255, 255, 255, 0.15)"
+                            class="pa-4 mb-4"
+                            style="backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18);"
+                            elevation="0"
+                            rounded
+                            height="140"
+                          >
+                            <v-row no-gutters align="start">
+                              <v-col cols="auto" class="mr-3">
+                                <v-icon icon="mdi-phone" color="white" size="large"></v-icon>
+                              </v-col>
+                              <v-col>
+                                <v-card-title class="text-white text-body-1 pa-0 mb-2" style="font-weight: 600;">
+                                  Phone
+                                </v-card-title>
+                                <v-card-text class="pa-0">
+                                  <a href="tel:+639123456789" class="text-white text-decoration-none" style="opacity: 0.9; font-size: 0.875rem;">+63 912 345 6789</a><br>
+                                  <a href="tel:+632123456789" class="text-white text-decoration-none" style="opacity: 0.9; font-size: 0.875rem;">+63 2 123 456 789</a>
+                                </v-card-text>
+                              </v-col>
+                            </v-row>
+                          </v-card>
+                        </v-col>
+
+                        <!-- Email -->
+                        <v-col cols="12" sm="6">
+                          <v-card
+                            color="rgba(255, 255, 255, 0.15)"
+                            class="pa-4 mb-4"
+                            style="backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18);"
+                            elevation="0"
+                            rounded
+                            height="140"
+                          >
+                            <v-row no-gutters align="start">
+                              <v-col cols="auto" class="mr-3">
+                                <v-icon icon="mdi-email" color="white" size="large"></v-icon>
+                              </v-col>
+                              <v-col>
+                                <v-card-title class="text-white text-body-1 pa-0 mb-2" style="font-weight: 600;">
+                                  Email
+                                </v-card-title>
+                                <v-card-text class="pa-0">
+                                  <a href="mailto:info@parish.com" class="text-white text-decoration-none" style="opacity: 0.9; font-size: 0.875rem;">info@parish.com</a><br>
+                                  <a href="mailto:events@parish.com" class="text-white text-decoration-none" style="opacity: 0.9; font-size: 0.875rem;">events@parish.com</a>
+                                </v-card-text>
+                              </v-col>
+                            </v-row>
+                          </v-card>
+                        </v-col>
+
+                        <!-- Office Hours -->
+                        <v-col cols="12" sm="6">
+                          <v-card
+                            color="rgba(255, 255, 255, 0.15)"
+                            class="pa-4 mb-4"
+                            style="backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18);"
+                            elevation="0"
+                            rounded
+                            height="140"
+                          >
+                            <v-row no-gutters align="start">
+                              <v-col cols="auto" class="mr-3">
+                                <v-icon icon="mdi-clock-outline" color="white" size="large"></v-icon>
+                              </v-col>
+                              <v-col>
+                                <v-card-title class="text-white text-body-1 pa-0 mb-2" style="font-weight: 600;">
+                                  Office Hours
+                                </v-card-title>
+                                <v-card-text class="text-white pa-0" style="opacity: 0.9; font-size: 0.875rem; line-height: 1.5;">
+                                  Monday - Friday: 8:00 AM - 5:00 PM<br>
+                                  Saturday: 8:00 AM - 12:00 PM<br>
+                                  Sunday: After Mass Services
+                                </v-card-text>
+                              </v-col>
+                            </v-row>
+                          </v-card>
+                        </v-col>
+                      </v-row>
+                    </v-container>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-sheet>
+          </v-col>
+        </v-row>
+      </v-container>      <!-- Announcements Section -->
+      <v-container class="py-12">
+        <v-row>
+          <v-col cols="12">
+            <!-- Section Header -->
+            <v-container class="text-center mb-8">
+              <v-row justify="center">
+                <v-col cols="12" md="8">
+                  <v-card flat color="transparent">
+                    <v-card-title class="text-h3 text-primary mb-4 justify-center">
+                      Parish Announcements
+                    </v-card-title>
+                    <v-card-text class="text-h6 text-grey-darken-1">
+                      Stay updated with our latest news and upcoming events
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-container>
+
+            <!-- Search Bar -->
+            <AnnouncementSearchBar
+              v-model="searchQuery"
+              :loading="loading"
+              :show-past-announcements="showPastAnnouncements"
+              placeholder="Search announcements..."
+              @update:model-value="handleSearchUpdate"
+              @update:show-past-announcements="handlePastToggleUpdate"
+            />
+
+            <!-- Announcements Grid -->
+            <AnnouncementGrid
+              :announcements="displayedAnnouncements"
+              :loading="loading"
+              :max-display="0"
+              @select="handleAnnouncementSelect"
+            />
+
+            <!-- Pagination (always show) -->
+            <AnnouncementPagination
+              :current-page="currentPage"
+              :total-items="totalItems"
+              :items-per-page="itemsPerPage"
+              :loading="loading"
+              @update:current-page="handlePageChange"
+              @update:items-per-page="handleItemsPerPageChange"
+            />
+
+          </v-col>
+        </v-row>
+      </v-container>
+
+      <!-- Additional Sections can be added here -->
+      <!-- For example: Services, Events, Contact, etc. -->
+ <CalendarViewer />
+
+      <!-- Calendar Dialog -->
+      <CalendarDialog v-model="showCalendarDialog" />
+    </template>
+
+    <!-- Floating Calendar Icon -->
+
+  </AppLayout>
 </template>
