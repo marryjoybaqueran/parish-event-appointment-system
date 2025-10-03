@@ -95,7 +95,7 @@ onMounted(async () => {
             </RouterLink> -->
 
             <!-- MEMBERS MANAGEMENT -->
-            <RouterLink to="admin-members-view" class="router-link">
+            <RouterLink to="/admin-members-view" class="router-link">
               <v-btn
                 class="mr-3 nav-btn members-btn"
                 variant="outlined"
