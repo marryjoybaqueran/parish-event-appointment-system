@@ -8,6 +8,7 @@ import AnnouncementSearchBar from '@/views/announcements/AnnouncementSearchBar.v
 import AnnouncementPagination from '@/views/announcements/AnnouncementPagination.vue'
 import CalendarViewer from '@/views/announcements/CalendarViewer.vue'
 import CalendarDialog from '@/views/announcements/CalendarDialog.vue'
+import ContactsWidget from '@/views/adminOld/components/ContactsWidget.vue'
 import { useAnnouncementServices } from '@/views/announcements/announcementServices'
 
 // Router for navigation
@@ -140,126 +141,7 @@ const handleBookNow = () => {
 
                   <!-- Right Column - Contact Information -->
                   <v-col cols="12" md="6">
-                    <v-container class="pa-4">
-                      <!-- Contact Header -->
-                      <v-card flat color="transparent" class="mb-6">
-                        <v-card-title class="text-white text-h4 justify-center justify-md-start px-0" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">
-                          Contact Information
-                        </v-card-title>
-                      </v-card>
-
-                      <v-row>
-                        <!-- Address -->
-                        <v-col cols="12" sm="6">
-                          <v-card
-                            color="rgba(255, 255, 255, 0.15)"
-                            class="pa-4 mb-4"
-                            style="backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18);"
-                            elevation="0"
-                            rounded
-                            height="140"
-                          >
-                            <v-row no-gutters align="start">
-                              <v-col cols="auto" class="mr-3">
-                                <v-icon icon="mdi-map-marker" color="white" size="large"></v-icon>
-                              </v-col>
-                              <v-col>
-                                <v-card-title class="text-white text-body-1 pa-0 mb-2" style="font-weight: 600;">
-                                  Address
-                                </v-card-title>
-                                <v-card-text class="text-white pa-0" style="opacity: 0.9; font-size: 0.875rem; line-height: 1.5;">
-                                  123 Parish Street<br>
-                                  City, Province 1234<br>
-                                  Philippines
-                                </v-card-text>
-                              </v-col>
-                            </v-row>
-                          </v-card>
-                        </v-col>
-
-                        <!-- Phone -->
-                        <v-col cols="12" sm="6">
-                          <v-card
-                            color="rgba(255, 255, 255, 0.15)"
-                            class="pa-4 mb-4"
-                            style="backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18);"
-                            elevation="0"
-                            rounded
-                            height="140"
-                          >
-                            <v-row no-gutters align="start">
-                              <v-col cols="auto" class="mr-3">
-                                <v-icon icon="mdi-phone" color="white" size="large"></v-icon>
-                              </v-col>
-                              <v-col>
-                                <v-card-title class="text-white text-body-1 pa-0 mb-2" style="font-weight: 600;">
-                                  Phone
-                                </v-card-title>
-                                <v-card-text class="pa-0">
-                                  <a href="tel:+639123456789" class="text-white text-decoration-none" style="opacity: 0.9; font-size: 0.875rem;">+63 912 345 6789</a><br>
-                                  <a href="tel:+632123456789" class="text-white text-decoration-none" style="opacity: 0.9; font-size: 0.875rem;">+63 2 123 456 789</a>
-                                </v-card-text>
-                              </v-col>
-                            </v-row>
-                          </v-card>
-                        </v-col>
-
-                        <!-- Email -->
-                        <v-col cols="12" sm="6">
-                          <v-card
-                            color="rgba(255, 255, 255, 0.15)"
-                            class="pa-4 mb-4"
-                            style="backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18);"
-                            elevation="0"
-                            rounded
-                            height="140"
-                          >
-                            <v-row no-gutters align="start">
-                              <v-col cols="auto" class="mr-3">
-                                <v-icon icon="mdi-email" color="white" size="large"></v-icon>
-                              </v-col>
-                              <v-col>
-                                <v-card-title class="text-white text-body-1 pa-0 mb-2" style="font-weight: 600;">
-                                  Email
-                                </v-card-title>
-                                <v-card-text class="pa-0">
-                                  <a href="mailto:info@parish.com" class="text-white text-decoration-none" style="opacity: 0.9; font-size: 0.875rem;">info@parish.com</a><br>
-                                  <a href="mailto:events@parish.com" class="text-white text-decoration-none" style="opacity: 0.9; font-size: 0.875rem;">events@parish.com</a>
-                                </v-card-text>
-                              </v-col>
-                            </v-row>
-                          </v-card>
-                        </v-col>
-
-                        <!-- Office Hours -->
-                        <v-col cols="12" sm="6">
-                          <v-card
-                            color="rgba(255, 255, 255, 0.15)"
-                            class="pa-4 mb-4"
-                            style="backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18);"
-                            elevation="0"
-                            rounded
-                            height="140"
-                          >
-                            <v-row no-gutters align="start">
-                              <v-col cols="auto" class="mr-3">
-                                <v-icon icon="mdi-clock-outline" color="white" size="large"></v-icon>
-                              </v-col>
-                              <v-col>
-                                <v-card-title class="text-white text-body-1 pa-0 mb-2" style="font-weight: 600;">
-                                  Office Hours
-                                </v-card-title>
-                                <v-card-text class="text-white pa-0" style="opacity: 0.9; font-size: 0.875rem; line-height: 1.5;">
-                                  Monday - Friday: 8:00 AM - 5:00 PM<br>
-                                  Saturday: 8:00 AM - 12:00 PM<br>
-                                  Sunday: After Mass Services
-                                </v-card-text>
-                              </v-col>
-                            </v-row>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </v-container>
+                    <ContactsWidget />
                   </v-col>
                 </v-row>
               </v-container>
