@@ -289,6 +289,7 @@ p {
 }
 
 .typewriter-container {
+  margin-top: 1rem;
   height: 40px; /* Fixed height for typewriter text */
   display: flex;
   align-items: center;

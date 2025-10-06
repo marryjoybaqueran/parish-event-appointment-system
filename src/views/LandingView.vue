@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
 import AnnouncementGrid from '@/views/announcements/AnnouncementGrid.vue'
@@ -13,6 +14,9 @@ import { useAnnouncementServices } from '@/views/announcements/announcementServi
 
 // Router for navigation
 const router = useRouter()
+
+// Vuetify display breakpoints
+const { mobile, xs, sm, mdAndUp } = useDisplay()
 
 // Use the announcement services composable
 const {
@@ -80,16 +84,8 @@ const handleBookNow = () => {
         <v-row no-gutters>
           <v-col cols="12">
             <v-sheet
-              :min-height="$vuetify.display.mobile ? '70vh' : '80vh'"
-              class="d-flex align-center"
-              style="
-                background-image:
-                  linear-gradient(rgba(25, 118, 210, 0.7), rgba(66, 165, 245, 0.7)),
-                  url('/bookevent-bg.jpg');
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-              "
+              :min-height="mobile ? '70vh' : '80vh'"
+              class="d-flex align-center hero-background"
             >
               <v-container>
                 <v-row align="center" class="fill-height">
@@ -101,23 +97,32 @@ const handleBookNow = () => {
                       class="pa-4"
                     >
                       <v-card-title
-                        class="text-white"
-                        :class="$vuetify.display.mobile ? 'text-h3 justify-center' : 'text-h4 justify-start'"
-                        style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); font-weight: 700; line-height: 1.2;"
+                        class="text-white font-weight-bold text-shadow"
+                        :class="{
+                          'text-h5 justify-center': xs,
+                          'text-h4 justify-center': sm,
+                          'text-h4 justify-start': mdAndUp
+                        }"
                       >
                         Welcome to Our Parish Community
                       </v-card-title>
 
-                      <v-card-text class="text-white text-h6 mt-4 px-0" style="opacity: 0.9; line-height: 1.6;">
+                      <v-card-text
+                        class="text-white mt-4 px-0"
+                        :class="mobile ? 'text-body-1' : 'text-h6'"
+                      >
                         Join us in faith, service, and unity. Together, we celebrate our spiritual journey.
                       </v-card-text>
 
-                      <v-card-actions class="px-0 mt-6" :class="$vuetify.display.mobile ? 'justify-center' : 'justify-start'">
+                      <v-card-actions
+                        class="px-0 mt-6"
+                        :class="mobile ? 'justify-center' : 'justify-start'"
+                      >
                         <v-btn
-                          size="large"
+                          :size="mobile ? 'default' : 'large'"
                           variant="flat"
                           color="white"
-                          class="text-primary mr-4"
+                          :class="mobile ? 'text-primary mr-2' : 'text-primary mr-4'"
                           elevation="2"
                           rounded
                           @click="handleBookNow"
@@ -126,7 +131,7 @@ const handleBookNow = () => {
                         </v-btn>
 
                         <v-btn
-                          size="large"
+                          :size="mobile ? 'default' : 'large'"
                           variant="outlined"
                           color="white"
                           class="text-white"
@@ -149,18 +154,28 @@ const handleBookNow = () => {
           </v-col>
         </v-row>
       </v-container>      <!-- Announcements Section -->
-      <v-container class="py-12">
+      <v-container :class="mobile ? 'py-8' : 'py-12'">
         <v-row>
           <v-col cols="12">
             <!-- Section Header -->
-            <v-container class="text-center mb-8">
+            <v-container :class="mobile ? 'text-center mb-6' : 'text-center mb-8'">
               <v-row justify="center">
                 <v-col cols="12" md="8">
                   <v-card flat color="transparent">
-                    <v-card-title class="text-h3 text-primary mb-4 justify-center">
+                    <v-card-title
+                      class="text-primary mb-4 justify-center"
+                      :class="{
+                        'text-h5': xs,
+                        'text-h4': sm,
+                        'text-h3': mdAndUp
+                      }"
+                    >
                       Parish Announcements
                     </v-card-title>
-                    <v-card-text class="text-h6 text-grey-darken-1">
+                    <v-card-text
+                      class="text-grey-darken-1"
+                      :class="mobile ? 'text-body-1' : 'text-h6'"
+                    >
                       Stay updated with our latest news and upcoming events
                     </v-card-text>
                   </v-card>
@@ -212,3 +227,19 @@ const handleBookNow = () => {
 
   </AppLayout>
 </template>
+
+<style scoped>
+/* Minimal scoped CSS for hero background - cannot be achieved with Vuetify utilities alone */
+.hero-background {
+  background-image:
+    linear-gradient(rgba(25, 118, 210, 0.7), rgba(66, 165, 245, 0.7)),
+    url('/bookevent-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.text-shadow {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+</style>
