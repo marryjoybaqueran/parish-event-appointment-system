@@ -252,21 +252,6 @@ onMounted(async () => {
             </RouterLink>
           </v-list-item>
 
-          <!-- BOOKINGS MANAGEMENT -->
-          <v-list-item
-            @click="drawer = false"
-            class="mobile-nav-item"
-            rounded="lg"
-            color="primary"
-          >
-            <RouterLink to="admin-booking-view" class="router-link mobile-link">
-              <template v-slot:prepend>
-                <v-icon class="mobile-nav-icon">mdi-clipboard-check</v-icon>
-              </template>
-              <v-list-item-title class="mobile-nav-text">BOOKINGS</v-list-item-title>
-            </RouterLink>
-          </v-list-item>
-
           <!-- MEMBERS MANAGEMENT -->
           <v-list-item
             @click="drawer = false"
@@ -274,7 +259,7 @@ onMounted(async () => {
             rounded="lg"
             color="primary"
           >
-            <RouterLink to="admin-members-view" class="router-link mobile-link">
+            <RouterLink to="/admin-members-view" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-icon class="mobile-nav-icon">mdi-account-group</v-icon>
               </template>
@@ -296,46 +281,6 @@ onMounted(async () => {
               <v-list-item-title class="mobile-nav-text">ANNOUNCEMENTS</v-list-item-title>
             </RouterLink>
           </v-list-item>
-
-          <!-- EVENTS MANAGEMENT -->
-          <v-list-item
-            @click="drawer = false"
-            class="mobile-nav-item"
-            rounded="lg"
-            color="primary"
-          >
-            <RouterLink to="admin-events-view" class="router-link mobile-link">
-              <template v-slot:prepend>
-                <v-icon class="mobile-nav-icon">mdi-calendar-multiselect</v-icon>
-              </template>
-              <v-list-item-title class="mobile-nav-text">EVENTS</v-list-item-title>
-            </RouterLink>
-          </v-list-item>
-
-          <!-- NOTIFICATIONS -->
-          <v-list-item
-            @click="drawer = false"
-            class="mobile-nav-item"
-            rounded="lg"
-            color="primary"
-          >
-            <RouterLink to="admin-alerts-view" class="router-link mobile-link">
-              <template v-slot:prepend>
-                <v-badge
-                  :model-value="notificationStore.hasUnreadNotifications"
-                  :content="notificationStore.unreadCount"
-                  color="error"
-                  inline
-                  class="mobile-drawer-notification-badge"
-                >
-                  <v-icon class="mobile-nav-icon">mdi-bell</v-icon>
-                </v-badge>
-              </template>
-              <v-list-item-title class="mobile-nav-text">ALERTS</v-list-item-title>
-            </RouterLink>
-          </v-list-item>
-
-
 
           <v-divider class="my-3" />
 
