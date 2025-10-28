@@ -1,7 +1,9 @@
 import { supabase } from '@/utils/supabase'
+import { supabaseAdmin } from '@/utils/supabase'
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
+import { useRolesDataStore } from './rolesData'
 
 import {
   eventCategories,
@@ -14,10 +16,18 @@ import {
   loadRecentActivities,
   approveBooking,
   denyBooking,
+  denyBookingWithComment,
   createEvent,
-} from '@/functions/adminDashboard'
+  checkBookingConflicts,
+  getBookingDetails,
+  forceApproveBooking,
+  getBookingAttachedImages,
+} from '@/views/adminOld/functions/adminDashboard'
 
 export const useAuthUserStore = defineStore('authUser', () => {
+  // Initialize roles store for centralized role management
+  const rolesStore = useRolesDataStore()
+
   const notifications = ref([])
   const pendingBookings = ref([])
   const events = ref([])
@@ -49,6 +59,7 @@ export const useAuthUserStore = defineStore('authUser', () => {
   })
 
   const unreadNotificationsCount = computed(() => notifications.value.filter((n) => !n.read).length)
+
   // Dashboard Loader
   async function loadDashboardData() {
     await Promise.all([
@@ -59,15 +70,39 @@ export const useAuthUserStore = defineStore('authUser', () => {
       loadRecentActivities(recentActivities),
     ])
   }
+
   // States
   const userData = ref(null)
   const authPages = ref([])
   const authBranchIds = ref([])
 
+  // Add a computed property for user state (for reactive UI components)
+  const user = computed(() => userData.value)
+
   // Getters
   // Computed Properties; Use for getting the state but not modifying its reactive state
   const userRole = computed(() => {
-    return userData.value?.is_admin ? 'Super Administrator' : userData.value.user_role
+    // Use rolesData store for centralized role management
+    const currentRole = rolesStore.getCurrentUserRole
+    return currentRole?.role || 'user'
+  })
+
+  // Role checking computed properties using rolesData store
+  const isCurrentUserAdmin = computed(() => {
+    return rolesStore.isCurrentUserAdmin
+  })
+
+  const isCurrentUserModerator = computed(() => {
+    return rolesStore.isCurrentUserModerator
+  })
+
+  const currentUserHasElevatedPrivileges = computed(() => {
+    return rolesStore.currentUserHasElevatedPrivileges
+  })
+
+  // Get current user role details
+  const getCurrentUserRoleDetails = computed(() => {
+    return rolesStore.getCurrentUserRole
   })
 
   // Reset State Action
@@ -75,6 +110,19 @@ export const useAuthUserStore = defineStore('authUser', () => {
     userData.value = null
     authPages.value = []
     authBranchIds.value = []
+  }
+
+  // Logout function
+  async function logout() {
+    try {
+      await supabase.auth.signOut()
+      $reset()
+      // Router navigation will be handled by auth state change
+      return true
+    } catch (error) {
+      console.error('Logout error:', error)
+      return false
+    }
   }
 
   // Actions
@@ -85,6 +133,9 @@ export const useAuthUserStore = defineStore('authUser', () => {
     if (data.session) {
       const { id, email, user_metadata } = data.session.user
       userData.value = { id, email, ...user_metadata }
+
+      // Load current user role from rolesData store
+      await rolesStore.getCurrentUserRoleFromAuth()
     }
 
     return !!data.session
@@ -150,6 +201,67 @@ export const useAuthUserStore = defineStore('authUser', () => {
     }
   }
 
+  // Get user email by user ID using admin client
+  async function getUserEmailById(userId) {
+    try {
+      const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId)
+
+      if (error) {
+        console.error('Error fetching user by ID:', error)
+        return { error }
+      }
+
+      return {
+        data: {
+          email: data.user?.email,
+          user_metadata: data.user?.user_metadata
+        }
+      }
+    } catch (error) {
+      console.error('Error in getUserEmailById:', error)
+      return { error }
+    }
+  }
+
+  // Role-based access control functions using rolesData store
+  function checkUserRole(userId) {
+    return rolesStore.getUserRoleById(userId)
+  }
+
+  function isUserAdmin(userId) {
+    return rolesStore.isUserAdmin(userId)
+  }
+
+  function isUserModerator(userId) {
+    return rolesStore.isUserModerator(userId)
+  }
+
+  function hasUserElevatedPrivileges(userId) {
+    return rolesStore.hasElevatedPrivileges(userId)
+  }
+
+  // Current user role checking functions
+  function getCurrentUserRole() {
+    return rolesStore.getCurrentUserRole
+  }
+
+  async function refreshCurrentUserRole() {
+    return await rolesStore.getCurrentUserRoleFromAuth()
+  }
+
+  // Page access control based on roles
+  function canAccessAdminPages() {
+    return rolesStore.isCurrentUserAdmin
+  }
+
+  function canAccessModeratorPages() {
+    return rolesStore.isCurrentUserModerator || rolesStore.isCurrentUserAdmin
+  }
+
+  function canAccessUserPages() {
+    return !!userData.value // Just need to be authenticated
+  }
+
   // Update User Profile Image
   async function updateUserImage(file) {
     // Get the file extension from the uploaded file
@@ -177,18 +289,196 @@ export const useAuthUserStore = defineStore('authUser', () => {
     }
   }
 
+  // Calendar helper functions for the dashboard
+  const hasEvent = computed(() => (date) => {
+    return calendarEvents.value.some((event) => event.date === date)
+  })
+
+  const hasMultipleEvents = computed(() => (date) => {
+    return calendarEvents.value.filter((event) => event.date === date).length > 1
+  })
+
+  const getSelectedDateEvents = computed(() => (selectedDate) => {
+    const dateStr = selectedDate.toISOString().split('T')[0]
+    return calendarEvents.value.filter((event) => event.date === dateStr)
+  })
+
+  const eventDates = computed(() => (date) => {
+    const dateEvents = calendarEvents.value.filter((event) => event.date === date)
+    if (dateEvents.length === 0) return false
+    if (dateEvents.length === 1) return getEventColor(dateEvents[0].type)
+    return '#9C27B0' // Multiple events color
+  })
+
+  // Updated booking formatting helper with proper ending_time support
+  const formatBookingDetails = computed(() => (booking) => {
+    let title = ''
+    let subtitle = ''
+    let date = ''
+    let starting_time = ''
+    let ending_time = ''
+
+    switch (booking.type) {
+      case 'wedding':
+        title = `Wedding Ceremony`
+        subtitle =
+          booking.title ||
+          `${booking.bride_firstname || ''} & ${booking.groom_firstname || ''}`.trim()
+        date = booking.wedding_date
+          ? new Date(booking.wedding_date).toLocaleDateString()
+          : 'Date TBD'
+        starting_time = booking.starting_time || '10:00 AM'
+        ending_time = booking.ending_time || '12:00 PM'
+        break
+
+      case 'baptism':
+        title = `Baptism Ceremony`
+        subtitle = `${booking.child_firstname} ${booking.child_lastname}`
+        date = booking.baptism_date
+          ? new Date(booking.baptism_date).toLocaleDateString()
+          : 'Date TBD'
+        starting_time = booking.starting_time || '2:00 PM'
+        ending_time = booking.ending_time || '3:00 PM'
+        break
+
+      case 'funeral':
+        title = `Funeral Service`
+        subtitle = `${booking.deceased_firstname} ${booking.deceased_lastname}`
+        date = booking.funeral_date
+          ? new Date(booking.funeral_date).toLocaleDateString()
+          : 'Date TBD'
+        // For funeral, check both starting_time and funeral_time (legacy field)
+        starting_time = booking.starting_time || booking.funeral_time || '9:00 AM'
+        ending_time = booking.ending_time || '10:00 AM'
+        break
+
+      case 'thanksgiving':
+        title = `Thanksgiving Service`
+        subtitle = `${booking.participant_firstname} ${booking.participant_lastname}`
+        date = booking.thanksgiving_date
+          ? new Date(booking.thanksgiving_date).toLocaleDateString()
+          : 'Date TBD'
+        starting_time = booking.starting_time || '4:00 PM'
+        ending_time = booking.ending_time || '5:00 PM'
+        break
+
+      default:
+        title = 'Unknown Event'
+        subtitle = 'Details unavailable'
+        date = 'Date TBD'
+        starting_time = 'Time TBD'
+        ending_time = 'Time TBD'
+    }
+
+    return { title, subtitle, date, starting_time, ending_time }
+  })
+
+  // Notification management
+  const addNotification = (notification) => {
+    notifications.value.unshift({
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      read: false,
+      ...notification,
+    })
+  }
+
+  const markNotificationAsRead = (notificationId) => {
+    const notification = notifications.value.find((n) => n.id === notificationId)
+    if (notification) {
+      notification.read = true
+    }
+  }
+
+  // Enhanced booking conflict detection with ending_time support
+  const checkConflicts = async (bookingDate, bookingStartTime, bookingEndTime) => {
+    return await checkBookingConflicts(bookingDate, bookingStartTime, bookingEndTime)
+  }
+
+  // Get detailed booking information
+  const getDetailedBookingInfo = (booking) => {
+    return getBookingDetails(booking)
+  }
+
+  // Enhanced approve booking with proper conflict checking using ending times
+  const approveBookingWithConflictCheck = async (booking) => {
+    try {
+      // Get the booking date and time with ending times
+      let bookingDate, bookingStartTime, bookingEndTime
+
+      switch (booking.type) {
+        case 'wedding':
+          bookingDate = booking.wedding_date
+          bookingStartTime = booking.starting_time || '10:00'
+          bookingEndTime = booking.ending_time || '12:00'
+          break
+        case 'baptism':
+          bookingDate = booking.baptism_date
+          bookingStartTime = booking.starting_time || '14:00'
+          bookingEndTime = booking.ending_time || '15:00'
+          break
+        case 'funeral':
+          bookingDate = booking.funeral_date
+          bookingStartTime = booking.starting_time || booking.funeral_time || '09:00'
+          bookingEndTime = booking.ending_time || '10:00'
+          break
+        case 'thanksgiving':
+          bookingDate = booking.thanksgiving_date
+          bookingStartTime = booking.starting_time || '16:00'
+          bookingEndTime = booking.ending_time || '17:00'
+          break
+      }
+
+      // Check for conflicts before approving with proper time ranges
+      if (bookingDate && bookingStartTime && bookingEndTime) {
+        const conflicts = await checkBookingConflicts(bookingDate, bookingStartTime, bookingEndTime)
+        if (conflicts.length > 0) {
+          return {
+            success: false,
+            conflicts: conflicts,
+            message: `Conflict detected! There are ${conflicts.length} conflicting event(s) on ${bookingDate} that overlap with ${bookingStartTime} - ${bookingEndTime}`,
+          }
+        }
+      }
+
+      // If no conflicts, proceed with approval
+      return await approveBooking(booking, loadDashboardData)
+    } catch (error) {
+      console.error('Error in conflict check approval:', error)
+      return { error }
+    }
+  }
+
   return {
     userData,
+    user,
     userRole,
     authPages,
     authBranchIds,
     $reset,
+    logout,
     isAuthenticated,
     getUserInformation,
+    getUserEmailById,
     getAuthPages,
     getAuthBranchIds,
     updateUserInformation,
     updateUserImage,
+
+    // Role management functions integrated with rolesData store
+    isCurrentUserAdmin,
+    isCurrentUserModerator,
+    currentUserHasElevatedPrivileges,
+    getCurrentUserRoleDetails,
+    checkUserRole,
+    isUserAdmin,
+    isUserModerator,
+    hasUserElevatedPrivileges,
+    getCurrentUserRole,
+    refreshCurrentUserRole,
+    canAccessAdminPages,
+    canAccessModeratorPages,
+    canAccessUserPages,
 
     notifications,
     pendingBookings,
@@ -200,12 +490,38 @@ export const useAuthUserStore = defineStore('authUser', () => {
     eventCategories,
     unreadNotificationsCount,
     statsTrends,
-    // Dashboard
-    loadDashboardData,
-    approveBooking: (booking) => approveBooking(booking, loadDashboardData),
-    denyBooking: (booking) => denyBooking(booking, loadDashboardData),
-    createEvent: (eventData) => createEvent(eventData, loadDashboardData),
 
+    // Dashboard functions
+    loadDashboardData,
+    loadPendingBookings: () => loadPendingBookings(pendingBookings, stats),
+    loadStats: () => loadStats(stats),
+    loadRecentActivities: () => loadRecentActivities(recentActivities),
+
+    // Booking management with proper ending_time conflict detection
+    approveBooking: approveBookingWithConflictCheck,
+    forceApproveBooking: (booking) => forceApproveBooking(booking, loadDashboardData),
+    denyBooking: (booking) => denyBooking(booking, loadDashboardData),
+    denyBookingWithComment: (booking, comment) =>
+      denyBookingWithComment(booking, comment, loadDashboardData),
+    createEvent: (eventData) => createEvent(eventData, loadDashboardData),
+    checkConflicts,
+    getDetailedBookingInfo,
+    getBookingAttachedImages,
+
+    // Calendar helpers
+    hasEvent,
+    hasMultipleEvents,
+    getSelectedDateEvents,
+    eventDates,
+
+    // Booking helpers with ending_time support
+    formatBookingDetails,
+
+    // Notification management
+    addNotification,
+    markNotificationAsRead,
+
+    // Utility functions
     getEventColor,
     getEventGradient,
   }

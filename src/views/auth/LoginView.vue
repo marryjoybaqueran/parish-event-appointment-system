@@ -1,11 +1,32 @@
 <script setup>
+import { ref } from 'vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
+import RegisterForm from '@/components/auth/RegisterForm.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
 
 //Display for mobile & desktop
 import { useDisplay } from 'vuetify'
 const { mobile } = useDisplay()
+
+// Form switching state
+const authMode = ref('login') // 'login' or 'register'
+
+const switchToRegister = () => {
+  authMode.value = 'register'
+}
+
+const switchToLogin = () => {
+  authMode.value = 'login'
+}
+
+const handleRegistrationSuccess = ({ email }) => {
+  // Handle successful registration
+  console.log('Registration successful for:', email)
+  // Switch to login mode after successful registration
+  authMode.value = 'login'
+  // You could pre-fill the email in login form if needed
+}
 </script>
 
 <template>
@@ -31,20 +52,41 @@ const { mobile } = useDisplay()
 
             <h2 class="line-1 anim-typewriter pt-1 text-center">
               "<span class="text-span"
-                >Join us as we come together in faith and community, where we celebrate the spirit
-                of service, devotion, and unity!</span
+                >{{ authMode === 'login'
+                    ? 'Welcome back! Join us as we come together in faith and community, celebrating the spirit of service, devotion, and unity!'
+                    : 'Join our spiritual community today! Together we celebrate faith, service, and unity in our parish family!'
+                }}</span
               >"
             </h2>
           </v-col>
           <!-- Right Column: Combined Auth Form -->
           <v-col class="cardy" cols="12" md="6" lg="6" xl="6" sm="12">
+            <!-- Form Mode Indicator -->
+
+
             <v-card
-              rounded="xl"
-              class="mx-auto pa-12 pb-8"
+              class="mx-auto pa-8 pb-6"
               elevation="8"
-              v-bind:width="mobile ? '110%' : '75%'"
+              rounded="lg"
+              v-bind:width="mobile ? '110%' : '80%'"
+              max-width="600px"
             >
-              <LoginForm></LoginForm>
+              <Transition name="form-fade" mode="out-in">
+                <!-- Login Form -->
+                <LoginForm
+                  v-if="authMode === 'login'"
+                  key="login"
+                  @switch-to-register="switchToRegister"
+                />
+
+                <!-- Register Form -->
+                <RegisterForm
+                  v-else
+                  key="register"
+                  @switch-to-login="switchToLogin"
+                  @registration-success="handleRegistrationSuccess"
+                />
+              </Transition>
             </v-card>
           </v-col>
         </v-row>
@@ -115,7 +157,13 @@ const { mobile } = useDisplay()
     2px 0 2px black,
     0 -2px 2px;
 }
-
+.header {
+  font-family:
+    Bookman,
+    URW Bookman L,
+    serifAmerican Typewriter,
+    serif;
+}
 .text-span {
   color: #fcb454;
 }
@@ -125,47 +173,35 @@ const { mobile } = useDisplay()
   justify-content: center;
   align-items: center;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  animation: bounce 4s infinite ease-in-out;
 }
 
 .cardd {
   justify-content: center;
   display: flex;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  animation: bounce 4s infinite ease-in-out;
 }
 
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-15px);
-  }
+/* Form transition animations */
+.form-fade-enter-active,
+.form-fade-leave-active {
+  transition: all 0.4s ease;
 }
 
-.v-card {
-  background: none !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  padding: 0 !important;
+.form-fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
 }
 
-.v-card .modern-form {
-  background: none !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  padding: 0 !important;
+.form-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
 }
 
-.v-card .auth-form-content {
-  background: transparent !important;
-}
-
-.v-card {
-  padding: 8px 8px 6px !important;
+/* Mode indicator styling */
+.mode-indicator {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  animation: slideInDown 0.8s ease-out;
 }
 </style>

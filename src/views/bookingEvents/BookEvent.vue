@@ -5,14 +5,11 @@ import PreloaderView from '@/components/layout/PreloaderView.vue'
 import EventGuide from './widgets/EventGuideSteperWidget.vue'
 import BookingWidget from './widgets/BookingWidget.vue'
 import AppBar from '@/components/layout/AppBar.vue'
-import {
-  getBackgroundImages,
-  useLoadingState
-} from './functions/helpers'
+import MyForms from '@/components/layout/MyForms.vue'
+import { getBackgroundImages, useLoadingState } from './functions/helpers'
 
 const images = getBackgroundImages()
 const { triggerLoading } = useLoadingState(500)
-
 
 onMounted(() => {
   triggerLoading()
@@ -44,10 +41,16 @@ onMounted(() => {
         </v-carousel>
 
         <!-- Content -->
-  <v-container class="content-wrapper">
-          <v-row>
+        <v-container class="content-wrapper">
+           <v-row>
             <v-col cols="12">
               <EventGuide />
+            </v-col>
+          </v-row>
+
+            <v-row>
+            <v-col cols="12">
+              <MyForms />
             </v-col>
           </v-row>
 
@@ -57,10 +60,9 @@ onMounted(() => {
               <BookingWidget />
             </v-col>
           </v-row>
-
         </v-container>
       </v-container>
-      
+
       <!-- Bottom Navigation -->
       <AppBar />
     </template>

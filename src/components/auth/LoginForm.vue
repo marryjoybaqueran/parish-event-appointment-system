@@ -5,49 +5,22 @@ import {
   requiredValidator,
   emailValidator,
 } from '@/utils/validators'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthUserStore } from '@/stores/authUser'
+
+// Define emits
+const emit = defineEmits(['switch-to-register'])
 
 const router = useRouter()
-
-const formMode = ref('login')
+const authUserStore = useAuthUserStore()
 
 const loginDataDefault = {
   email: '',
   password: '',
-  userType: 'user',
 }
-
-const registerDataDefault = {
-  fname: '',
-  lname: '',
-  email: '',
-  gender: '',
-  address: '',
-  number: '',
-  password: '',
-  password_confirmation: '',
-}
-
-// const userTypeOptions = [
-//   {
-//     value: 'user',
-//     title: 'User',
-//     icon: 'mdi-account',
-//     description: 'Access member portal',
-//     color: 'primary',
-//   },
-//   {
-//     value: 'admin',
-//     title: 'Admin',
-//     icon: 'mdi-shield-account',
-//     description: 'Administrative access',
-//     color: 'warning',
-//   },
-// ]
 
 const loginData = ref({ ...loginDataDefault })
-const registerData = ref({ ...registerDataDefault })
 
 const formAction = ref({ ...formActionDefault })
 
@@ -55,24 +28,12 @@ const isPasswordVisible = ref(false)
 
 const refVform = ref()
 
-
-const isLoginMode = computed(() => formMode.value === 'login')
-
-// Computed proxy that points to loginData or registerData depending on mode
-const formData = computed(() => (isLoginMode.value ? loginData.value : registerData.value))
-
-const switchMode = (mode) => {
-  formMode.value = mode
-  formAction.value = { ...formActionDefault }
-  refVform.value?.resetValidation()
-}
-
 const onLoginSubmit = async () => {
   formAction.value = { ...formActionDefault }
   formAction.value.formProcess = true
 
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email: loginData.value.email,
       password: loginData.value.password,
     })
@@ -83,33 +44,18 @@ const onLoginSubmit = async () => {
       return
     }
 
-    const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
-      check_user_id: data.user.id,
-    })
-
-    if (roleError) {
-      console.error('Role fetch error:', roleError)
-      formAction.value.formErrorMessage = 'Could not determine user role'
-      return
-    }
-
-    const actualUserRole = roleData?.trim().toLowerCase()
-    const selectedUserType = loginData.value.userType
-
-    if (selectedUserType === 'admin' && actualUserRole !== 'admin') {
-      formAction.value.formErrorMessage = 'Access denied: You do not have admin privileges'
-      return
-    }
-
     formAction.value.formSuccessMessage = 'Successfully Logged in!'
 
-    switch (selectedUserType) {
-      case 'admin':
-        router.replace('/admin-dashboard')
-        break
-      default:
-        router.replace('/homepage')
+    // Wait for authUser store to load user role after authentication
+    await authUserStore.isAuthenticated()
+
+    // Dynamic routing based on user's actual role from database
+    if (authUserStore.isCurrentUserAdmin) {
+      router.replace('/admin-dashboard')
+    } else {
+      router.replace('/homepage')
     }
+
   } catch (err) {
     console.error('Unexpected error:', err)
     formAction.value.formErrorMessage = 'An unexpected error occurred'
@@ -120,53 +66,6 @@ const onLoginSubmit = async () => {
   }
 }
 
-const onRegisterSubmit = async () => {
-  formAction.value = { ...formActionDefault }
-  formAction.value.formProcess = true
-
-  const { data, error } = await supabase.auth.signUp({
-    email: registerData.value.email,
-    password: registerData.value.password,
-    options: {
-      data: {
-        fname: registerData.value.fname,
-        lname: registerData.value.lname,
-        gender: registerData.value.gender,
-        address: registerData.value.address,
-        number: registerData.value.number,
-      },
-    },
-  })
-
-  if (error) {
-    console.log(error)
-    formAction.value.formErrorMessage = error.message
-    formAction.value.formStatus = error.status
-  } else if (data) {
-    console.log(data)
-    formAction.value.formSuccessMessage = 'Successfully Registered Account!'
-    setTimeout(() => {
-      switchMode('login')
-      loginData.value.email = registerData.value.email
-    }, 2000)
-  }
-
-  refVform.value?.reset()
-  formAction.value.formProcess = false
-}
-
-const onFormSubmit = () => {
-  refVform.value?.validate().then(({ valid }) => {
-    if (valid) {
-      if (isLoginMode.value) {
-        onLoginSubmit()
-      } else {
-        onRegisterSubmit()
-      }
-    }
-  })
-}
-
 // Social sign-in handlers (use Supabase OAuth)
 const signInWithGoogle = async () => {
   console.log('Signing in with Google...')
@@ -174,6 +73,18 @@ const signInWithGoogle = async () => {
 
 const signInWithFacebook = async () => {
   console.log('Signing in with Facebook...')
+}
+
+const switchToRegister = () => {
+  emit('switch-to-register')
+}
+
+const onFormSubmit = () => {
+  refVform.value?.validate().then(({ valid }) => {
+    if (valid) {
+      onLoginSubmit()
+    }
+  })
 }
 </script>
 
@@ -184,121 +95,130 @@ const signInWithFacebook = async () => {
       :form-error-message="formAction.formErrorMessage"
     />
 
-  <v-form class="mt-5" ref="refVform" @submit.prevent="onFormSubmit">
-    <!-- Welcome header with animation -->
-    <div class="text-center mb-6">
-      <v-avatar size="64" class="mb-4 welcome-avatar">
-        <v-icon size="40" color="primary">mdi-church</v-icon>
-      </v-avatar>
-      <h2 class="text-h4 text-primary mb-2 welcome-text">Welcome Back!</h2>
-      <p class="text-body-2 text-medium-emphasis">Sign in to continue your spiritual journey</p>
-    </div>
-
-    <!-- Email field with enhanced styling -->
-    <div class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center">
-      <v-icon size="small" class="mr-2">mdi-email</v-icon>
-      Email Address
-    </div>
-
-    <v-text-field
-      v-model="formData.email"
-      density="comfortable"
-      placeholder="Enter your email address"
-      prepend-inner-icon="mdi-email-outline"
-      :rules="[requiredValidator, emailValidator]"
-      :counter="50"
-      variant="outlined"
-      color="primary"
-      class="mb-3 animated-field"
-      hide-details="auto"
-    ></v-text-field>
-
-    <!-- Password field with enhanced styling -->
-    <div
-      class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center justify-space-between"
-    >
-      <div class="d-flex align-center">
-        <v-icon size="small" class="mr-2">mdi-lock</v-icon>
-        Password
+    <v-form class="mt-1" ref="refVform" @submit.prevent="onFormSubmit">
+      <!-- Welcome header with animation -->
+      <div class="text-center mb-3">
+        <v-avatar size="64" class="welcome-avatar">
+          <v-icon size="60" color="primary">mdi-church</v-icon>
+        </v-avatar>
+        <h2 class="text-h4 text-primary mb-2 welcome-text">Welcome Back!</h2>
+        <p class="text-body-2 text-medium-emphasis">Sign in to continue your spiritual journey</p>
       </div>
-      <v-btn variant="text" size="small" class="text-caption text-primary" @click="() => {}">
-        Forgot password?
-      </v-btn>
-    </div>
 
-    <v-text-field
-      v-model="formData.password"
-      density="comfortable"
-      :rules="[requiredValidator]"
-      counter="20"
-      placeholder="Enter your password"
-      prepend-inner-icon="mdi-lock-outline"
-      variant="outlined"
-      color="primary"
-      :append-inner-icon="isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
-      :type="isPasswordVisible ? 'text' : 'password'"
-      @click:append-inner="isPasswordVisible = !isPasswordVisible"
-      class="mb-4 animated-field"
-      hide-details="auto"
-    ></v-text-field>
-  <!--   <v-select>
+      <div class="auth-form-content">
+        <!-- Email field with enhanced styling -->
+        <div class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center">
+          <v-icon size="small" class="mr-2">mdi-email</v-icon>
+          Email Address
+        </div>
 
-    </v-select> -->
-    <!-- Enhanced login button with ripple effect -->
-    <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
-      <v-btn
-        v-bind="props"
-        :elevation="isHovering ? 8 : 2"
-        size="large"
-        variant="elevated"
-        color="primary"
-        type="submit"
-        :disabled="formAction.formProcess"
-        :loading="formAction.formProcess"
-        block
-        class="login-btn mb-4"
-        rounded="lg"
-      >
-        <v-icon left class="mr-2">mdi-login</v-icon>
-        <span class="text-h6">Sign In</span>
-      </v-btn>
-    </v-hover>
+        <v-text-field
+          v-model="loginData.email"
+          density="comfortable"
+          placeholder="Enter your email address"
+          prepend-inner-icon="mdi-email-outline"
+          :rules="[requiredValidator, emailValidator]"
+          :counter="50"
+          variant="outlined"
+          color="primary"
+          rounded="lg"
+          class="animated-field"
+          hide-details="auto"
+        ></v-text-field>
 
-    <!-- Social login divider -->
-    <v-divider class="my-4">
-      <span class="text-caption text-medium-emphasis px-3">Or continue with</span>
-    </v-divider>
-
-    <!-- Social login icons (replacing buttons) -->
-    <v-row class="ma-0 justify-center">
-      <v-col cols="6" class="pa-1 d-flex justify-center">
-        <v-icon
-          size="36"
-          class="social-icon google--text"
-          role="button"
-          tabindex="0"
-          @click="signInWithGoogle"
-          @keyup.enter="signInWithGoogle"
-          title="Sign in with Google"
+        <!-- Password field with enhanced styling -->
+        <div
+          class="text-subtitle-1 text-medium-emphasis mb-2 d-flex align-center justify-space-between"
         >
-          mdi-google
-        </v-icon>
-      </v-col>
-      <v-col cols="6" class="pa-1 d-flex justify-center">
-        <v-icon
-          size="36"
-          class="social-icon facebook--text"
-          role="button"
-          tabindex="0"
-          @click="signInWithFacebook"
-          @keyup.enter="signInWithFacebook"
-          title="Sign in with Facebook"
-        >
-          mdi-facebook
-        </v-icon>
-      </v-col>
-    </v-row>
-  </v-form>
+          <div class="d-flex align-center">
+            <v-icon size="small" class="mr-2">mdi-lock</v-icon>
+            Password
+          </div>
+          <v-btn variant="text" size="small" class="text-caption text-primary" @click="() => {}">
+            Forgot password?
+          </v-btn>
+        </div>
+
+        <v-text-field
+          v-model="loginData.password"
+          density="comfortable"
+          :rules="[requiredValidator]"
+          counter="20"
+          placeholder="Enter your password"
+          prepend-inner-icon="mdi-lock-outline"
+          variant="outlined"
+          color="primary"
+          rounded="lg"
+          :append-inner-icon="isPasswordVisible ? 'mdi-eye' : 'mdi-eye-off'"
+          :type="isPasswordVisible ? 'text' : 'password'"
+          @click:append-inner="isPasswordVisible = !isPasswordVisible"
+          class="mb-4 animated-field"
+          hide-details="auto"
+        ></v-text-field>
+
+        <!-- Enhanced login button with ripple effect -->
+        <v-hover v-slot:default="{ isHovering, props }" close-delay="200">
+          <v-btn
+            v-bind="props"
+            :elevation="isHovering ? 8 : 2"
+            size="large"
+            variant="elevated"
+            color="primary"
+            type="submit"
+            :disabled="formAction.formProcess"
+            :loading="formAction.formProcess"
+            block
+            class="login-btn mb-3"
+            rounded="lg"
+          >
+            <v-icon icon="mdi-login" class="mr-2"></v-icon>
+            <span class="text-h6">Sign In</span>
+          </v-btn>
+        </v-hover>
+
+        <div class="toggle-links mt-3">
+          <span>
+            Don't have an account?
+            <a @click="switchToRegister" class="toggle-link">Sign up</a>
+          </span>
+        </div>
+
+        <!-- Social login divider -->
+        <v-divider class="my-4">
+          <span class="text-caption text-medium-emphasis px-3">Or continue with</span>
+        </v-divider>
+
+        <!-- Social login icons (replacing buttons) -->
+        <v-row class="ma-0 justify-center">
+          <v-col cols="6" class="pa-1 d-flex justify-center">
+            <v-icon
+              size="36"
+              class="social-icon google--text"
+              role="button"
+              tabindex="0"
+              @click="signInWithGoogle"
+              @keyup.enter="signInWithGoogle"
+              title="Sign in with Google"
+            >
+              mdi-google
+            </v-icon>
+          </v-col>
+          <v-col cols="6" class="pa-1 d-flex justify-center">
+            <v-icon
+              size="36"
+              class="social-icon facebook--text"
+              role="button"
+              tabindex="0"
+              @click="signInWithFacebook"
+              @keyup.enter="signInWithFacebook"
+              title="Sign in with Facebook"
+            >
+              mdi-facebook
+            </v-icon>
+          </v-col>
+        </v-row>
+      </div>
+    </v-form>
   </div>
 </template>
 
@@ -383,5 +303,24 @@ const signInWithFacebook = async () => {
 /* Loading spinner enhancement */
 .v-btn--loading .v-btn__content {
   opacity: 0.6;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.cursor-pointer:hover {
+  text-decoration: none;
+}
+
+.toggle-link {
+  color: #1976d2;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.toggle-link:hover {
+  text-decoration: none;
 }
 </style>

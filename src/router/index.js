@@ -1,29 +1,47 @@
-import { /*getUserInformation,*/ supabase, isAuthenticated } from '@/utils/supabase'
+import { /*getUserInformation,*/ } from '@/utils/supabase'
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthUserStore } from '@/stores/authUser'
 import LoginView from '@/views/auth/LoginView.vue'
 import HomePage from '@/views/auth/HomePage.vue'
 import BookEvent from '@/views/bookingEvents/BookEvent.vue'
-import WeddingMassForm from '@/views/auth/WeddingMassForm.vue'
-import BaptismMass from '@/views/auth/BaptismMass.vue'
-import FuneralMass from '@/views/auth/FuneralMass.vue'
+import WeddingMassForm from '@/views/auth/WeddingMassView.vue'
+import BaptismMass from '@/views/auth/BaptismMassView.vue'
+import FuneralMass from '@/views/auth/FuneralMassView.vue'
 import ThanksGivingMass from '@/views/auth/ThanksGivingMass.vue'
 import TrialHeader from '@/views/TrialHeader.vue'
-import AdminDashboard from '@/views/admin/AdminDashboard.vue'
-import AdminBookingsView from '@/views/admin/AdminBookingsView.vue'
+import AdminDashboard from '@/views/admin/AdminDashboardView.vue'
+import AdminBookingsView from '@/views/adminOld/AdminBookingsView.vue'
+import AdminMembersView from '@/views/adminOld/AdminMembersView.vue'
+import AdminEventsView from '@/views/adminOld/AdminEventsView.vue'
+import AdminAlertsView from '@/views/adminOld/AdminAlertsView.vue'
 import NotFoundView from '@/views/error/NotFoundView.vue'
-import FFBookingListView from '@/views/admin/FFBookingListView.vue'
-import BFBookingListView from '@/views/admin/BFBookingListView.vue'
-import TGBookingListView from '@/views/admin/TGBookingListView.vue'
 import ForbiddenView from '@/views/error/ForbiddenView.vue'
 import TrialPage from '@/views/error/TrialPage.vue'
 // import CameraView from '@/views/camera/CameraView.vue'
 import Events from '@/views/events/EventsView.vue'
 import Notifications from '@/views/notifications/NotificationsView.vue'
+import Pending from '@/views/PendingView.vue'
+import WeddingContinue from '@/views/contWedding/ContWeddingView.vue'
+import WeddingContinue2 from '@/views/contWedding/CameraWeddingView.vue'
+import FuneralContinue from '@/views/contFuneral/ContFuneralView.vue'
+import FuneralContinue2 from '@/views/contFuneral/CameraFunderalView.vue'
+import ThanksGivingContinue from '@/views/contThanksGiving/ContThanksGivingView.vue'
+import ThanksGivingContinue2 from '@/views/contThanksGiving/CamerraThanksGivingView.vue'
+import BaptismContinue from '@/views/contBaptism/ContBaptismView.vue'
+import BaptismContinue2 from '@/views/contBaptism/CameraBaptismView.vue'
+import FinnishView from '@/views/FinnishView.vue'
 
+import LandingView from '@/views/LandingView.vue'
+import AnnouncementView from '@/views/admin/AnnouncementView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    {
+      path: '/',
+      name: 'landing',
+      component: LandingView,
+    },
     {
       path: '/trial-page',
       name: 'trial-page',
@@ -31,62 +49,129 @@ const router = createRouter({
     },
 
     {
-      path: '/',
-      name: 'home',
-    },
-    {
-      path: '/login',
+      path: '/auth',
       name: 'login',
       component: LoginView,
     },
-
     {
       path: '/homepage',
       name: 'homepage',
       component: HomePage,
+      meta: { requiresUserMode: true },
     },
     {
       path: '/book-event',
       name: 'book-event',
       component: BookEvent,
+      meta: { requiresUserMode: true },
     },
-   /*   {
+    {
+      path: '/pending',
+      name: 'pending',
+      component: Pending,
+      meta: { requiresUserMode: true },
+    },
+    {
+      path: '/admin/announcements',
+      name: 'announcement',
+      component: AnnouncementView,
+      meta: { requiresAdmin: true },
+    },
+    /*   {
       path: '/camera',
       name: 'camera',
       component: CameraView,
-       meta: { requiresAuth: true },
+       meta: { requiresAuth: true, requiresUserMode: true },
     }, */
     {
       path: '/events',
       name: 'events',
       component: Events,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/wedding-mass-continue',
+      name: 'wedding-mass-continue',
+      component: WeddingContinue,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/wedding-mass-continue-2',
+      name: 'wedding-mass-continue-2',
+      component: WeddingContinue2,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/funeral-mass-continue',
+      name: 'funeral-mass-continue',
+      component: FuneralContinue,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/funeral-mass-continue-2',
+      name: 'funeral-mass-continue-2',
+      component: FuneralContinue2,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/thanksgiving-mass-continue',
+      name: 'thanksgiving-mass-continue',
+      component: ThanksGivingContinue,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/thanksgiving-mass-continue-2',
+      name: 'thanksgiving-mass-continue-2',
+      component: ThanksGivingContinue2,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/baptism-mass-continue',
+      name: 'baptism-mass-continue',
+      component: BaptismContinue,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/baptism-mass-continue-2',
+      name: 'baptism-mass-continue-2',
+      component: BaptismContinue2,
+      meta: { requiresAuth: true, requiresUserMode: true },
+    },
+    {
+      path: '/finnish',
+      name: 'finnish',
+      component: FinnishView,
+      meta: { requiresAuth: true, requiresUserMode: true },
     },
     {
       path: '/notifications',
       name: 'notifications',
       component: Notifications,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresUserMode: true },
     },
     {
       path: '/wedding-mass-form',
       name: 'wedding-mass-form',
       component: WeddingMassForm,
+      meta: { requiresUserMode: true },
     },
     {
       path: '/baptism-mass',
       name: 'baptism-mass',
       component: BaptismMass,
+      meta: { requiresUserMode: true },
     },
     {
       path: '/funeral-mass',
       name: 'funeral-mass',
       component: FuneralMass,
+      meta: { requiresUserMode: true },
     },
     {
       path: '/thanks-giving-mass',
       name: 'thanks-giving-mass',
       component: ThanksGivingMass,
+      meta: { requiresUserMode: true },
     },
     {
       //path: '/admin/admin-dashboard',
@@ -102,7 +187,27 @@ const router = createRouter({
       component: AdminBookingsView,
       meta: { requiresAdmin: true },
     },
-
+    {
+      //path: '/admin/admin-members-view',
+      path: '/admin-members-view',
+      name: 'admin-members-view',
+      component: AdminMembersView,
+      meta: { requiresAdmin: true },
+    },
+    {
+      //path: '/admin/admin-events-view',
+      path: '/admin-events-view',
+      name: 'admin-events-view',
+      component: AdminEventsView,
+      meta: { requiresAdmin: true },
+    },
+    {
+      //path: '/admin/admin-alerts-view',
+      path: '/admin-alerts-view',
+      name: 'admin-alerts-view',
+      component: AdminAlertsView,
+      meta: { requiresAdmin: true },
+    },
     {
       path: '/trial-header',
       name: 'trial-header',
@@ -113,38 +218,41 @@ const router = createRouter({
       name: 'page-not-found',
       component: NotFoundView,
     },
-    {
-      path: '/funeral-mass-form-bookinglist-view',
-      name: 'funeral-mass-form-bookinglist-view',
-      component: FFBookingListView,
-      meta: { requiresAdmin: true },
-    },
-    {
-      path: '/baptism-mass-form-bookinglist-view',
-      name: 'baptism-mass-form-bookinglist-view',
-      component: BFBookingListView,
-      meta: { requiresAdmin: true },
-    },
-    {
-      path: '/thanksgiving-mass-form-bookinglist-view',
-      name: 'thanksgiving-mass-form-bookinglist-view',
-      component: TGBookingListView,
-      meta: { requiresAdmin: true },
-    },
-   
+
+
     {
       path: '/forbidden',
       name: 'forbidden',
       component: ForbiddenView,
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'catch-all',
+      redirect: '/page-not-found',
+    },
   ],
 })
 
+// Initialize auth state on app startup
+let authInitialized = false
+
 router.beforeEach(async (to) => {
-  const isLoggedIn = await isAuthenticated()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const authUserStore = useAuthUserStore()
+
+  // Only call isAuthenticated once on app startup, then use reactive state
+  if (!authInitialized) {
+    try {
+      await authUserStore.isAuthenticated()
+      authInitialized = true
+    } catch (error) {
+      console.error('Auth initialization error:', error)
+      // Fallback to logged out state
+      authInitialized = true
+    }
+  }
+
+  // Use reactive state instead of async method - with null safety
+  const isLoggedIn = authUserStore.user !== null && authUserStore.user !== undefined
 
   // Redirect to appropriate page if accessing home route
   if (to.name === 'home') {
@@ -153,8 +261,8 @@ router.beforeEach(async (to) => {
 
   // If not logged in
   if (!isLoggedIn) {
-    // Only allow access to login and register
-    if (to.name === 'login' || to.name === 'register') {
+    // Only allow access to login, register, and landing
+    if (to.name === 'login' || to.name === 'register' || to.name === 'landing') {
       return true
     } else if (to.name === 'page-not-found' || to.name === 'forbidden') {
       return true
@@ -164,44 +272,63 @@ router.beforeEach(async (to) => {
     }
   }
 
+  // If logged in and trying to access landing page, redirect to appropriate dashboard
+  if (isLoggedIn && to.name === 'landing') {
+    const isAdmin = authUserStore.isCurrentUserAdmin
+    if (isAdmin) {
+      return { name: 'admin-dashboard' }
+    } else {
+      return { name: 'homepage' }
+    }
+  }
+
   // If logged in, prevent access to login or register pages
   if (isLoggedIn && (to.name === 'login' || to.name === 'register')) {
-    // redirect the user to the dashboard page
-    return { name: 'homepage' }
+    // Redirect based on user's actual role from rolesData store
+    const isAdmin = authUserStore.isCurrentUserAdmin
+    if (isAdmin) {
+      return { name: 'admin-dashboard' }
+    } else {
+      return { name: 'homepage' }
+    }
   }
 
-  let userRole = null
-  if (user) {
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single()
-    userRole = roleData?.role
-  }
+  // Use authUser store for role checking instead of direct database query
+  const isAdmin = authUserStore.isCurrentUserAdmin
 
-  const isAdmin = userRole === 'admin'
+  // Strict role separation - admins and users have separate page access
 
+  // Check admin-only routes
   if (to.meta.requiresAdmin) {
     if (!isLoggedIn || !isAdmin) {
       return '/forbidden'
     }
   }
 
-  /*
-  // Check user if the user is logged in or not admin
-  if (isLoggedIn && !isAdmin) {
-    if (to.path.startsWith('/admin/users')) {
-      return { name: 'forbidden' }
+  // Check user-mode-only routes - ONLY regular users can access these
+  if (to.meta.requiresUserMode) {
+    if (!isLoggedIn) {
+      return '/forbidden'
+    }
+    // Block admins from accessing user-only pages
+    if (isAdmin) {
+      return '/forbidden'
     }
   }
 
-  // If not logged in, prevent access to system pages
-  if (!isLoggedIn && to.path.startsWith('/admin')) {
-    // redirect the user to the login page
-    return { name: 'login' }
+  // Additional role-based redirection for specific scenarios
+  if (isLoggedIn) {
+    // If admin tries to access homepage, redirect to admin dashboard
+    if (isAdmin && to.name === 'homepage') {
+      return { name: 'admin-dashboard' }
+    }
+
+    // If regular user tries to access any admin page, block them
+    if (!isAdmin && to.path.startsWith('/admin')) {
+      return '/forbidden'
+    }
   }
-*/
+
   if (router.resolve(to).matched.length === 0) {
     return { name: 'page-not-found' }
   }

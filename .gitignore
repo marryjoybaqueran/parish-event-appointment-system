@@ -31,7 +31,8 @@ coverage
 .history
 .github
 .env
-
+.clinerules
 # History files and folders
-.history/
+.history
 *.history
+github_switcher

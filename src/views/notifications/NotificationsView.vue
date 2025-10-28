@@ -1,22 +1,39 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 import NavBar2 from '@/components/layout/NavBar2.vue'
 import PreloaderView from '@/components/layout/PreloaderView.vue'
 import NotificationWidget from './components/NotificationWidget.vue'
-import { mockNotifications } from './data/notificationData.js'
 import AppBar from '@/components/layout/AppBar.vue'
+//import MyForms from '@/components/layout/MyForms.vue'
+import { useRealTimeNotifications } from '@/views/notifications/composables/useRealTimeNotifications.js'
 
 const router = useRouter()
+const { mdAndUp } = useDisplay()
 
-// Reactive data para sa notifications
-const notifications = ref([...mockNotifications])
+// Use real-time notifications composable
+const {
+  notifications,
+  unreadCount,
+  /* hasUnreadNotifications, */
+  markAsRead,
+  markAllAsRead,
+  clearReadNotifications,
+  deleteNotification,
+  // fetchNotificationsFromDatabase,
+  loading,
+  error
+} = useRealTimeNotifications()
+
+// Local reactive data para sa filtering
 const filterType = ref('all')
 const searchQuery = ref('')
 
 // Computed properties para sa filtering
 const filteredNotifications = computed(() => {
-  let filtered = notifications.value
+  // Ensure notifications.value is an array, fallback to empty array
+  let filtered = notifications.value || []
 
   // Filter by type
   if (filterType.value !== 'all') {
@@ -32,8 +49,8 @@ const filteredNotifications = computed(() => {
   // Filter by search query
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(n => 
-      n.title.toLowerCase().includes(query) || 
+    filtered = filtered.filter(n =>
+      n.title.toLowerCase().includes(query) ||
       n.message.toLowerCase().includes(query)
     )
   }
@@ -42,43 +59,20 @@ const filteredNotifications = computed(() => {
   return filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
 })
 
-const unreadCount = computed(() => 
-  notifications.value.filter(n => !n.isRead).length
-)
-
 // Filter options para sa dropdown
 const filterOptions = [
   { value: 'all', title: 'All Notifications' },
   { value: 'unread', title: 'Unread' },
-  { value: 'read', title: 'Read' },
-  { value: 'success', title: 'Success' },
-  { value: 'warning', title: 'Warning' },
-  { value: 'error', title: 'Error' },
-  { value: 'info', title: 'Info' }
+  { value: 'read', title: 'Read' }
 ]
 
-// Functions para sa notification management
-const markAsRead = (notificationId) => {
-  const notification = notifications.value.find(n => n.id === notificationId)
-  if (notification) {
-    notification.isRead = true
-  }
-}
-
-const markAllAsRead = () => {
-  notifications.value.forEach(n => n.isRead = true)
-}
-
-const clearReadNotifications = () => {
-  notifications.value = notifications.value.filter(n => !n.isRead)
-}
-
+// Function para sa handling notification click
 const handleNotificationClick = (notification) => {
   // Mark as read kung unread pa
   if (!notification.isRead) {
     markAsRead(notification.id)
   }
-  
+
   // Navigate sa action URL kung naa
   if (notification.actionUrl) {
     router.push(notification.actionUrl)
@@ -86,8 +80,7 @@ const handleNotificationClick = (notification) => {
 }
 
 onMounted(() => {
-  // Future: Fetch notifications from API
-  console.log('Notifications loaded:', notifications.value.length)
+  console.log('NotificationsView mounted - Real-time listeners should be active')
 })
 </script>
 
@@ -96,6 +89,11 @@ onMounted(() => {
   <NavBar2>
     <template #content>
       <v-container fluid class="pa-4">
+         <!--  <v-row>
+            <v-col cols="12">
+              <MyForms />
+            </v-col>
+          </v-row> -->
         <!-- Header section -->
         <v-row class="mb-4">
           <v-col cols="12">
@@ -106,10 +104,10 @@ onMounted(() => {
                   Manage your parish notifications and updates
                 </p>
               </div>
-              
+
               <!-- Unread count badge -->
               <v-chip
-                v-if="unreadCount > 0"
+                v-if="unreadCount && unreadCount > 0"
                 color="primary"
                 class="me-2"
               >
@@ -133,7 +131,7 @@ onMounted(() => {
               prepend-inner-icon="mdi-filter"
             />
           </v-col>
-          
+
           <v-col cols="12" md="5">
             <v-text-field
               v-model="searchQuery"
@@ -145,10 +143,22 @@ onMounted(() => {
               placeholder="Search by title or message..."
             />
           </v-col>
-          
+
           <v-col cols="12" md="3" class="d-flex align-center justify-end">
+           <!--  <v-btn
+              color="primary"
+              variant="text"
+              size="small"
+              class="me-2"
+              :loading="loading"
+              @click="fetchNotificationsFromDatabase"
+              title="Refresh from database"
+            >
+              <v-icon icon="mdi-refresh" />
+            </v-btn> -->
+
             <v-btn
-              v-if="unreadCount > 0"
+              v-if="unreadCount && unreadCount > 0"
               color="primary"
               variant="outlined"
               size="small"
@@ -157,7 +167,7 @@ onMounted(() => {
             >
               Mark All Read
             </v-btn>
-            
+
             <v-btn
               color="error"
               variant="text"
@@ -169,10 +179,32 @@ onMounted(() => {
           </v-col>
         </v-row>
 
+        <!-- Loading state -->
+        <v-row v-if="loading" class="mb-4">
+          <v-col cols="12" class="text-center">
+            <v-progress-circular indeterminate color="primary" />
+            <p class="text-body-2 text-medium-emphasis mt-2">
+              Loading notifications...
+            </p>
+          </v-col>
+        </v-row>
+
+        <!-- Error state -->
+        <v-row v-if="error" class="mb-4">
+          <v-col cols="12">
+            <v-alert
+              type="error"
+              variant="outlined"
+              :text="error"
+              closable
+            />
+          </v-col>
+        </v-row>
+
         <!-- Notifications list -->
         <v-row>
           <v-col cols="12">
-            <div v-if="filteredNotifications.length === 0" class="text-center py-8">
+            <div v-if="!filteredNotifications || filteredNotifications.length === 0" class="text-center py-8">
               <v-icon
                 icon="mdi-bell-off"
                 size="64"
@@ -187,20 +219,42 @@ onMounted(() => {
               </p>
             </div>
 
-            <div v-else class="notifications-list">
+            <!-- Mobile layout (old single-column style) -->
+            <div v-if="!mdAndUp" class="notifications-list-mobile">
               <NotificationWidget
                 v-for="notification in filteredNotifications"
                 :key="notification.id"
                 :notification="notification"
                 @mark-as-read="markAsRead"
                 @click="handleNotificationClick"
+                @delete="deleteNotification"
+                class="mb-2"
               />
             </div>
+
+            <!-- Desktop layout (grid style) -->
+            <v-row v-else class="notifications-list">
+              <v-col
+                v-for="notification in filteredNotifications"
+                :key="notification.id"
+                cols="12"
+                md="4"
+                lg="3"
+                xl="3"
+              >
+                <NotificationWidget
+                  :notification="notification"
+                  @mark-as-read="markAsRead"
+                  @click="handleNotificationClick"
+                  @delete="deleteNotification"
+                />
+              </v-col>
+            </v-row>
           </v-col>
         </v-row>
 
         <!-- Load more button (future enhancement) -->
-        <v-row v-if="filteredNotifications.length > 0" class="mt-4">
+        <v-row v-if="filteredNotifications && filteredNotifications.length > 0" class="mt-4">
           <v-col cols="12" class="text-center">
             <v-btn
               color="primary"
@@ -220,7 +274,7 @@ onMounted(() => {
 
 <style scoped>
 .notifications-list {
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -229,5 +283,11 @@ onMounted(() => {
   .notifications-list {
     max-width: 100%;
   }
+}
+
+/* Ensure consistent card height in grid layout */
+.notifications-list .v-col {
+  display: flex;
+  flex-direction: column;
 }
 </style>

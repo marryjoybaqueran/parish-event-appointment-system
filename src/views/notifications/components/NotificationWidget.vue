@@ -13,7 +13,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['markAsRead', 'click'])
+const emit = defineEmits(['markAsRead', 'click', 'delete'])
 
 // Computed properties para sa styling
 const cardClasses = computed(() => [
@@ -41,6 +41,12 @@ const handleClick = () => {
     emit('markAsRead', props.notification.id)
   }
   emit('click', props.notification)
+}
+
+const handleDelete = (event) => {
+  // Stop event propagation para dili ma-trigger ang card click
+  event.stopPropagation()
+  emit('delete', props.notification.id)
 }
 </script>
 
@@ -70,7 +76,7 @@ const handleClick = () => {
         <!-- Notification Content -->
         <v-col>
           <div class="d-flex justify-space-between align-start mb-1">
-            <h3 
+            <h3
               :class="[
                 'text-subtitle-1 font-weight-medium mb-1',
                 { 'text-primary': !notification.isRead }
@@ -78,19 +84,33 @@ const handleClick = () => {
             >
               {{ notification.title }}
             </h3>
-            
-            <!-- Unread indicator -->
-            <v-chip
-              v-if="!notification.isRead"
-              color="primary"
-              size="x-small"
-              class="ms-2"
-            >
-              New
-            </v-chip>
+
+            <div class="d-flex align-center gap-2">
+              <!-- Unread indicator -->
+              <v-chip
+                v-if="!notification.isRead"
+                color="primary"
+                size="x-small"
+              >
+                New
+              </v-chip>
+
+              <!-- Delete button -->
+              <v-btn
+                icon
+                size="x-small"
+                variant="text"
+                color="error"
+                class="delete-btn"
+                @click="handleDelete"
+                :title="'Delete notification'"
+              >
+                <v-icon size="small">mdi-close</v-icon>
+              </v-btn>
+            </div>
           </div>
 
-          <p 
+          <p
             :class="[
               'text-body-2 mb-2',
               { 'text-medium-emphasis': notification.isRead },
@@ -104,9 +124,9 @@ const handleClick = () => {
             <span class="text-caption text-medium-emphasis">
               {{ timeAgo }}
             </span>
-            
+
             <!-- Action button if actionUrl exists -->
-            <v-btn
+        <!--     <v-btn
               v-if="notification.actionUrl"
               :color="getNotificationTypeColor(notification.type)"
               size="small"
@@ -115,7 +135,7 @@ const handleClick = () => {
             >
               View Details
               <v-icon end icon="mdi-arrow-right" />
-            </v-btn>
+            </v-btn> -->
           </div>
         </v-col>
       </v-row>
@@ -142,5 +162,18 @@ const handleClick = () => {
 .notification-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.delete-btn {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.notification-card:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  background-color: rgba(var(--v-theme-error), 0.1) !important;
 }
 </style>
