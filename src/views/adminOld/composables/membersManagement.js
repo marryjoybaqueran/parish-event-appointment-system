@@ -96,8 +96,8 @@ export function useMembersManagement() {
   const roleOptions = [
     { value: 'all', title: 'All Roles' },
     { value: 'user', title: 'User' },
-    { value: 'admin', title: 'Administrator' },
-    { value: 'moderator', title: 'Moderator' }
+    { value: 'admin', title: 'Administrator' }
+   /*  { value: 'moderator', title: 'Moderator' } */
   ]
 
   // Load members function
