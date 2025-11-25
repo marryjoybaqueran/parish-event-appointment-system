@@ -148,7 +148,7 @@ const handleCancel = () => {
                 label="Role"
                 :items="[
                   { value: 'user', title: 'User', icon: 'mdi-account' },
-                  { value: 'moderator', title: 'Moderator', icon: 'mdi-shield-check' },
+                  // { value: 'moderator', title: 'Moderator', icon: 'mdi-shield-check' }, // Disabled
                   { value: 'admin', title: 'Administrator', icon: 'mdi-shield-crown' }
                 ]"
                 :disabled="actionLoading"
