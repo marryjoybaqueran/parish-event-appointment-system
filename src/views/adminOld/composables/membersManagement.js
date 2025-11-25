@@ -511,8 +511,8 @@ export function useMembersManagement() {
     switch (role) {
       case 'admin':
         return 'red'
-      case 'moderator':
-        return 'orange'
+      // case 'moderator': // Disabled
+      //   return 'orange'
       case 'user':
         return 'blue'
       default:
