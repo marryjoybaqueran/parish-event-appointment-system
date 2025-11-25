@@ -219,8 +219,8 @@ onUpdated(() => {
             :key="legend.label"
             :color="legend.color"
             size="small"
-            variant="tonal"
-            class="me-2 mb-1"
+            variant="flat"
+            class="me-2 mb-1 event-legend-chip"
           >
             <v-icon :icon="legend.icon" class="me-1" size="16"></v-icon>
             {{ legend.label }}
@@ -457,5 +457,16 @@ onUpdated(() => {
     font-size: 0.75rem;
     padding: 0.5rem 0;
   }
+}
+
+/* Event legend chip styling */
+.event-legend-chip {
+  border: 1px solid rgba(var(--v-border-color), 0.3) !important;
+  font-weight: 500 !important;
+}
+
+.event-legend-chip .v-chip__content {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 </style>
