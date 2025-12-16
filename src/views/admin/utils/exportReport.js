@@ -84,20 +84,32 @@ export async function exportBookingTrendsExcel(
   detailedBookings = {},
 ) {
   const now = new Date()
+  const wb = XLSX.utils.book_new()
 
-  // Current Month Summary data
+  // We will build an array of arrays (AOA) representing the whole sheet
+  let wsData = []
+
+  // 1. Title
+  wsData.push([
+    `Booking Trends Report - ${now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
+  ])
+  wsData.push([]) // spacing
+
+  // 2. Current Month Summary
+  wsData.push([`Current Month Summary`])
+  wsData.push(['Booking Type', 'Count'])
   const currentTotal = Object.values(currentMonthCounts).reduce((sum, count) => sum + count, 0)
-  const currentMonthData = [
-    ['Booking Type', 'Count'],
-    ['Baptism', currentMonthCounts.baptism],
-    ['Wedding', currentMonthCounts.wedding],
-    ['Funeral', currentMonthCounts.funeral],
-    ['Thanksgiving', currentMonthCounts.thanksgiving],
-    ['Others', currentMonthCounts.others],
-    ['Total', currentTotal],
-  ]
+  wsData.push(['Baptism', currentMonthCounts.baptism])
+  wsData.push(['Wedding', currentMonthCounts.wedding])
+  wsData.push(['Funeral', currentMonthCounts.funeral])
+  wsData.push(['Thanksgiving', currentMonthCounts.thanksgiving])
+  wsData.push(['Others', currentMonthCounts.others])
+  wsData.push(['Total', currentTotal])
+  wsData.push([]) // spacing
+  wsData.push([]) // spacing
 
-  // Historical Trends data
+  // 3. Historical Trends
+  wsData.push(['Historical Booking Trends'])
   const trendsHeaders = [
     'Month',
     'Baptism',
@@ -107,21 +119,25 @@ export async function exportBookingTrendsExcel(
     'Others',
     'Total',
   ]
-  const trendsRows = trendData.map((monthData) => [
-    monthData.month,
-    monthData.baptism,
-    monthData.wedding,
-    monthData.funeral,
-    monthData.thanksgiving,
-    monthData.others,
-    monthData.baptism +
-      monthData.wedding +
-      monthData.funeral +
-      monthData.thanksgiving +
-      monthData.others,
-  ])
+  wsData.push(trendsHeaders)
 
-  // Calculate totals
+  trendData.forEach((monthData) => {
+    wsData.push([
+      monthData.month,
+      monthData.baptism,
+      monthData.wedding,
+      monthData.funeral,
+      monthData.thanksgiving,
+      monthData.others,
+      monthData.baptism +
+        monthData.wedding +
+        monthData.funeral +
+        monthData.thanksgiving +
+        monthData.others,
+    ])
+  })
+
+  // Totals row for trends
   const totals = trendData.reduce(
     (acc, month) => {
       acc.baptism += month.baptism
@@ -134,7 +150,7 @@ export async function exportBookingTrendsExcel(
     { baptism: 0, wedding: 0, funeral: 0, thanksgiving: 0, others: 0 },
   )
 
-  const totalRow = [
+  wsData.push([
     'TOTAL',
     totals.baptism,
     totals.wedding,
@@ -142,62 +158,54 @@ export async function exportBookingTrendsExcel(
     totals.thanksgiving,
     totals.others,
     totals.baptism + totals.wedding + totals.funeral + totals.thanksgiving + totals.others,
-  ]
-
-  // Create workbook
-  const wb = XLSX.utils.book_new()
-
-  // Current Month sheet
-  const ws1 = XLSX.utils.aoa_to_sheet([
-    [
-      `Current Month Summary (${now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})`,
-    ],
-    [],
-    ...currentMonthData,
   ])
-  XLSX.utils.book_append_sheet(wb, ws1, 'Current Month')
+  wsData.push([]) // spacing
+  wsData.push([]) // spacing
 
-  // Historical Trends sheet
-  const ws2 = XLSX.utils.aoa_to_sheet([
-    ['Historical Booking Trends'],
-    [],
-    trendsHeaders,
-    ...trendsRows,
-    totalRow,
-  ])
-  XLSX.utils.book_append_sheet(wb, ws2, 'Historical Trends')
-
-  // Detailed Bookings Sheets
+  // 4. Detailed Sections
   if (detailedBookings) {
     Object.entries(detailedBookings).forEach(([type, data]) => {
       if (data && data.length > 0) {
+        wsData.push([`${type.charAt(0).toUpperCase() + type.slice(1)} Details`])
+
         const mapping = columnMapping[type]
         if (mapping) {
-          // Transform data using mapping
-          const formattedData = data.map((item) => {
-            const row = {}
-            Object.entries(mapping).forEach(([header, getter]) => {
-              row[header] = getter(item)
-            })
-            return row
+          const headers = Object.keys(mapping)
+          wsData.push(headers)
+
+          data.forEach((item) => {
+            const row = headers.map((header) => mapping[header](item))
+            wsData.push(row)
           })
-          const ws = XLSX.utils.json_to_sheet(formattedData)
-
-          // Adjust column widths
-          const wscols = Object.keys(mapping).map(() => ({ wch: 25 }))
-          ws['!cols'] = wscols
-
-          const sheetName = type.charAt(0).toUpperCase() + type.slice(1)
-          XLSX.utils.book_append_sheet(wb, ws, sheetName)
         } else {
-          // Fallback for unknown types
-          const ws = XLSX.utils.json_to_sheet(data)
-          const sheetName = type.charAt(0).toUpperCase() + type.slice(1)
-          XLSX.utils.book_append_sheet(wb, ws, sheetName)
+          // Fallback
+          if (data.length > 0) {
+            const headers = Object.keys(data[0])
+            wsData.push(headers)
+            data.forEach((item) => {
+              wsData.push(headers.map((h) => item[h]))
+            })
+          }
         }
+        wsData.push([]) // spacing
       }
     })
   }
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData)
+
+  // Set column widths - make them wide enough to accommodate most data
+  ws['!cols'] = [
+    { wch: 25 }, // Col A
+    { wch: 20 }, // Col B
+    { wch: 20 }, // Col C
+    { wch: 20 }, // Col D
+    { wch: 20 }, // Col E
+    { wch: 20 }, // Col F
+    { wch: 20 }, // Col G
+  ]
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Booking Report')
 
   // Generate and save
   const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
