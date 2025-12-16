@@ -25,13 +25,19 @@ const drawer = ref(false)
 function onClick() {
   localStorage.setItem('theme', theme.value)
 }
+
+function toggleTheme() {
+  isDark.value = !isDark.value
+}
 import { useDisplay } from 'vuetify'
 const { mobile, mdAndDown } = useDisplay()
 
 // Load Functions during component rendering
 onMounted(async () => {
   isLoggedIn.value = await authStore.isAuthenticated()
-  await notificationStore.loadStoredNotifications()
+  if (isLoggedIn.value) {
+    await notificationStore.loadStoredNotifications()
+  }
 })
 </script>
 
@@ -69,12 +75,7 @@ onMounted(async () => {
         <div v-if="!mdAndDown" class="d-flex align-center nav">
           <div class="d-flex nav nav-items-container">
             <RouterLink to="/admin-dashboard" class="router-link">
-              <v-btn
-                class="mr-3 nav-btn home-btn-nav"
-                variant="outlined"
-                size="large"
-                rounded="lg"
-              >
+              <v-btn class="mr-3 nav-btn home-btn-nav" variant="outlined" size="large" rounded="lg">
                 <v-icon class="nav-icon me-2">mdi-view-dashboard</v-icon>
                 <span class="nav-text">DASHBOARD</span>
                 <v-ripple />
@@ -96,12 +97,7 @@ onMounted(async () => {
 
             <!-- MEMBERS MANAGEMENT -->
             <RouterLink to="/admin-members-view" class="router-link">
-              <v-btn
-                class="mr-3 nav-btn members-btn"
-                variant="outlined"
-                size="large"
-                rounded="lg"
-              >
+              <v-btn class="mr-3 nav-btn members-btn" variant="outlined" size="large" rounded="lg">
                 <v-icon class="nav-icon me-2">mdi-account-group</v-icon>
                 <span class="nav-text">MEMBERS</span>
                 <v-ripple />
@@ -123,7 +119,7 @@ onMounted(async () => {
             </RouterLink>
 
             <!-- EVENTS MANAGEMENT -->
-           <!--  <RouterLink to="admin-events-view" class="router-link">
+            <!--  <RouterLink to="admin-events-view" class="router-link">
               <v-btn
                 class="mr-3 nav-btn events-btn"
                 variant="outlined"
@@ -137,7 +133,7 @@ onMounted(async () => {
             </RouterLink> -->
 
             <!-- NOTIFICATIONS TAB -->
-          <!--   <RouterLink to="admin-alerts-view" class="router-link">
+            <!--   <RouterLink to="admin-alerts-view" class="router-link">
               <v-badge
                 :model-value="notificationStore.hasUnreadNotifications"
                 :content="notificationStore.unreadCount"
@@ -158,24 +154,19 @@ onMounted(async () => {
                 </v-btn>
               </v-badge>
             </RouterLink> -->
-
-
           </div>
           <v-spacer></v-spacer>
 
           <!-- Enhanced Theme Switch -->
           <div class="theme-switch-container me-4">
             <v-btn
-              @click="isDark = !isDark; onClick()"
+              @click="toggleTheme"
               :color="isDark ? 'amber' : 'indigo'"
               variant="outlined"
               rounded="xl"
               class="theme-toggle-btn"
             >
-              <v-icon
-                :class="isDark ? 'theme-icon-rotate' : 'theme-icon-scale'"
-                size="20"
-              >
+              <v-icon :class="isDark ? 'theme-icon-rotate' : 'theme-icon-scale'" size="20">
                 {{ isDark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
               </v-icon>
               <span class="theme-text ms-2">
@@ -238,12 +229,7 @@ onMounted(async () => {
           </div>
 
           <!-- DASHBOARD -->
-          <v-list-item
-            @click="drawer = false"
-            class="mobile-nav-item"
-            rounded="lg"
-            color="primary"
-          >
+          <v-list-item @click="drawer = false" class="mobile-nav-item" rounded="lg" color="primary">
             <RouterLink to="/admin-dashboard" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-icon class="mobile-nav-icon">mdi-view-dashboard</v-icon>
@@ -253,12 +239,7 @@ onMounted(async () => {
           </v-list-item>
 
           <!-- MEMBERS MANAGEMENT -->
-          <v-list-item
-            @click="drawer = false"
-            class="mobile-nav-item"
-            rounded="lg"
-            color="primary"
-          >
+          <v-list-item @click="drawer = false" class="mobile-nav-item" rounded="lg" color="primary">
             <RouterLink to="/admin-members-view" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-icon class="mobile-nav-icon">mdi-account-group</v-icon>
@@ -268,12 +249,7 @@ onMounted(async () => {
           </v-list-item>
 
           <!-- ANNOUNCEMENTS MANAGEMENT -->
-          <v-list-item
-            @click="drawer = false"
-            class="mobile-nav-item"
-            rounded="lg"
-            color="primary"
-          >
+          <v-list-item @click="drawer = false" class="mobile-nav-item" rounded="lg" color="primary">
             <RouterLink to="/admin/announcements" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-icon class="mobile-nav-icon">mdi-bullhorn</v-icon>
@@ -287,7 +263,7 @@ onMounted(async () => {
           <!-- THEME SWITCH -->
           <v-list-item class="mobile-nav-item">
             <v-btn
-              @click="isDark = !isDark; onClick()"
+              @click="toggleTheme"
               variant="outlined"
               rounded="lg"
               class="mobile-theme-btn w-100"
@@ -409,7 +385,6 @@ onMounted(async () => {
   background: rgba(76, 175, 80, 0.1) !important;
 }
 
-
 .bookings-btn:hover {
   background: linear-gradient(45deg, #1976d2, #1565c0) !important;
   transform: translateY(-3px);
@@ -439,8 +414,6 @@ onMounted(async () => {
   color: #f44336 !important;
   background: rgba(244, 67, 54, 0.1) !important;
 }
-
-
 
 .nav-icon {
   transition: all 0.3s ease;
@@ -608,13 +581,23 @@ onMounted(async () => {
 }
 
 @keyframes sunPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 @keyframes moonRotate {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(15deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
 }
 
 @keyframes notificationPulse {

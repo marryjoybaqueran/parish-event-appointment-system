@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, defineOptions } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useDisplay } from 'vuetify'
 import ViewEventDialog from './ViewEventDialog.vue'
 import CalendarTableView from '@/views/admin/components/CalendarTableView.vue'
@@ -12,7 +12,7 @@ import '@/views/admin/styles/calendar-theme.css'
 
 // Component name for ESLint multi-word rule
 defineOptions({
-  name: 'CalendarWidget'
+  name: 'CalendarWidget',
 })
 
 // Vuetify responsive composable
@@ -36,7 +36,7 @@ const currentPeriodStart = ref(new Date())
 // Calendar view options
 const calendarViews = [
   { title: 'Month', value: 'month', icon: 'mdi-calendar-month' },
-  { title: 'Week', value: 'week', icon: 'mdi-calendar-week' }
+  { title: 'Week', value: 'week', icon: 'mdi-calendar-week' },
 ]
 
 const currentView = ref('month')
@@ -90,15 +90,15 @@ const availableStatuses = [
   { label: 'Approved', value: 'approved', color: 'success' },
   { label: 'Pending', value: 'pending', color: 'warning' },
   { label: 'Denied', value: 'denied', color: 'error' },
-  { label: 'Cancelled', value: 'cancelled', color: 'grey' }
+  { label: 'Cancelled', value: 'cancelled', color: 'grey' },
 ]
 
 // Computed properties
 const calendarEvents = computed(() => {
   // Filter events based on selected statuses
   return allEvents.value
-    .filter(event => selectedStatuses.value.includes(event.status?.toLowerCase()))
-    .map(event => ({
+    .filter((event) => selectedStatuses.value.includes(event.status?.toLowerCase()))
+    .map((event) => ({
       id: event.id,
       title: event.title,
       startDate: new Date(event.startDate),
@@ -106,14 +106,14 @@ const calendarEvents = computed(() => {
       classes: event.classes || [`event-${event.category}`],
       style: {
         backgroundColor: event.color,
-        color: getContrastYIQ(event.color)
+        color: getContrastYIQ(event.color),
       },
       // Keep original event data for dialog
       originalEvent: event,
       // Add event metadata for table view
       category: event.category,
       status: event.status,
-      time: event.time
+      time: event.time,
     }))
 })
 
@@ -123,7 +123,7 @@ const displayPeriodLabel = computed(() => {
   const start = currentPeriodStart.value
   const options = {
     year: 'numeric',
-    month: 'long'
+    month: 'long',
   }
 
   if (currentView.value === 'week') {
@@ -139,11 +139,11 @@ const displayPeriodLabel = computed(() => {
 const getContrastYIQ = (hexcolor) => {
   if (!hexcolor) return '#000000'
 
-  const r = parseInt(hexcolor.substr(1,2),16)
-  const g = parseInt(hexcolor.substr(3,2),16)
-  const b = parseInt(hexcolor.substr(5,2),16)
-  const yiq = ((r*299)+(g*587)+(b*114))/1000
-  return (yiq >= 128) ? '#000000' : '#FFFFFF'
+  const r = parseInt(hexcolor.substr(1, 2), 16)
+  const g = parseInt(hexcolor.substr(3, 2), 16)
+  const b = parseInt(hexcolor.substr(5, 2), 16)
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000
+  return yiq >= 128 ? '#000000' : '#FFFFFF'
 }
 
 // Methods
@@ -155,7 +155,7 @@ const handleEventClick = (event) => {
   const clickedEventData = {
     clickedEvent: event,
     originalEvent: event?.originalEvent,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   }
 
   try {
@@ -234,7 +234,9 @@ onMounted(async () => {
     <!-- Header Card -->
     <v-card class="calendar-container mb-0" elevation="2" rounded="lg">
       <!-- Calendar Header -->
-      <v-card-title :class="['d-flex align-center justify-space-between bg-primary text-white', headerPadding]">
+      <v-card-title
+        :class="['d-flex align-center justify-space-between bg-primary text-white', headerPadding]"
+      >
         <div class="d-flex align-center">
           <v-icon :size="iconSize" :class="xs ? 'me-2' : 'me-3'">mdi-calendar-multiple</v-icon>
           <div>
@@ -245,17 +247,8 @@ onMounted(async () => {
       </v-card-title>
 
       <!-- Tab Navigation -->
-      <v-tabs
-        v-model="activeTab"
-        bg-color="surface"
-        color="primary"
-        density="compact"
-      >
-        <v-tab
-          v-for="tab in tabs"
-          :key="tab.value"
-          :value="tab.value"
-        >
+      <v-tabs v-model="activeTab" bg-color="surface" color="primary" density="compact">
+        <v-tab v-for="tab in tabs" :key="tab.value" :value="tab.value">
           <v-icon :icon="tab.icon" class="me-2"></v-icon>
           {{ tab.label }}
         </v-tab>
@@ -270,7 +263,13 @@ onMounted(async () => {
       class="mt-0 calendar-view-card"
     >
       <v-card-text :class="[cardPadding, 'pb-0']">
-        <div :class="['d-flex align-center justify-space-between', mobile ? 'flex-column gap-3' : 'flex-row gap-4', xs ? 'mb-4' : 'mb-6']">
+        <div
+          :class="[
+            'd-flex align-center justify-space-between',
+            mobile ? 'flex-column gap-3' : 'flex-row gap-4',
+            xs ? 'mb-4' : 'mb-6',
+          ]"
+        >
           <!-- Navigation Controls -->
           <div :class="['d-flex align-center', xs ? 'gap-1' : 'gap-2']">
             <v-btn
@@ -321,7 +320,11 @@ onMounted(async () => {
                 :size="buttonSize"
                 @click="changeView(view.value)"
               >
-                <v-icon :icon="view.icon" :class="xs ? '' : 'me-1'" :size="xs ? '18' : '20'"></v-icon>
+                <v-icon
+                  :icon="view.icon"
+                  :class="xs ? '' : 'me-1'"
+                  :size="xs ? '18' : '20'"
+                ></v-icon>
                 <span v-if="showViewLabels">{{ view.title }}</span>
               </v-btn>
             </v-btn-toggle>
@@ -331,7 +334,13 @@ onMounted(async () => {
         <!-- Event Legend -->
         <div :class="xs ? 'mb-4' : 'mb-6'">
           <div class="d-flex flex-wrap align-center gap-2">
-            <span :class="[xs ? 'text-caption' : 'text-subtitle-2', 'font-weight-medium', xs ? 'me-1' : 'me-2']">
+            <span
+              :class="[
+                xs ? 'text-caption' : 'text-subtitle-2',
+                'font-weight-medium',
+                xs ? 'me-1' : 'me-2',
+              ]"
+            >
               Event Types:
             </span>
             <v-chip
@@ -342,7 +351,11 @@ onMounted(async () => {
               variant="tonal"
               :class="xs ? 'me-1 mb-1' : 'me-2 mb-1'"
             >
-              <v-icon :icon="legend.icon" :class="xs ? 'me-1' : 'me-1'" :size="xs ? '14' : '16'"></v-icon>
+              <v-icon
+                :icon="legend.icon"
+                :class="xs ? 'me-1' : 'me-1'"
+                :size="xs ? '14' : '16'"
+              ></v-icon>
               <span :class="xs ? 'text-caption' : ''">{{ legend.label }}</span>
             </v-chip>
           </div>
@@ -351,14 +364,16 @@ onMounted(async () => {
         <!-- Status Filter -->
         <div :class="xs ? 'mb-4' : 'mb-6'">
           <div class="d-flex flex-wrap align-center gap-2">
-            <span :class="[xs ? 'text-caption' : 'text-subtitle-2', 'font-weight-medium', xs ? 'me-1' : 'me-2']">
+            <span
+              :class="[
+                xs ? 'text-caption' : 'text-subtitle-2',
+                'font-weight-medium',
+                xs ? 'me-1' : 'me-2',
+              ]"
+            >
               Filter by Status:
             </span>
-            <v-chip-group
-              v-model="selectedStatuses"
-              multiple
-              selected-class="text-primary"
-            >
+            <v-chip-group v-model="selectedStatuses" multiple selected-class="text-primary">
               <v-chip
                 v-for="status in availableStatuses"
                 :key="status.value"
@@ -370,7 +385,11 @@ onMounted(async () => {
                 :class="xs ? 'me-1 mb-1' : 'me-2 mb-1'"
               >
                 <v-icon
-                  :icon="selectedStatuses.includes(status.value) ? 'mdi-check-circle' : 'mdi-circle-outline'"
+                  :icon="
+                    selectedStatuses.includes(status.value)
+                      ? 'mdi-check-circle'
+                      : 'mdi-circle-outline'
+                  "
                   :class="xs ? 'me-1' : 'me-1'"
                   :size="xs ? '14' : '16'"
                 ></v-icon>
@@ -394,20 +413,10 @@ onMounted(async () => {
       </div>
 
       <!-- Error State -->
-      <v-alert
-        v-else-if="error"
-        type="error"
-        variant="tonal"
-        :class="xs ? 'ma-4' : 'ma-6'"
-      >
+      <v-alert v-else-if="error" type="error" variant="tonal" :class="xs ? 'ma-4' : 'ma-6'">
         {{ error }}
         <template #append>
-          <v-btn
-            color="error"
-            variant="text"
-            :size="buttonSize"
-            @click="fetchAllEvents"
-          >
+          <v-btn color="error" variant="text" :size="buttonSize" @click="fetchAllEvents">
             Retry
           </v-btn>
         </template>
@@ -446,36 +455,28 @@ onMounted(async () => {
         <p :class="[xs ? 'text-caption' : 'text-body-2', 'text-grey mb-4']">
           No events are currently scheduled. Check back later for updates.
         </p>
-        <v-btn
-          color="primary"
-          variant="elevated"
-          :size="buttonSize"
-          @click="fetchAllEvents"
-        >
+        <v-btn color="primary" variant="elevated" :size="buttonSize" @click="fetchAllEvents">
           Refresh Calendar
         </v-btn>
       </div>
     </v-card>
 
     <!-- Table View Card (Conditionally Rendered) -->
-    <v-card
-      v-show="activeTab === 'table'"
-      elevation="2"
-      rounded="lg"
-      class="mt-0 table-view-card"
-    >
+    <v-card v-show="activeTab === 'table'" elevation="2" rounded="lg" class="mt-0 table-view-card">
       <!-- Status Filter for Table View -->
       <v-card-text :class="[cardPadding, 'pb-0']">
         <div :class="xs ? 'mb-4' : 'mb-6'">
           <div class="d-flex flex-wrap align-center gap-2">
-            <span :class="[xs ? 'text-caption' : 'text-subtitle-2', 'font-weight-medium', xs ? 'me-1' : 'me-2']">
+            <span
+              :class="[
+                xs ? 'text-caption' : 'text-subtitle-2',
+                'font-weight-medium',
+                xs ? 'me-1' : 'me-2',
+              ]"
+            >
               Filter by Status:
             </span>
-            <v-chip-group
-              v-model="selectedStatuses"
-              multiple
-              selected-class="text-primary"
-            >
+            <v-chip-group v-model="selectedStatuses" multiple selected-class="text-primary">
               <v-chip
                 v-for="status in availableStatuses"
                 :key="status.value"
@@ -487,7 +488,11 @@ onMounted(async () => {
                 :class="xs ? 'me-1 mb-1' : 'me-2 mb-1'"
               >
                 <v-icon
-                  :icon="selectedStatuses.includes(status.value) ? 'mdi-check-circle' : 'mdi-circle-outline'"
+                  :icon="
+                    selectedStatuses.includes(status.value)
+                      ? 'mdi-check-circle'
+                      : 'mdi-circle-outline'
+                  "
                   :class="xs ? 'me-1' : 'me-1'"
                   :size="xs ? '14' : '16'"
                 ></v-icon>
@@ -508,11 +513,7 @@ onMounted(async () => {
   </div>
 
   <!-- Event Details Dialog (View-Only) -->
-  <ViewEventDialog
-    v-model="showEventDialog"
-    :event="selectedEvent"
-    view-only
-  />
+  <ViewEventDialog v-model="showEventDialog" :event="selectedEvent" view-only />
 </template>
 
 <style scoped>

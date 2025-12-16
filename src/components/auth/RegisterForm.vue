@@ -6,6 +6,7 @@ import {
   emailValidator,
   passwordValidator,
   confirmedValidator,
+  integerValidator,
 } from '@/utils/validators'
 import { ref } from 'vue'
 import TermsDialog from '@/components/auth/dialogs/TermsDialog.vue'
@@ -20,6 +21,9 @@ const privacyDialog = ref(false)
 const helpDialog = ref(false)
 
 const registerDataDefault = {
+  firstname: '',
+  lastname: '',
+  phone: '',
   email: '',
   password: '',
   password_confirmation: '',
@@ -40,6 +44,14 @@ const onRegisterSubmit = async () => {
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: registerData.value.email,
     password: registerData.value.password,
+    options: {
+      data: {
+        firstname: registerData.value.firstname,
+        lastname: registerData.value.lastname,
+        phone: registerData.value.phone,
+        role: registerData.value.role,
+      },
+    },
   })
 
   if (authError) {
@@ -80,14 +92,12 @@ const onRegisterSubmit = async () => {
       roleError = error
     } else {
       // User role doesn't exist, insert new record
-      const { data, error } = await supabase
-        .from('user_roles')
-        .insert([
-          {
-            user_id: authData.user.id,
-            role: registerData.value.role
-          }
-        ])
+      const { data, error } = await supabase.from('user_roles').insert([
+        {
+          user_id: authData.user.id,
+          role: registerData.value.role,
+        },
+      ])
 
       roleData = data
       roleError = error
@@ -112,8 +122,6 @@ const onRegisterSubmit = async () => {
   refVform.value?.reset()
   formAction.value.formProcess = false
 }
-
-
 
 const openHelpDialog = () => {
   helpDialog.value = { isOpen: true, contentType: 'help' }
@@ -158,14 +166,60 @@ const onFormSubmit = () => {
           <v-card-text class="text-center py-3">
             <v-icon color="info" size="20" class="mb-1">mdi-information-outline</v-icon>
             <p class="text-caption text-info ma-0">
-              <strong>Admin Access:</strong> New accounts are registered as regular users.
-              Contact admin support if you need elevated privileges (admin/moderator access).
+              <strong>Admin Access:</strong> New accounts are registered as regular users. Contact
+              admin support if you need elevated privileges (admin/moderator access).
             </p>
           </v-card-text>
         </v-card>
       </div>
 
       <div class="auth-form-content register-content">
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="registerData.firstname"
+              :rules="[requiredValidator]"
+              label="First Name"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-account"
+              class="form-field"
+              hide-details="auto"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="registerData.lastname"
+              :rules="[requiredValidator]"
+              label="Last Name"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-account"
+              class="form-field"
+              hide-details="auto"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col cols="12">
+            <v-text-field
+              v-model="registerData.phone"
+              :rules="[requiredValidator, integerValidator]"
+              label="Phone Number"
+              variant="outlined"
+              color="primary"
+              density="comfortable"
+              prepend-inner-icon="mdi-phone"
+              class="form-field"
+              hide-details="auto"
+              type="tel"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+
         <v-row>
           <v-col cols="12">
             <v-text-field
@@ -281,9 +335,9 @@ const onFormSubmit = () => {
                 </v-btn>
               </template>
               <span>
-                New accounts are registered as regular users by default.
-                If you need admin or moderator privileges, please contact
-                the admin support team after registration for role upgrade.
+                New accounts are registered as regular users by default. If you need admin or
+                moderator privileges, please contact the admin support team after registration for
+                role upgrade.
               </span>
             </v-tooltip>
           </v-col>

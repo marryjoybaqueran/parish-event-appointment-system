@@ -36,6 +36,10 @@ const drawer = ref(false)
 function onClick() {
   localStorage.setItem('theme', theme.value)
 }
+
+function toggleTheme() {
+  isDark.value = !isDark.value
+}
 import { useDisplay } from 'vuetify'
 const { mobile, mdAndDown } = useDisplay()
 
@@ -55,8 +59,11 @@ router.afterEach(() => {
 
 // Load Functions during component rendering - optimized to avoid blocking
 onMounted(async () => {
-  // Only load notifications, auth state should already be available from router guard
-  await notificationStore.loadStoredNotifications()
+  // Only load notifications if authenticated
+  const isAuthenticated = await authStore.isAuthenticated()
+  if (isAuthenticated) {
+    await notificationStore.loadStoredNotifications()
+  }
 })
 </script>
 
@@ -73,12 +80,7 @@ onMounted(async () => {
         <!-- LOGO + HEADER -->
         <div class="d-flex align-center logo-section">
           <div class="logo-container">
-            <v-img
-              src="logo.png"
-              :width="mobile ? '40px' : '50px'"
-              class="me-3 logo-image"
-              cover
-            />
+            <v-img src="logo.png" :width="mobile ? '40px' : '50px'" class="me-3 logo-image" cover />
           </div>
           <div class="header-text-container">
             <h2 :class="mdAndDown ? 'small-header' : 'large-header'" class="ma-0 header">
@@ -94,12 +96,7 @@ onMounted(async () => {
         <div v-if="!mdAndDown" class="d-flex align-center nav">
           <div class="d-flex nav nav-items-container">
             <RouterLink to="/homepage" class="router-link">
-              <v-btn
-                class="mr-3 nav-btn home-btn-nav"
-                variant="outlined"
-                size="large"
-                rounded="lg"
-              >
+              <v-btn class="mr-3 nav-btn home-btn-nav" variant="outlined" size="large" rounded="lg">
                 <v-icon class="nav-icon me-2">mdi-home</v-icon>
                 <span class="nav-text">HOME</span>
                 <v-ripple />
@@ -122,12 +119,7 @@ onMounted(async () => {
 
             <!-- EVENTS TAB -->
             <RouterLink to="/events" class="router-link">
-              <v-btn
-                class="mr-3 nav-btn events-btn"
-                variant="outlined"
-                size="large"
-                rounded="lg"
-              >
+              <v-btn class="mr-3 nav-btn events-btn" variant="outlined" size="large" rounded="lg">
                 <v-icon class="nav-icon me-2">mdi-calendar-multiselect</v-icon>
                 <span class="nav-text">EVENTS</span>
                 <v-ripple />
@@ -162,16 +154,13 @@ onMounted(async () => {
           <!-- Enhanced Theme Switch -->
           <div class="theme-switch-container me-4">
             <v-btn
-              @click="isDark = !isDark; onClick()"
+              @click="toggleTheme"
               :color="isDark ? 'amber' : 'indigo'"
               variant="outlined"
               rounded="xl"
               class="theme-toggle-btn"
             >
-              <v-icon
-                :class="isDark ? 'theme-icon-rotate' : 'theme-icon-scale'"
-                size="20"
-              >
+              <v-icon :class="isDark ? 'theme-icon-rotate' : 'theme-icon-scale'" size="20">
                 {{ isDark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
               </v-icon>
               <span class="theme-text ms-2">
@@ -234,12 +223,7 @@ onMounted(async () => {
           </div>
 
           <!-- HOME -->
-          <v-list-item
-            @click="drawer = false"
-            class="mobile-nav-item"
-            rounded="lg"
-            color="primary"
-          >
+          <v-list-item @click="drawer = false" class="mobile-nav-item" rounded="lg" color="primary">
             <RouterLink to="/homepage" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-icon class="mobile-nav-icon">mdi-home</v-icon>
@@ -249,12 +233,7 @@ onMounted(async () => {
           </v-list-item>
 
           <!-- BOOK EVENT -->
-          <v-list-item
-            @click="drawer = false"
-            class="mobile-nav-item"
-            rounded="lg"
-            color="primary"
-          >
+          <v-list-item @click="drawer = false" class="mobile-nav-item" rounded="lg" color="primary">
             <RouterLink to="/book-event" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-icon class="mobile-nav-icon">mdi-calendar-plus</v-icon>
@@ -264,12 +243,7 @@ onMounted(async () => {
           </v-list-item>
 
           <!-- EVENTS -->
-          <v-list-item
-            @click="drawer = false"
-            class="mobile-nav-item"
-            rounded="lg"
-            color="primary"
-          >
+          <v-list-item @click="drawer = false" class="mobile-nav-item" rounded="lg" color="primary">
             <RouterLink to="/events" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-icon class="mobile-nav-icon">mdi-calendar-multiselect</v-icon>
@@ -279,12 +253,7 @@ onMounted(async () => {
           </v-list-item>
 
           <!-- NOTIFICATIONS -->
-          <v-list-item
-            @click="drawer = false"
-            class="mobile-nav-item"
-            rounded="lg"
-            color="primary"
-          >
+          <v-list-item @click="drawer = false" class="mobile-nav-item" rounded="lg" color="primary">
             <RouterLink to="/notifications" class="router-link mobile-link">
               <template v-slot:prepend>
                 <v-badge
@@ -306,7 +275,7 @@ onMounted(async () => {
           <!-- THEME SWITCH -->
           <v-list-item class="mobile-nav-item">
             <v-btn
-              @click="isDark = !isDark; onClick()"
+              @click="toggleTheme"
               variant="outlined"
               rounded="lg"
               class="mobile-theme-btn w-100"
@@ -400,7 +369,9 @@ onMounted(async () => {
   position: relative;
   font-weight: 600;
   letter-spacing: 1px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   overflow: hidden;
   text-transform: none;
   min-width: 120px;
@@ -623,13 +594,23 @@ onMounted(async () => {
 }
 
 @keyframes sunPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 @keyframes moonRotate {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(15deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
 }
 
 @keyframes notificationPulse {

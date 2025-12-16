@@ -1,6 +1,7 @@
 import { onMounted, onUnmounted, watch, computed } from 'vue'
 import { useNotificationStore } from '@/stores/notification.js'
 import { runNotificationSystemChecks } from '@/views/notifications/composables/notificationHelpers.js'
+import { supabase } from '@/utils/supabase.js'
 
 /**
  * Composable para sa managing real-time notifications
@@ -8,25 +9,52 @@ import { runNotificationSystemChecks } from '@/views/notifications/composables/n
  */
 export function useRealTimeNotifications() {
   const notificationStore = useNotificationStore()
+  let authListener = null
+
+  const initNotifications = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session?.user) return
+
+    // Run system checks first
+    await runNotificationSystemChecks()
+
+    // Load stored notifications first (now async)
+    await notificationStore.loadStoredNotifications()
+
+    // Request notification permission
+    await notificationStore.requestNotificationPermission()
+
+    // Initialize real-time listeners
+    await notificationStore.initializeRealTimeListeners()
+  }
 
   // Setup real-time listeners on mount
   onMounted(async () => {
-    // Run system checks first
-    await runNotificationSystemChecks()
-    
-    // Load stored notifications first (now async)
-    await notificationStore.loadStoredNotifications()
-    
-    // Request notification permission
-    await notificationStore.requestNotificationPermission()
-    
-    // Initialize real-time listeners
-    await notificationStore.initializeRealTimeListeners()
+    await initNotifications()
+
+    // Listen for auth changes
+    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        await initNotifications()
+      } else if (event === 'SIGNED_OUT') {
+        notificationStore.cleanup()
+        // Clear notifications on logout
+        if (notificationStore.notifications) {
+          notificationStore.notifications = []
+        }
+      }
+    })
+    authListener = data.subscription
   })
 
   // Cleanup on unmount
   onUnmounted(() => {
     notificationStore.cleanup()
+    if (authListener) {
+      authListener.unsubscribe()
+    }
   })
 
   // Watch para sa saving notifications whenever they change
@@ -35,7 +63,7 @@ export function useRealTimeNotifications() {
     () => {
       notificationStore.saveNotifications()
     },
-    { deep: true }
+    { deep: true },
   )
 
   // Return store properties and methods para sa component use
@@ -51,6 +79,6 @@ export function useRealTimeNotifications() {
     saveNotificationToDatabase: notificationStore.saveNotificationToDatabase,
     fetchNotificationsFromDatabase: notificationStore.fetchNotificationsFromDatabase,
     loading: notificationStore.loading,
-    error: notificationStore.error
+    error: notificationStore.error,
   }
 }

@@ -46,7 +46,7 @@ export async function getCurrentMonthBookingCounts() {
         .from('others')
         .select('id', { count: 'exact', head: true })
         .gte('created_at', startDate)
-        .lte('created_at', endDate + 'T23:59:59')
+        .lte('created_at', endDate + 'T23:59:59'),
     ])
 
     return {
@@ -55,7 +55,7 @@ export async function getCurrentMonthBookingCounts() {
       funeral: funeralRes.count || 0,
       thanksgiving: thanksgivingRes.count || 0,
       others: othersRes.count || 0,
-      error: null
+      error: null,
     }
   } catch (error) {
     console.error('Error fetching booking counts:', error)
@@ -65,7 +65,7 @@ export async function getCurrentMonthBookingCounts() {
       funeral: 0,
       thanksgiving: 0,
       others: 0,
-      error: error.message
+      error: error.message,
     }
   }
 }
@@ -118,7 +118,7 @@ export async function getBookingTrends(monthsBack = 6) {
           .from('others')
           .select('id', { count: 'exact', head: true })
           .gte('created_at', startDate)
-          .lte('created_at', endDate + 'T23:59:59')
+          .lte('created_at', endDate + 'T23:59:59'),
       ])
 
       results.push({
@@ -127,7 +127,7 @@ export async function getBookingTrends(monthsBack = 6) {
         wedding: weddingRes.count || 0,
         funeral: funeralRes.count || 0,
         thanksgiving: thanksgivingRes.count || 0,
-        others: othersRes.count || 0
+        others: othersRes.count || 0,
       })
     } catch (error) {
       console.error(`Error fetching trends for ${year}-${month}:`, error)
@@ -137,12 +137,78 @@ export async function getBookingTrends(monthsBack = 6) {
         wedding: 0,
         funeral: 0,
         thanksgiving: 0,
-        others: 0
+        others: 0,
       })
     }
   }
 
   return results
+}
+
+/**
+ * Get detailed bookings for the current month
+ */
+export async function getDetailedBookings() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const startDate = `${year}-${month}-01`
+
+  // Calculate last day of current month
+  const nextMonth = new Date(year, now.getMonth() + 1, 1)
+  const lastDay = new Date(nextMonth - 1)
+  const endDate = `${year}-${month}-${String(lastDay.getDate()).padStart(2, '0')}`
+
+  try {
+    const [baptismRes, weddingRes, funeralRes, thanksgivingRes, othersRes] = await Promise.all([
+      supabase
+        .from('baptism_bookings')
+        .select('*')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate + 'T23:59:59'),
+
+      supabase
+        .from('wedding_bookings')
+        .select('*')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate + 'T23:59:59'),
+
+      supabase
+        .from('funeral_bookings')
+        .select('*')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate + 'T23:59:59'),
+
+      supabase
+        .from('thanksgiving_bookings')
+        .select('*')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate + 'T23:59:59'),
+
+      supabase
+        .from('others')
+        .select('*')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate + 'T23:59:59'),
+    ])
+
+    return {
+      baptism: baptismRes.data || [],
+      wedding: weddingRes.data || [],
+      funeral: funeralRes.data || [],
+      thanksgiving: thanksgivingRes.data || [],
+      others: othersRes.data || [],
+    }
+  } catch (error) {
+    console.error('Error fetching detailed bookings:', error)
+    return {
+      baptism: [],
+      wedding: [],
+      funeral: [],
+      thanksgiving: [],
+      others: [],
+    }
+  }
 }
 
 /**
@@ -154,7 +220,7 @@ export function useBookingStats() {
     wedding: 0,
     funeral: 0,
     thanksgiving: 0,
-    others: 0
+    others: 0,
   })
 
   const trendData = ref([])
@@ -200,6 +266,6 @@ export function useBookingStats() {
     loading,
     error,
     loadCurrentMonthStats,
-    loadTrendData
+    loadTrendData,
   }
 }
