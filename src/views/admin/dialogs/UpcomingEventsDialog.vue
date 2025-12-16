@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
+import { supabase } from '@/utils/supabase'
 import { useBaptismStore } from '@/stores/baptismBookingData.js'
 import { useWeddingStore } from '@/stores/weddingBookingData.js'
 import { useFuneralStore } from '@/stores/funeralBookingData.js'
@@ -22,6 +23,8 @@ const otherStore = useOtherStore()
 const usersStore = useUsersStore()
 
 const error = ref(null)
+const successMessage = ref(null)
+const sendingSmsId = ref(null)
 
 const headers = [
   { title: 'ID', key: 'id', sortable: true },
@@ -179,18 +182,32 @@ const getPhoneNumber = (userId) => {
   return user ? user.phone : null
 }
 
-const sendSms = (item) => {
+const sendSms = async (item) => {
   const phoneNumber = getPhoneNumber(item.user_id)
   if (!phoneNumber) {
     return
   }
 
-  const message = `Hello ${item.full_name}, this is a reminder for your upcoming ${item.event_type} event on ${formatDate(item.event_date)} at ${formatTime(item.event_time)}.`
-  const encodedMessage = encodeURIComponent(message)
+  sendingSmsId.value = item.id
+  error.value = null
+  successMessage.value = null
 
-  // Use window.location.href instead of window.open for protocol handlers
-  // This avoids "Failed to open URI" errors in some browsers/environments
-  window.location.href = `sms:${phoneNumber}?body=${encodedMessage}`
+  const message = `Hello ${item.full_name}, this is a reminder for your upcoming ${item.event_type} event on ${formatDate(item.event_date)} at ${formatTime(item.event_time)}.`
+
+  try {
+    const { data, error: funcError } = await supabase.functions.invoke('send-sms', {
+      body: { phone: phoneNumber, message: message },
+    })
+
+    if (funcError) throw funcError
+
+    successMessage.value = `SMS sent successfully to ${item.full_name}`
+  } catch (err) {
+    console.error('Error sending SMS:', err)
+    error.value = 'Failed to send SMS: ' + (err.message || 'Unknown error')
+  } finally {
+    sendingSmsId.value = null
+  }
 }
 </script>
 
@@ -208,8 +225,25 @@ const sendSms = (item) => {
       <v-divider></v-divider>
 
       <v-card-text class="pa-0">
-        <v-alert v-if="error" type="error" variant="tonal" class="ma-4">
+        <v-alert
+          v-if="error"
+          type="error"
+          variant="tonal"
+          class="ma-4"
+          closable
+          @click:close="error = null"
+        >
           {{ error }}
+        </v-alert>
+        <v-alert
+          v-if="successMessage"
+          type="success"
+          variant="tonal"
+          class="ma-4"
+          closable
+          @click:close="successMessage = null"
+        >
+          {{ successMessage }}
         </v-alert>
 
         <v-data-table
@@ -250,7 +284,8 @@ const sendSms = (item) => {
               size="small"
               class="text-none"
               @click="sendSms(item)"
-              :disabled="!getPhoneNumber(item.user_id)"
+              :loading="sendingSmsId === item.id"
+              :disabled="!getPhoneNumber(item.user_id) || sendingSmsId === item.id"
               :title="
                 getPhoneNumber(item.user_id) ? 'Send SMS Reminder' : 'No phone number available'
               "
