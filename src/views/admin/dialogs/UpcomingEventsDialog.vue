@@ -187,7 +187,10 @@ const sendSms = (item) => {
 
   const message = `Hello ${item.full_name}, this is a reminder for your upcoming ${item.event_type} event on ${formatDate(item.event_date)} at ${formatTime(item.event_time)}.`
   const encodedMessage = encodeURIComponent(message)
-  window.open(`sms:${phoneNumber}?body=${encodedMessage}`, '_blank')
+
+  // Use window.location.href instead of window.open for protocol handlers
+  // This avoids "Failed to open URI" errors in some browsers/environments
+  window.location.href = `sms:${phoneNumber}?body=${encodedMessage}`
 }
 </script>
 
