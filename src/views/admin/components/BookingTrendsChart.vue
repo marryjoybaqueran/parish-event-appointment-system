@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useBookingStats } from '../composables/bookingStats.js'
+import { useBookingStats, getDetailedBookings } from '../composables/bookingStats.js'
 import { exportBookingTrendsReport, exportBookingTrendsExcel } from '../utils/exportReport.js'
 import BookingTrendsTable from './BookingTrendsTable.vue'
 import { Line } from 'vue-chartjs'
@@ -13,7 +13,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 } from 'chart.js'
 
 // Register Chart.js components
@@ -25,10 +25,11 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 )
 
-const { currentMonthCounts, trendData, loading, error, loadCurrentMonthStats, loadTrendData } = useBookingStats()
+const { currentMonthCounts, trendData, loading, error, loadCurrentMonthStats, loadTrendData } =
+  useBookingStats()
 
 const selectedPeriod = ref(6) // months
 const showTableView = ref(false)
@@ -41,54 +42,54 @@ const chartData = computed(() => {
   if (!trendData.value || trendData.value.length === 0) {
     return {
       labels: [],
-      datasets: []
+      datasets: [],
     }
   }
 
   return {
-    labels: trendData.value.map(d => d.month),
+    labels: trendData.value.map((d) => d.month),
     datasets: [
       {
         label: 'Baptism',
-        data: trendData.value.map(d => d.baptism),
+        data: trendData.value.map((d) => d.baptism),
         borderColor: '#2196F3',
         backgroundColor: 'rgba(33, 150, 243, 0.1)',
         tension: 0.4,
-        fill: true
+        fill: true,
       },
       {
         label: 'Wedding',
-        data: trendData.value.map(d => d.wedding),
+        data: trendData.value.map((d) => d.wedding),
         borderColor: '#E91E63',
         backgroundColor: 'rgba(233, 30, 99, 0.1)',
         tension: 0.4,
-        fill: true
+        fill: true,
       },
       {
         label: 'Funeral',
-        data: trendData.value.map(d => d.funeral),
+        data: trendData.value.map((d) => d.funeral),
         borderColor: '#795548',
         backgroundColor: 'rgba(121, 85, 72, 0.1)',
         tension: 0.4,
-        fill: true
+        fill: true,
       },
       {
         label: 'Thanksgiving',
-        data: trendData.value.map(d => d.thanksgiving),
+        data: trendData.value.map((d) => d.thanksgiving),
         borderColor: '#9C27B0',
         backgroundColor: 'rgba(156, 39, 176, 0.1)',
         tension: 0.4,
-        fill: true
+        fill: true,
       },
       {
         label: 'Others',
-        data: trendData.value.map(d => d.others),
+        data: trendData.value.map((d) => d.others),
         borderColor: '#607D8B',
         backgroundColor: 'rgba(96, 125, 139, 0.1)',
         tension: 0.4,
-        fill: true
-      }
-    ]
+        fill: true,
+      },
+    ],
   }
 })
 
@@ -103,9 +104,9 @@ const chartOptions = {
         usePointStyle: true,
         padding: 15,
         font: {
-          size: 12
-        }
-      }
+          size: 12,
+        },
+      },
     },
     tooltip: {
       mode: 'index',
@@ -113,34 +114,34 @@ const chartOptions = {
       backgroundColor: 'rgba(0, 0, 0, 0.8)',
       padding: 12,
       titleFont: {
-        size: 14
+        size: 14,
       },
       bodyFont: {
-        size: 13
-      }
-    }
+        size: 13,
+      },
+    },
   },
   scales: {
     y: {
       beginAtZero: true,
       ticks: {
-        stepSize: 1
+        stepSize: 1,
       },
       grid: {
-        color: 'rgba(0, 0, 0, 0.05)'
-      }
+        color: 'rgba(0, 0, 0, 0.05)',
+      },
     },
     x: {
       grid: {
-        display: false
-      }
-    }
+        display: false,
+      },
+    },
   },
   interaction: {
     mode: 'nearest',
     axis: 'x',
-    intersect: false
-  }
+    intersect: false,
+  },
 }
 
 const currentMonthStats = computed(() => {
@@ -150,7 +151,7 @@ const currentMonthStats = computed(() => {
     { type: 'Wedding', count: counts.wedding, color: '#E91E63', icon: 'mdi-heart' },
     { type: 'Funeral', count: counts.funeral, color: '#795548', icon: 'mdi-candle' },
     { type: 'Thanksgiving', count: counts.thanksgiving, color: '#9C27B0', icon: 'mdi-hands-pray' },
-    { type: 'Others', count: counts.others, color: '#607D8B', icon: 'mdi-dots-horizontal' }
+    { type: 'Others', count: counts.others, color: '#607D8B', icon: 'mdi-dots-horizontal' },
   ]
 })
 
@@ -172,10 +173,12 @@ async function confirmExport() {
   exportDialog.value = false
 
   try {
+    const detailedBookings = await getDetailedBookings()
+
     if (selectedFormat.value === 'docx') {
-      await exportBookingTrendsReport(trendData.value, currentMonthCounts.value)
+      await exportBookingTrendsReport(trendData.value, currentMonthCounts.value, detailedBookings)
     } else if (selectedFormat.value === 'excel') {
-      await exportBookingTrendsExcel(trendData.value, currentMonthCounts.value)
+      await exportBookingTrendsExcel(trendData.value, currentMonthCounts.value, detailedBookings)
     }
     exportSuccess.value = true
     setTimeout(() => {
@@ -190,10 +193,7 @@ async function confirmExport() {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    loadCurrentMonthStats(),
-    loadTrendData(selectedPeriod.value)
-  ])
+  await Promise.all([loadCurrentMonthStats(), loadTrendData(selectedPeriod.value)])
 })
 </script>
 
@@ -258,10 +258,7 @@ onMounted(async () => {
           <p class="mb-4 text-body-2">Choose the format for your booking trends report:</p>
 
           <v-radio-group v-model="selectedFormat">
-            <v-radio
-              value="docx"
-              color="primary"
-            >
+            <v-radio value="docx" color="primary">
               <template #label>
                 <div class="d-flex align-center">
                   <v-icon color="blue" class="mr-2">mdi-file-word</v-icon>
@@ -273,10 +270,7 @@ onMounted(async () => {
               </template>
             </v-radio>
 
-            <v-radio
-              value="excel"
-              color="success"
-            >
+            <v-radio value="excel" color="success">
               <template #label>
                 <div class="d-flex align-center">
                   <v-icon color="green" class="mr-2">mdi-file-excel</v-icon>
@@ -294,30 +288,15 @@ onMounted(async () => {
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            variant="text"
-            @click="exportDialog = false"
-          >
-            Cancel
-          </v-btn>
-          <v-btn
-            color="success"
-            variant="elevated"
-            :loading="exporting"
-            @click="confirmExport"
-          >
+          <v-btn variant="text" @click="exportDialog = false"> Cancel </v-btn>
+          <v-btn color="success" variant="elevated" :loading="exporting" @click="confirmExport">
             Export
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-snackbar
-      v-model="exportSuccess"
-      color="success"
-      timeout="3000"
-      location="top"
-    >
+    <v-snackbar v-model="exportSuccess" color="success" timeout="3000" location="top">
       <v-icon>mdi-check-circle</v-icon>
       Report exported successfully!
     </v-snackbar>
@@ -328,27 +307,17 @@ onMounted(async () => {
       <!-- Current Month Stats -->
       <div class="mb-6">
         <h3 class="text-subtitle-1 font-weight-bold mb-3">
-          Current Month Summary ({{ new Date().toLocaleString('default', { month: 'long', year: 'numeric' }) }})
+          Current Month Summary ({{
+            new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+          }})
         </h3>
 
-        <v-alert
-          v-if="error"
-          type="error"
-          variant="tonal"
-          density="compact"
-          class="mb-3"
-        >
+        <v-alert v-if="error" type="error" variant="tonal" density="compact" class="mb-3">
           {{ error }}
         </v-alert>
 
         <v-row v-if="!loading" dense>
-          <v-col
-            v-for="stat in currentMonthStats"
-            :key="stat.type"
-            cols="6"
-            sm="4"
-            md="2"
-          >
+          <v-col v-for="stat in currentMonthStats" :key="stat.type" cols="6" sm="4" md="2">
             <div
               class="pa-3 rounded-lg text-center"
               :style="{ backgroundColor: stat.color + '15', border: `2px solid ${stat.color}40` }"
@@ -363,7 +332,10 @@ onMounted(async () => {
           <v-col cols="12" sm="4" md="2">
             <div
               class="pa-3 rounded-lg text-center"
-              style="background: linear-gradient(135deg, #667eea15, #764ba215); border: 2px solid #667eea40"
+              style="
+                background: linear-gradient(135deg, #667eea15, #764ba215);
+                border: 2px solid #667eea40;
+              "
             >
               <v-icon color="primary" size="28" class="mb-1">mdi-sigma</v-icon>
               <div class="text-h5 font-weight-bold text-primary">
@@ -380,22 +352,14 @@ onMounted(async () => {
       </div>
 
       <!-- Table View -->
-      <BookingTrendsTable
-        v-if="showTableView"
-        :trend-data="trendData"
-        :loading="loading"
-      />
+      <BookingTrendsTable v-if="showTableView" :trend-data="trendData" :loading="loading" />
 
       <!-- Trends Chart -->
       <div v-else class="chart-container" style="height: 350px; position: relative">
         <div v-if="loading" class="d-flex align-center justify-center" style="height: 100%">
           <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
         </div>
-        <Line
-          v-else-if="chartData.labels.length > 0"
-          :data="chartData"
-          :options="chartOptions"
-        />
+        <Line v-else-if="chartData.labels.length > 0" :data="chartData" :options="chartOptions" />
         <div v-else class="d-flex align-center justify-center text-grey" style="height: 100%">
           <div class="text-center">
             <v-icon size="64" color="grey-lighten-1">mdi-chart-line-variant</v-icon>
