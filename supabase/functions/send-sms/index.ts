@@ -1,12 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 serve(async (req) => {
   // 1. Handle CORS (so your frontend can call this)
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    } })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
@@ -16,6 +18,10 @@ serve(async (req) => {
     // 3. Get your Secrets (we will set these in the next step)
     const API_KEY = Deno.env.get('TEXTBEE_API_KEY')
     const DEVICE_ID = Deno.env.get('TEXTBEE_DEVICE_ID')
+
+    if (!API_KEY || !DEVICE_ID) {
+      throw new Error("Missing TextBee API Key or Device ID")
+    }
 
     if (!phone || !message) {
       throw new Error("Missing phone or message")
@@ -37,13 +43,13 @@ serve(async (req) => {
     const data = await res.text()
 
     return new Response(data, {
-      headers: { "Content-Type": "application/json", 'Access-Control-Allow-Origin': '*' }
+      headers: { "Content-Type": "application/json", ...corsHeaders }
     })
 
-  } catch (error) {
+  } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
-      headers: { "Content-Type": "application/json", 'Access-Control-Allow-Origin': '*' }
+      headers: { "Content-Type": "application/json", ...corsHeaders }
     })
   }
 })
