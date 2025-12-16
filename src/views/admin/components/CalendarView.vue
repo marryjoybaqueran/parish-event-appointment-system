@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineProps, defineEmits, onMounted, onUpdated, watch } from 'vue'
+import { ref, onMounted, onUpdated, watch } from 'vue'
 import { CalendarView } from 'vue-simple-calendar'
 import 'vue-simple-calendar/dist/vue-simple-calendar.css'
 import '../styles/calendar-theme.css'
@@ -8,48 +8,48 @@ import { EVENT_LEGEND } from '../utils/constants.ts'
 const props = defineProps({
   loading: {
     type: Boolean,
-    default: false
+    default: false,
   },
   error: {
     type: String,
-    default: null
+    default: null,
   },
   calendarEvents: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   currentPeriodStart: {
     type: Date,
-    required: true
+    required: true,
   },
   displayPeriodUom: {
     type: String,
-    default: 'month'
+    default: 'month',
   },
   displayPeriodCount: {
     type: Number,
-    default: 1
+    default: 1,
   },
   startingDayOfWeek: {
     type: Number,
-    default: 0
+    default: 0,
   },
   displayPeriodLabel: {
     type: String,
-    default: ''
+    default: '',
   },
   currentView: {
     type: String,
-    default: 'month'
+    default: 'month',
   },
   calendarViews: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   conflictsCount: {
     type: Number,
-    default: 0
-  }
+    default: 0,
+  },
 })
 
 const emit = defineEmits([
@@ -59,7 +59,7 @@ const emit = defineEmits([
   'next-period',
   'today',
   'change-view',
-  'refresh'
+  'refresh',
 ])
 
 const calendarRef = ref(null)
@@ -120,7 +120,7 @@ const markPastDates = () => {
   // Use nextTick to ensure DOM is updated
   setTimeout(() => {
     const dayElements = document.querySelectorAll('.cv-day')
-    dayElements.forEach(dayEl => {
+    dayElements.forEach((dayEl) => {
       const dayNumber = parseInt(dayEl.querySelector('.cv-day-number')?.textContent)
       if (dayNumber && !isNaN(dayNumber)) {
         const currentMonth = props.currentPeriodStart.getMonth()
@@ -138,9 +138,12 @@ const markPastDates = () => {
 }
 
 // Watch for period changes and re-mark past dates
-watch(() => props.currentPeriodStart, () => {
-  markPastDates()
-})
+watch(
+  () => props.currentPeriodStart,
+  () => {
+    markPastDates()
+  },
+)
 
 // Mark past dates after component is mounted and updated
 onMounted(() => {
@@ -166,14 +169,7 @@ onUpdated(() => {
             @click="goToPreviousPeriod"
           ></v-btn>
 
-          <v-btn
-            color="primary"
-            variant="elevated"
-            class="mx-2"
-            @click="goToToday"
-          >
-            Today
-          </v-btn>
+          <v-btn color="primary" variant="elevated" class="mx-2" @click="goToToday"> Today </v-btn>
 
           <v-btn
             icon="mdi-chevron-right"
@@ -243,37 +239,23 @@ onUpdated(() => {
           </span>
         </div>
         <div class="text-caption mt-1">
-          Events with red borders have scheduling conflicts. Click on conflicting events for details.
+          Events with red borders have scheduling conflicts. Click on conflicting events for
+          details.
         </div>
       </v-alert>
     </v-card-text>
 
     <!-- Loading State -->
     <div v-if="loading" class="d-flex justify-center align-center pa-8">
-      <v-progress-circular
-        indeterminate
-        color="primary"
-        size="48"
-      ></v-progress-circular>
+      <v-progress-circular indeterminate color="primary" size="48"></v-progress-circular>
       <span class="ms-4 text-subtitle-1">Loading calendar events...</span>
     </div>
 
     <!-- Error State -->
-    <v-alert
-      v-else-if="error"
-      type="error"
-      variant="tonal"
-      class="ma-6"
-    >
+    <v-alert v-else-if="error" type="error" variant="tonal" class="ma-6">
       {{ error }}
       <template #append>
-        <v-btn
-          color="error"
-          variant="text"
-          @click="handleRefresh"
-        >
-          Retry
-        </v-btn>
+        <v-btn color="error" variant="text" @click="handleRefresh"> Retry </v-btn>
       </template>
     </v-alert>
 
@@ -299,16 +281,12 @@ onUpdated(() => {
 
     <!-- Empty State -->
     <div v-else class="text-center pa-8">
-      <v-icon color="grey-lighten-1" size="64" class="mb-4">
-        mdi-calendar-blank
-      </v-icon>
+      <v-icon color="grey-lighten-1" size="64" class="mb-4"> mdi-calendar-blank </v-icon>
       <h3 class="text-h6 text-grey-darken-1 mb-2">No Events Found</h3>
       <p class="text-body-2 text-grey mb-4">
         No events are currently scheduled. Events from approved bookings will appear here.
       </p>
-      <v-btn color="primary" variant="elevated" @click="handleRefresh">
-        Refresh Calendar
-      </v-btn>
+      <v-btn color="primary" variant="elevated" @click="handleRefresh"> Refresh Calendar </v-btn>
     </div>
   </v-card>
 </template>

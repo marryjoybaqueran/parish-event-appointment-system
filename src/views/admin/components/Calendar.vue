@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, defineOptions, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import CalendarDialog from '../dialogs/CalendarDialog.vue'
 import ViewEventDialog from '../dialogs/ViewEventDialog.vue'
 import CalendarView from './CalendarView.vue'
@@ -11,17 +11,18 @@ import { useCalendarTabManager } from '../composables/calendarTabManager'
 
 // Component name for ESLint multi-word rule
 defineOptions({
-  name: 'EventCalendar'
+  name: 'EventCalendar',
 })
 
 // Calendar composable
 const { loading, error, allEvents, fetchAllEvents } = useCalendarFetch()
 
 // Approval composable para sa booking actions (using new actionQuery)
-const { approveEvent, denyEvent, deleteEvent} = useActionQuery()
+const { approveEvent, denyEvent, deleteEvent } = useActionQuery()
 
 // Conflict detection composable
-const { detectConflicts, hasConflicts, getConflictSeverity, conflictsCount } = useConflictDetection()
+const { detectConflicts, hasConflicts, getConflictSeverity, conflictsCount } =
+  useConflictDetection()
 
 // Tab manager composable
 const { activeTab, tabs } = useCalendarTabManager()
@@ -44,14 +45,14 @@ const currentPeriodStart = ref(new Date())
 const calendarViews = [
   { title: 'Month', value: 'month', icon: 'mdi-calendar-month' },
   { title: 'Week', value: 'week', icon: 'mdi-calendar-week' },
-  { title: 'Day', value: 'day', icon: 'mdi-calendar-today' }
+  { title: 'Day', value: 'day', icon: 'mdi-calendar-today' },
 ]
 
 const currentView = ref('month')
 
 // Computed properties
 const calendarEvents = computed(() => {
-  const events = allEvents.value.map(event => ({
+  const events = allEvents.value.map((event) => ({
     id: event.id,
     title: event.title,
     startDate: new Date(event.startDate),
@@ -59,21 +60,21 @@ const calendarEvents = computed(() => {
     classes: event.classes || [`event-${event.category}`],
     style: {
       backgroundColor: event.color,
-      color: getContrastYIQ(event.color)
+      color: getContrastYIQ(event.color),
     },
     // Keep original event data for dialog
     originalEvent: event,
     // Add conflict data
     category: event.category,
     status: event.status,
-    time: event.time
+    time: event.time,
   }))
 
   // Detect conflicts whenever events change
   detectConflicts(events)
 
   // Add conflict indicators to events
-  return events.map(event => {
+  return events.map((event) => {
     const hasConflict = hasConflicts(event.id)
     const conflictSeverity = getConflictSeverity(event.id)
 
@@ -88,8 +89,8 @@ const calendarEvents = computed(() => {
         style: {
           ...event.style,
           border: `2px solid ${conflictColor}`,
-          boxShadow: `0 0 8px ${conflictColor}40`
-        }
+          boxShadow: `0 0 8px ${conflictColor}40`,
+        },
       }
     }
 
@@ -103,7 +104,7 @@ const displayPeriodLabel = computed(() => {
   const start = currentPeriodStart.value
   const options = {
     year: 'numeric',
-    month: 'long'
+    month: 'long',
   }
 
   if (currentView.value === 'week') {
@@ -115,7 +116,7 @@ const displayPeriodLabel = computed(() => {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     })
   }
 
@@ -126,11 +127,11 @@ const displayPeriodLabel = computed(() => {
 const getContrastYIQ = (hexcolor) => {
   if (!hexcolor) return '#000000'
 
-  const r = parseInt(hexcolor.substr(1,2),16)
-  const g = parseInt(hexcolor.substr(3,2),16)
-  const b = parseInt(hexcolor.substr(5,2),16)
-  const yiq = ((r*299)+(g*587)+(b*114))/1000
-  return (yiq >= 128) ? '#000000' : '#FFFFFF'
+  const r = parseInt(hexcolor.substr(1, 2), 16)
+  const g = parseInt(hexcolor.substr(3, 2), 16)
+  const b = parseInt(hexcolor.substr(5, 2), 16)
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000
+  return yiq >= 128 ? '#000000' : '#FFFFFF'
 }
 
 // Helper function to check if a date is in the past
@@ -162,7 +163,7 @@ const handleDateClick = (clickedDate) => {
   selectedDate.value = dateStr
 
   // Get events for the clicked date - fix comparison with Date objects
-  eventsForSelectedDate.value = allEvents.value.filter(event => {
+  eventsForSelectedDate.value = allEvents.value.filter((event) => {
     // Compare using the eventDate string property or format the startDate
     if (event.eventDate) {
       return event.eventDate === dateStr
@@ -189,7 +190,7 @@ const handleEventClick = (event) => {
   const clickedEventData = {
     clickedEvent: event,
     originalEvent: event?.originalEvent,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   }
 
   try {
@@ -337,18 +338,22 @@ onMounted(async () => {
 })
 
 // Watch for changes in allEvents and re-detect conflicts
-watch(allEvents, () => {
-  const events = allEvents.value.map(event => ({
-    id: event.id,
-    title: event.title,
-    startDate: new Date(event.startDate),
-    endDate: event.endDate ? new Date(event.endDate) : new Date(event.startDate),
-    category: event.category,
-    status: event.status,
-    time: event.time
-  }))
-  detectConflicts(events)
-}, { deep: true })
+watch(
+  allEvents,
+  () => {
+    const events = allEvents.value.map((event) => ({
+      id: event.id,
+      title: event.title,
+      startDate: new Date(event.startDate),
+      endDate: event.endDate ? new Date(event.endDate) : new Date(event.startDate),
+      category: event.category,
+      status: event.status,
+      time: event.time,
+    }))
+    detectConflicts(events)
+  },
+  { deep: true },
+)
 </script>
 
 <template>
@@ -374,12 +379,7 @@ watch(allEvents, () => {
         slider-color="white"
         density="compact"
       >
-        <v-tab
-          v-for="tab in tabs"
-          :key="tab.value"
-          :value="tab.value"
-          class="text-white"
-        >
+        <v-tab v-for="tab in tabs" :key="tab.value" :value="tab.value" class="text-white">
           <v-icon :icon="tab.icon" class="me-2"></v-icon>
           {{ tab.title }}
         </v-tab>
@@ -416,12 +416,7 @@ watch(allEvents, () => {
     </v-card>
 
     <!-- Table View Card (Conditionally Rendered) -->
-    <v-card
-      v-if="activeTab === 'table'"
-      elevation="2"
-      rounded="lg"
-      class="mt-0 table-view-card"
-    >
+    <v-card v-if="activeTab === 'table'" elevation="2" rounded="lg" class="mt-0 table-view-card">
       <CalendarTableView
         :events="allEvents"
         :loading="loading"

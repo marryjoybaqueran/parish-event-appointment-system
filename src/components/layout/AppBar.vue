@@ -10,11 +10,12 @@ const notificationStore = useNotificationStore()
 // Authentication state
 const isLoggedIn = ref(false)
 
-
 // Load functions during component mounting
 onMounted(async () => {
   isLoggedIn.value = await authStore.isAuthenticated()
-  await notificationStore.loadStoredNotifications()
+  if (isLoggedIn.value) {
+    await notificationStore.loadStoredNotifications()
+  }
 })
 </script>
 
@@ -28,12 +29,7 @@ onMounted(async () => {
     grow
   >
     <!-- HOME -->
-    <v-btn
-      value="home"
-      class="bottom-nav-btn"
-      to="/homepage"
-      size="large"
-    >
+    <v-btn value="home" class="bottom-nav-btn" to="/homepage" size="large">
       <v-icon class="bottom-nav-icon" size="24">mdi-home</v-icon>
       <span class="bottom-nav-text">HOME</span>
     </v-btn>
@@ -50,23 +46,13 @@ onMounted(async () => {
     </v-btn>
 
     <!-- EVENTS -->
-    <v-btn
-      value="events"
-      class="bottom-nav-btn"
-      to="/events"
-      size="large"
-    >
+    <v-btn value="events" class="bottom-nav-btn" to="/events" size="large">
       <v-icon class="bottom-nav-icon" size="24">mdi-calendar-multiselect</v-icon>
       <span class="bottom-nav-text">EVENTS</span>
     </v-btn>
 
     <!-- NOTIFICATIONS -->
-    <v-btn
-      value="notifications"
-      class="bottom-nav-btn"
-      to="/notifications"
-      size="large"
-    >
+    <v-btn value="notifications" class="bottom-nav-btn" to="/notifications" size="large">
       <v-badge
         :model-value="notificationStore.hasUnreadNotifications"
         :content="notificationStore.unreadCount"
@@ -81,7 +67,7 @@ onMounted(async () => {
     </v-btn>
 
     <!-- THEME TOGGLE -->
-  <!-- theme toggle removed -->
+    <!-- theme toggle removed -->
   </v-bottom-navigation>
 </template>
 
@@ -222,37 +208,39 @@ onMounted(async () => {
 
 /* ===== ANIMATIONS ===== */
 @keyframes sunPulse {
-  0%, 100% { 
+  0%,
+  100% {
     transform: scale(1);
     filter: brightness(1);
   }
-  50% { 
+  50% {
     transform: scale(1.1);
     filter: brightness(1.2);
   }
 }
 
 @keyframes moonRotate {
-  0%, 100% { 
+  0%,
+  100% {
     transform: rotate(0deg);
     filter: brightness(1);
   }
-  50% { 
+  50% {
     transform: rotate(15deg);
     filter: brightness(1.1);
   }
 }
 
 @keyframes notificationPulse {
-  0% { 
+  0% {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
   }
-  70% { 
+  70% {
     transform: scale(1.1);
     box-shadow: 0 0 0 6px rgba(244, 67, 54, 0);
   }
-  100% { 
+  100% {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
   }
@@ -314,11 +302,11 @@ onMounted(async () => {
   .bottom-nav-text {
     font-size: 10px;
   }
-  
+
   .bottom-nav-icon {
     margin-bottom: 1px;
   }
-  
+
   .bottom-nav-btn {
     margin: 2px;
   }
@@ -340,7 +328,7 @@ onMounted(async () => {
     transform: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
-  
+
   .bottom-nav-btn:active {
     transform: scale(0.95);
     transition: transform 0.1s ease;

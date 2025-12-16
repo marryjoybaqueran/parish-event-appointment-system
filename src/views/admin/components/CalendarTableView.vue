@@ -1,25 +1,31 @@
 <script setup>
-import { computed, ref, defineProps, defineEmits } from 'vue'
+import { computed, ref } from 'vue'
 import { EVENT_LEGEND } from '../utils/constants.ts'
 
 // Props
 const props = defineProps({
   events: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   loading: {
     type: Boolean,
-    default: false
+    default: false,
   },
   viewOnly: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 })
 
 // Emits
-const emit = defineEmits(['edit-event', 'approve-event', 'deny-event', 'delete-event', 'view-event'])
+const emit = defineEmits([
+  'edit-event',
+  'approve-event',
+  'deny-event',
+  'delete-event',
+  'view-event',
+])
 
 // Table configuration
 const itemsPerPage = ref(10)
@@ -33,7 +39,7 @@ const itemsPerPageOptions = [
   { value: 10, title: '10' },
   { value: 25, title: '25' },
   { value: 50, title: '50' },
-  { value: -1, title: 'All' }
+  { value: -1, title: 'All' },
 ]
 
 // Table headers
@@ -43,54 +49,54 @@ const headers = [
     align: 'start',
     sortable: true,
     key: 'title',
-    width: '25%'
+    width: '25%',
   },
   {
     title: 'Category',
     align: 'center',
     sortable: true,
     key: 'category',
-    width: '15%'
+    width: '15%',
   },
   {
     title: 'Date',
     align: 'center',
     sortable: true,
     key: 'startDate',
-    width: '15%'
+    width: '15%',
   },
   {
     title: 'Time',
     align: 'center',
     sortable: true,
     key: 'time',
-    width: '10%'
+    width: '10%',
   },
   {
     title: 'Status',
     align: 'center',
     sortable: true,
     key: 'status',
-    width: '10%'
+    width: '10%',
   },
   {
     title: 'Actions',
     align: 'center',
     sortable: false,
     key: 'actions',
-    width: '10%'
-  }
+    width: '10%',
+  },
 ]
 
 // Computed properties
 const tableEvents = computed(() => {
-  return props.events.map(event => ({
+  return props.events.map((event) => ({
     ...event,
     formattedDate: formatDate(event.startDate),
     formattedTime: event.time || 'All Day',
     statusColor: getStatusColor(event.status),
     categoryInfo: getCategoryInfo(event.category),
-    bookingOwnerDisplay: getBookingOwner(event)
+    bookingOwnerDisplay: getBookingOwner(event),
   }))
 })
 
@@ -101,7 +107,7 @@ const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     })
   } catch {
     return 'Invalid Date'
@@ -124,15 +130,18 @@ const getStatusColor = (status) => {
 }
 
 const getCategoryInfo = (category) => {
-  const legend = EVENT_LEGEND.find(item =>
-    item.label.toLowerCase().includes(category?.toLowerCase()) ||
-    category?.toLowerCase().includes(item.label.toLowerCase())
+  const legend = EVENT_LEGEND.find(
+    (item) =>
+      item.label.toLowerCase().includes(category?.toLowerCase()) ||
+      category?.toLowerCase().includes(item.label.toLowerCase()),
   )
-  return legend || {
-    label: category || 'General',
-    color: 'primary',
-    icon: 'mdi-calendar'
-  }
+  return (
+    legend || {
+      label: category || 'General',
+      color: 'primary',
+      icon: 'mdi-calendar',
+    }
+  )
 }
 
 const getBookingOwner = (event) => {
@@ -221,7 +230,7 @@ const canDelete = () => {
       </div>
 
       <!-- Search -->
-      <div class="search-container" style="max-width: 300px;">
+      <div class="search-container" style="max-width: 300px">
         <v-text-field
           v-model="search"
           append-inner-icon="mdi-magnify"
@@ -251,11 +260,7 @@ const canDelete = () => {
     >
       <!-- Category Column -->
       <template #[`item.category`]="{ item }">
-        <v-chip
-          :color="item.categoryInfo.color"
-          size="small"
-          variant="tonal"
-        >
+        <v-chip :color="item.categoryInfo.color" size="small" variant="tonal">
           <v-icon :icon="item.categoryInfo.icon" size="16" class="me-1"></v-icon>
           {{ item.categoryInfo.label }}
         </v-chip>
@@ -277,11 +282,7 @@ const canDelete = () => {
 
       <!-- Status Column -->
       <template #[`item.status`]="{ item }">
-        <v-chip
-          :color="item.statusColor"
-          size="small"
-          variant="tonal"
-        >
+        <v-chip :color="item.statusColor" size="small" variant="tonal">
           {{ item.status || 'Unknown' }}
         </v-chip>
       </template>
@@ -359,11 +360,7 @@ const canDelete = () => {
       <!-- Loading State -->
       <template #loading>
         <div class="d-flex justify-center align-center pa-8">
-          <v-progress-circular
-            indeterminate
-            color="primary"
-            size="48"
-          ></v-progress-circular>
+          <v-progress-circular indeterminate color="primary" size="48"></v-progress-circular>
           <span class="ms-4">Loading events...</span>
         </div>
       </template>
@@ -371,9 +368,7 @@ const canDelete = () => {
       <!-- No Data State -->
       <template #no-data>
         <div class="text-center pa-8">
-          <v-icon color="grey-lighten-1" size="64" class="mb-4">
-            mdi-calendar-blank
-          </v-icon>
+          <v-icon color="grey-lighten-1" size="64" class="mb-4"> mdi-calendar-blank </v-icon>
           <h3 class="text-h6 text-grey-darken-1 mb-2">No Events Found</h3>
           <p class="text-body-2 text-grey">
             No events match your search criteria or no events are currently scheduled.
@@ -386,7 +381,9 @@ const canDelete = () => {
         <div class="pa-4">
           <div class="d-flex align-center justify-space-between flex-wrap">
             <div class="text-body-2 text-grey">
-              Showing {{ Math.min((page - 1) * itemsPerPage + 1, tableEvents.length) }} to {{ Math.min(page * itemsPerPage, tableEvents.length) }} of {{ tableEvents.length }} event{{ tableEvents.length !== 1 ? 's' : '' }}
+              Showing {{ Math.min((page - 1) * itemsPerPage + 1, tableEvents.length) }} to
+              {{ Math.min(page * itemsPerPage, tableEvents.length) }} of
+              {{ tableEvents.length }} event{{ tableEvents.length !== 1 ? 's' : '' }}
             </div>
             <div class="d-flex align-center gap-4">
               <!-- Items per page selector -->
@@ -398,7 +395,7 @@ const canDelete = () => {
                   variant="outlined"
                   density="compact"
                   hide-details
-                  style="width: 80px;"
+                  style="width: 80px"
                 ></v-select>
               </div>
               <!-- Pagination -->
