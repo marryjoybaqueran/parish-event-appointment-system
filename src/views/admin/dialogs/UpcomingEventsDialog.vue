@@ -5,9 +5,10 @@ import { useWeddingStore } from '@/stores/weddingBookingData.js'
 import { useFuneralStore } from '@/stores/funeralBookingData.js'
 import { useThanksGivingStore } from '@/stores/thanksGivingBookingData.js'
 import { useOtherStore } from '@/stores/otherData.ts'
+import { useUsersStore } from '@/stores/usersData.js'
 
 const props = defineProps({
-  modelValue: Boolean
+  modelValue: Boolean,
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -18,6 +19,7 @@ const weddingStore = useWeddingStore()
 const funeralStore = useFuneralStore()
 const thanksgivingStore = useThanksGivingStore()
 const otherStore = useOtherStore()
+const usersStore = useUsersStore()
 
 const error = ref(null)
 
@@ -27,7 +29,8 @@ const headers = [
   { title: 'Name', key: 'full_name', sortable: true },
   { title: 'Event Date', key: 'event_date', sortable: true },
   { title: 'Time', key: 'event_time', sortable: false },
-  { title: 'Status', key: 'status', sortable: true }
+  { title: 'Status', key: 'status', sortable: true },
+  { title: 'Actions', key: 'actions', sortable: false, align: 'end' },
 ]
 
 const closeDialog = () => {
@@ -36,8 +39,13 @@ const closeDialog = () => {
 
 // Computed property for loading state
 const loading = computed(() => {
-  return baptismStore.loading || weddingStore.loading ||
-         funeralStore.loading || thanksgivingStore.loading || otherStore.loading
+  return (
+    baptismStore.loading ||
+    weddingStore.loading ||
+    funeralStore.loading ||
+    thanksgivingStore.loading ||
+    otherStore.loading
+  )
 })
 
 // Computed property to combine all upcoming bookings
@@ -47,61 +55,60 @@ const upcomingEvents = computed(() => {
 
   const allUpcomingBookings = [
     ...(baptismStore.bookings || [])
-      .filter(b => b.baptism_date && new Date(b.baptism_date) >= today)
-      .map(b => ({
+      .filter((b) => b.baptism_date && new Date(b.baptism_date) >= today)
+      .map((b) => ({
         ...b,
         event_type: 'Baptism',
         full_name: `${b.child_firstname || ''} ${b.child_lastname || ''}`.trim(),
         status: b.is_denied ? 'denied' : b.is_approved ? 'approved' : 'pending',
         event_date: b.baptism_date,
-        event_time: b.starting_time || 'N/A'
+        event_time: b.starting_time || 'N/A',
       })),
     ...(weddingStore.bookings || [])
-      .filter(b => b.wedding_date && new Date(b.wedding_date) >= today)
-      .map(b => ({
+      .filter((b) => b.wedding_date && new Date(b.wedding_date) >= today)
+      .map((b) => ({
         ...b,
         event_type: 'Wedding',
-        full_name: `${b.groom_firstname || ''} ${b.groom_lastname || ''} & ${b.bride_firstname || ''} ${b.bride_lastname || ''}`.trim(),
+        full_name:
+          `${b.groom_firstname || ''} ${b.groom_lastname || ''} & ${b.bride_firstname || ''} ${b.bride_lastname || ''}`.trim(),
         status: b.is_denied ? 'denied' : b.is_approved ? 'approved' : 'pending',
         event_date: b.wedding_date,
-        event_time: b.starting_time || 'N/A'
+        event_time: b.starting_time || 'N/A',
       })),
     ...(funeralStore.bookings || [])
-      .filter(b => b.funeral_date && new Date(b.funeral_date) >= today)
-      .map(b => ({
+      .filter((b) => b.funeral_date && new Date(b.funeral_date) >= today)
+      .map((b) => ({
         ...b,
         event_type: 'Funeral',
         full_name: `${b.deceased_firstname || ''} ${b.deceased_lastname || ''}`.trim(),
         status: b.is_denied ? 'denied' : b.is_approved ? 'approved' : 'pending',
         event_date: b.funeral_date,
-        event_time: b.starting_time || b.funeral_time || 'N/A'
+        event_time: b.starting_time || b.funeral_time || 'N/A',
       })),
     ...(thanksgivingStore.bookings || [])
-      .filter(b => b.thanksgiving_date && new Date(b.thanksgiving_date) >= today)
-      .map(b => ({
+      .filter((b) => b.thanksgiving_date && new Date(b.thanksgiving_date) >= today)
+      .map((b) => ({
         ...b,
         event_type: 'Thanksgiving',
         full_name: b.title || b.organizer || 'N/A',
         status: b.is_denied ? 'denied' : b.is_approved ? 'approved' : 'pending',
         event_date: b.thanksgiving_date,
-        event_time: b.starting_time || 'N/A'
+        event_time: b.starting_time || 'N/A',
       })),
     ...(otherStore.items || [])
-      .filter(b => b.date && new Date(b.date) >= today)
-      .map(b => ({
+      .filter((b) => b.date && new Date(b.date) >= today)
+      .map((b) => ({
         ...b,
         event_type: 'Other',
         full_name: b.title || 'N/A',
         status: b.is_denied ? 'denied' : b.is_approved ? 'approved' : 'pending',
         event_date: b.date,
-        event_time: b.starting_time || 'N/A'
-      }))
+        event_time: b.starting_time || 'N/A',
+      })),
   ]
 
   // Sort by event_date ascending (nearest first)
-  return allUpcomingBookings.sort((a, b) =>
-    new Date(a.event_date) - new Date(b.event_date)
-  )
+  return allUpcomingBookings.sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
 })
 
 const fetchUpcomingEvents = async () => {
@@ -113,7 +120,8 @@ const fetchUpcomingEvents = async () => {
       weddingStore.fetchBookings(),
       funeralStore.fetchBookings(),
       thanksgivingStore.fetchBookings(),
-      otherStore.fetchAll()
+      otherStore.fetchAll(),
+      usersStore.fetchUsers(),
     ])
   } catch (err) {
     console.error('Error fetching upcoming events:', err)
@@ -121,18 +129,21 @@ const fetchUpcomingEvents = async () => {
   }
 }
 
-watch(() => props.modelValue, (newVal) => {
-  if (newVal) {
-    fetchUpcomingEvents()
-  }
-})
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (newVal) {
+      fetchUpcomingEvents()
+    }
+  },
+)
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
@@ -147,7 +158,7 @@ const getEventTypeColor = (type) => {
     wedding: 'pink',
     funeral: 'purple',
     thanksgiving: 'green',
-    other: 'cyan'
+    other: 'cyan',
   }
   return colors[type?.toLowerCase()] || 'grey'
 }
@@ -157,19 +168,31 @@ const getStatusColor = (status) => {
     pending: 'orange',
     approved: 'success',
     denied: 'error',
-    completed: 'blue'
+    completed: 'blue',
   }
   return colors[status?.toLowerCase()] || 'grey'
+}
+
+const getPhoneNumber = (userId) => {
+  if (!userId) return null
+  const user = usersStore.users.find((u) => u.id === userId)
+  return user ? user.phone : null
+}
+
+const sendSms = (item) => {
+  const phoneNumber = getPhoneNumber(item.user_id)
+  if (!phoneNumber) {
+    return
+  }
+
+  const message = `Hello ${item.full_name}, this is a reminder for your upcoming ${item.event_type} event on ${formatDate(item.event_date)} at ${formatTime(item.event_time)}.`
+  const encodedMessage = encodeURIComponent(message)
+  window.open(`sms:${phoneNumber}?body=${encodedMessage}`, '_blank')
 }
 </script>
 
 <template>
-  <v-dialog
-    :model-value="modelValue"
-    @update:model-value="closeDialog"
-    max-width="1200"
-    scrollable
-  >
+  <v-dialog :model-value="modelValue" @update:model-value="closeDialog" max-width="1200" scrollable>
     <v-card>
       <v-card-title class="d-flex align-center justify-space-between bg-cyan">
         <div class="d-flex align-center">
@@ -215,6 +238,23 @@ const getStatusColor = (status) => {
             <v-chip size="small" :color="getStatusColor(item.status)">
               {{ item.status || 'Pending' }}
             </v-chip>
+          </template>
+
+          <template v-slot:[`item.actions`]="{ item }">
+            <v-btn
+              variant="tonal"
+              color="primary"
+              size="small"
+              class="text-none"
+              @click="sendSms(item)"
+              :disabled="!getPhoneNumber(item.user_id)"
+              :title="
+                getPhoneNumber(item.user_id) ? 'Send SMS Reminder' : 'No phone number available'
+              "
+            >
+              <v-icon start>mdi-message-text</v-icon>
+              Send SMS
+            </v-btn>
           </template>
 
           <template v-slot:loading>
